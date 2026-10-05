@@ -1,0 +1,13 @@
+**/node_modules/
+**/.env
+**/.env.local
+backend/data/
+backend/bin/
+**/build/
+**/.gradle/
+**/Pods/
+**/DerivedData/
+**/local.properties
+*.log
+artifacts/
+.DS_Store
