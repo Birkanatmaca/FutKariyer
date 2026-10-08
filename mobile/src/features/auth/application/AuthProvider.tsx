@@ -20,6 +20,7 @@ import type {
 
 type AuthContextValue = {
   user: User | null;
+  token: string | null;
   restoring: boolean;
   restoreError: string | null;
   retryRestore(): Promise<void>;
@@ -115,6 +116,7 @@ export function AuthProvider({
     <AuthContext.Provider
       value={{
         user,
+        token: saved?.token ?? null,
         restoring,
         restoreError,
         retryRestore,

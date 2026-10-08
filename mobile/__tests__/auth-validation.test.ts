@@ -7,25 +7,19 @@ const account = {
   email: 'deniz@example.com',
   password: 'strong-password',
   role: 'player' as const,
-  adultConfirmed: true,
 };
 test('valid account passes; email is trimmed for validation', () => {
   expect(
     validateRegistration({ ...account, email: ' deniz@example.com ' }),
   ).toEqual({});
 });
-test('rejects short passwords, invalid names and adult refusal independently', () => {
+test('rejects short passwords and invalid names independently', () => {
   const errors = validateRegistration({
     ...account,
     fullName: 'X',
     password: 'short',
-    adultConfirmed: false,
   });
-  expect(Object.keys(errors).sort()).toEqual([
-    'adultConfirmed',
-    'fullName',
-    'password',
-  ]);
+  expect(Object.keys(errors).sort()).toEqual(['fullName', 'password']);
 });
 test('counts multi-byte characters against the bcrypt byte limit', () => {
   expect(
@@ -35,8 +29,8 @@ test('counts multi-byte characters against the bcrypt byte limit', () => {
     validateRegistration({ ...account, password: 'ş'.repeat(36) }),
   ).toEqual({});
 });
-test('login rejects invalid email and empty password', () => {
+test('login rejects empty identifier and empty password', () => {
   expect(
-    Object.keys(validateLogin({ email: 'invalid', password: '' })).sort(),
-  ).toEqual(['email', 'password']);
+    Object.keys(validateLogin({ identifier: '', password: '' })).sort(),
+  ).toEqual(['identifier', 'password']);
 });

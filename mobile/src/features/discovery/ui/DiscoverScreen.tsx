@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Compass, MapPin } from 'lucide-react-native';
+import { Compass } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { EmptyState } from '../../../shared/ui/EmptyState';
+import { PageHeader } from '../../../shared/ui/PageHeader';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 const sections = [
@@ -14,14 +15,11 @@ export function DiscoverScreen() {
   const [selected, setSelected] = useState(0);
   return (
     <Screen>
-      <View style={styles.top}>
-        <Text style={styles.eyebrow}>{copy.discover.eyebrow}</Text>
-        <View style={styles.location}>
-          <MapPin size={13} color={colors.brand} />
-          <Text style={styles.city}>Ankara</Text>
-        </View>
-      </View>
-      <Text style={styles.title}>{copy.discover.title}</Text>
+      <PageHeader
+        eyebrow={copy.discover.eyebrow}
+        title={copy.discover.title}
+        description={copy.discover.description}
+      />
       <View style={styles.segments}>
         {sections.map((label, index) => (
           <Pressable
@@ -51,36 +49,6 @@ export function DiscoverScreen() {
   );
 }
 const styles = StyleSheet.create({
-  top: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: space.sm,
-  },
-  eyebrow: {
-    fontSize: 9,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    color: colors.muted,
-    flexShrink: 1,
-  },
-  location: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.xs,
-    paddingVertical: space.sm,
-    paddingHorizontal: space.md,
-    borderRadius: radius.pill,
-    backgroundColor: colors.brandWash,
-  },
-  city: { color: colors.brand, fontSize: 11, fontWeight: '600' },
-  title: {
-    fontSize: 35,
-    lineHeight: 41,
-    letterSpacing: -1.2,
-    color: colors.text,
-    fontWeight: '800',
-  },
   segments: {
     backgroundColor: colors.surface,
     padding: space.xs,
@@ -95,7 +63,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  selected: { backgroundColor: colors.raised },
+  selected: {
+    backgroundColor: colors.raised,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.brand,
+  },
   segmentText: { color: colors.muted, fontSize: 12, fontWeight: '600' },
-  selectedText: { color: colors.text },
+  selectedText: { color: colors.brand },
 });

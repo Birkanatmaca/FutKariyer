@@ -3,6 +3,8 @@ export type User = {
   id: string;
   fullName: string;
   email: string;
+  username: string;
+  active: boolean;
   role: AccountRole;
   city: string;
   createdAt: string;
@@ -14,11 +16,12 @@ export interface SessionStorage {
   save(value: SavedSession): Promise<void>;
   clear(): Promise<void>;
 }
-export type LoginInput = { email: string; password: string };
-export type RegisterInput = LoginInput & {
+export type LoginInput = { identifier: string; password: string };
+export type RegisterInput = {
+  email: string;
+  password: string;
   fullName: string;
   role: AccountRole;
-  adultConfirmed: boolean;
 };
 export interface AuthRepository {
   login(input: LoginInput): Promise<AuthSession>;

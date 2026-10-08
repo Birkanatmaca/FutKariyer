@@ -21,20 +21,22 @@ type ValidationError map[string]string
 func (e ValidationError) Error() string { return "Bilgilerini kontrol edip tekrar dene." }
 
 type RegisterInput struct {
-	FullName       string `json:"fullName"`
-	Email          string `json:"email"`
-	Password       string `json:"password"`
-	Role           string `json:"role"`
-	AdultConfirmed bool   `json:"adultConfirmed"`
-}
-type LoginInput struct {
+	FullName string `json:"fullName"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Role     string `json:"role"`
+}
+type LoginInput struct {
+	Identifier string `json:"identifier"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
 }
 type PublicUser struct {
 	ID        string    `json:"id"`
 	FullName  string    `json:"fullName"`
 	Email     string    `json:"email"`
+	Username  string    `json:"username"`
+	Active    bool      `json:"active"`
 	Role      string    `json:"role"`
 	City      string    `json:"city"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -55,8 +57,8 @@ func New(repo domain.Repository, ttl time.Duration) *Service {
 	dummy, _ := bcrypt.GenerateFromPassword([]byte("unusable-placeholder-password"), bcrypt.DefaultCost)
 	return &Service{repo: repo, ttl: ttl, dummyHash: dummy, now: time.Now}
 }
-func public(u domain.User) PublicUser {
-	return PublicUser{ID: u.ID, FullName: u.FullName, Email: u.Email, Role: u.Role, City: u.City, CreatedAt: u.CreatedAt}
+func Public(u domain.User) PublicUser {
+	return PublicUser{ID: u.ID, FullName: u.FullName, Email: u.Email, Username: u.Username, Active: u.Active, Role: u.Role, City: u.City, CreatedAt: u.CreatedAt}
 }
 func canonicalEmail(email string) string { return strings.ToLower(strings.TrimSpace(email)) }
 func validEmail(email string) bool {
@@ -76,11 +78,8 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	if utf8.RuneCountInString(in.Password) < 10 || len(in.Password) > 72 {
 		fields["password"] = "Şifren en az 10 karakter olmalı ve 72 bayttan uzun olmamalı."
 	}
-	if in.Role != "player" && in.Role != "coach" && in.Role != "club" {
-		fields["role"] = "Hesap türünü seç."
-	}
-	if !in.AdultConfirmed {
-		fields["adultConfirmed"] = "Ankara pilotuna yalnızca 18 yaş ve üzeri kişiler katılabilir."
+	if in.Role != "player" {
+		fields["role"] = "Kendi kaydını yalnızca sporcu olarak oluşturabilirsin."
 	}
 	if len(fields) > 0 {
 		return AuthResult{}, fields
@@ -93,7 +92,7 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	if _, err = rand.Read(idBytes); err != nil {
 		return AuthResult{}, err
 	}
-	user := domain.User{ID: hex.EncodeToString(idBytes), FullName: in.FullName, Email: in.Email, PasswordHash: string(hash), Role: in.Role, City: "Ankara", AdultConfirmed: true, CreatedAt: s.now().UTC()}
+	user := domain.User{ID: hex.EncodeToString(idBytes), FullName: in.FullName, Email: in.Email, PasswordHash: string(hash), Role: in.Role, City: "Ankara", Active: true, CreatedAt: s.now().UTC()}
 	token, session, err := s.newSession(user.ID)
 	if err != nil {
 		return AuthResult{}, err
@@ -101,10 +100,20 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	if err = s.repo.Register(ctx, user, session); err != nil {
 		return AuthResult{}, err
 	}
-	return AuthResult{Token: token, ExpiresAt: session.ExpiresAt, User: public(user)}, nil
+	return AuthResult{Token: token, ExpiresAt: session.ExpiresAt, User: Public(user)}, nil
 }
 func (s *Service) Login(ctx context.Context, in LoginInput) (AuthResult, error) {
-	user, err := s.repo.UserByEmail(ctx, canonicalEmail(in.Email))
+	return s.login(ctx, in, "mobile")
+}
+func (s *Service) AdminLogin(ctx context.Context, in LoginInput) (AuthResult, error) {
+	return s.login(ctx, in, "admin")
+}
+func (s *Service) login(ctx context.Context, in LoginInput, audience string) (AuthResult, error) {
+	identifier := in.Identifier
+	if identifier == "" {
+		identifier = in.Email
+	}
+	user, err := s.repo.UserByLogin(ctx, canonicalEmail(identifier))
 	if errors.Is(err, domain.ErrNotFound) {
 		_ = bcrypt.CompareHashAndPassword(s.dummyHash, []byte(in.Password))
 		return AuthResult{}, domain.ErrUnauthorized
@@ -112,19 +121,33 @@ func (s *Service) Login(ctx context.Context, in LoginInput) (AuthResult, error) 
 	if err != nil {
 		return AuthResult{}, err
 	}
-	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)) != nil || !user.Active {
 		return AuthResult{}, domain.ErrUnauthorized
+	}
+	if (user.Role == "admin") != (audience == "admin") {
+		return AuthResult{}, domain.ErrWrongPortal
 	}
 	token, session, err := s.newSession(user.ID)
 	if err != nil {
 		return AuthResult{}, err
 	}
+	session.AuthVersion = user.AuthVersion
+	session.Audience = audience
+	if audience == "admin" && session.ExpiresAt.After(s.now().Add(8*time.Hour)) {
+		session.ExpiresAt = s.now().UTC().Add(8 * time.Hour)
+	}
 	if err = s.repo.CreateSession(ctx, session); err != nil {
 		return AuthResult{}, err
 	}
-	return AuthResult{Token: token, ExpiresAt: session.ExpiresAt, User: public(user)}, nil
+	return AuthResult{Token: token, ExpiresAt: session.ExpiresAt, User: Public(user)}, nil
 }
 func (s *Service) Me(ctx context.Context, token string) (PublicUser, error) {
+	return s.me(ctx, token, "mobile")
+}
+func (s *Service) AdminMe(ctx context.Context, token string) (PublicUser, error) {
+	return s.me(ctx, token, "admin")
+}
+func (s *Service) me(ctx context.Context, token, audience string) (PublicUser, error) {
 	if len(token) != 43 {
 		return PublicUser{}, domain.ErrUnauthorized
 	}
@@ -135,7 +158,7 @@ func (s *Service) Me(ctx context.Context, token string) (PublicUser, error) {
 	if err != nil {
 		return PublicUser{}, err
 	}
-	if !session.ExpiresAt.After(s.now()) {
+	if !session.ExpiresAt.After(s.now()) || session.Audience != audience {
 		return PublicUser{}, domain.ErrUnauthorized
 	}
 	user, err := s.repo.UserByID(ctx, session.UserID)
@@ -145,7 +168,10 @@ func (s *Service) Me(ctx context.Context, token string) (PublicUser, error) {
 	if err != nil {
 		return PublicUser{}, err
 	}
-	return public(user), nil
+	if !user.Active || session.AuthVersion != user.AuthVersion || (user.Role == "admin") != (audience == "admin") {
+		return PublicUser{}, domain.ErrUnauthorized
+	}
+	return Public(user), nil
 }
 func (s *Service) Logout(ctx context.Context, token string) error {
 	return s.repo.DeleteSession(ctx, HashToken(token))
@@ -160,5 +186,5 @@ func (s *Service) newSession(userID string) (string, domain.Session, error) {
 		return "", domain.Session{}, err
 	}
 	token := base64.RawURLEncoding.EncodeToString(bytes)
-	return token, domain.Session{TokenHash: HashToken(token), UserID: userID, ExpiresAt: s.now().UTC().Add(s.ttl)}, nil
+	return token, domain.Session{Audience: "mobile", TokenHash: HashToken(token), UserID: userID, ExpiresAt: s.now().UTC().Add(s.ttl)}, nil
 }

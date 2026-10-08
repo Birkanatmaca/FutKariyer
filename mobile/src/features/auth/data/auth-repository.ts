@@ -8,6 +8,8 @@ function isUser(value: User): boolean {
     typeof value.id === 'string' &&
     typeof value.fullName === 'string' &&
     typeof value.email === 'string' &&
+    typeof value.username === 'string' &&
+    typeof value.active === 'boolean' &&
     typeof value.city === 'string' &&
     typeof value.createdAt === 'string' &&
     Number.isFinite(Date.parse(value.createdAt)) &&

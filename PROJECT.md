@@ -1,23 +1,26 @@
 # Fut Career — Proje Tanımı
 
-**Sürüm:** 0.3 · **Durum:** İlk geliştirme dilimi · **Tarih:** 5 Ekim 2026
+**Sürüm:** 0.8 · **Durum:** Profesyonel mobil arayüz ve yaş sınırı olmadan üyelik · **Tarih:** 8 Ekim 2026
 
 ## Ürün özeti
 
-Fut Career, Ankara'daki 18 yaş ve üzeri amatör futbolcuların kendilerini kulüp ve antrenörlere tanıtmasını; kulüp ve antrenörlerin de uygun oyuncuları keşfetmesini sağlayan iki yönlü bir futbol ağıdır.
+Fut Career, futbolcuların yeteneklerini ve deneyimlerini kulüp ve antrenörlere tanıtmasını; kulüp ve antrenörlerin de uygun oyuncuları keşfetmesini sağlayan iki yönlü bir futbol ağıdır.
 
 Ürünün ilk başarısı profil sayısı değil, oyuncu ile kulüp/antrenör arasında kurulan karşılıklı ve anlamlı bağlantıdır.
 
 ## İlk pilot
 
 - **Şehir:** Ankara
-- **Öncelikli kullanıcılar:** 18+ amatör futbolcular, kulüpler ve antrenörler
+- **Öncelikli kullanıcılar:** Amatör futbolcular, kulüpler ve antrenörler. Kullanıcının 8 Ekim 2026 kararıyla üyelik yaş sınırı kaldırıldı; kayıt veya hesap oluşturma sırasında yaş onayı alınmaz.
+- **Mobil sunum:** Şehir, pilot ve yaş etiketleri gösterilmez. Metinler futbol profili, deneyim, kulüp keşfi ve bağlantı kurma amacını genel ifadelerle anlatır. Ankara iç planlamadaki ilk pilot bölgesidir; mobil marka mesajı değildir. Yeni hesapların mevcut şehir varsayılanı kullanıcı konumu olarak arayüzde gösterilmez.
 - **Eşleşme modeli:** Her iki taraf da keşif yapabilir ve tanışma isteği gönderebilir.
 - **İletişim kuralı:** İstek kabul edilmeden tarafların özel iletişim bilgileri açılmaz.
 - **Platform:** React Native 0.84.1 + TypeScript; Android ve iOS native projeleri depoda tutulur. Android SDK 36 ile uyumlu resmi başlangıç şablonu kullanılır.
+- **Yönetici platformu:** frontend/ altında bağımsız React + TypeScript + Vite web uygulaması. Yönetici girişi /securityadmin adresindedir; kullanıcı ve kulüp yönetimi yalnızca bu paneldedir. Mevcut React ve Vite araçları kullanılır.
 - **Tarayıcı önizlemesi:** Aynı React Native ekranları React Native Web ve Vite ile yerelde görüntülenir. Kayıt/giriş gerçek Go API'ye bağlanır. Tarayıcı oturumu yalnızca bellekte tutulur; sayfa yenilendiğinde yeniden giriş gerekir. Bu önizleme bir web yayınlama kararı değildir.
-- **Backend:** Go HTTP API. İlk geliştirme sürümünde SQLite; repository sınırı sonraki veri tabanı geçişini destekler.
-- **Depo düzeni:** mobile/ mobil istemci, backend/ Go servisi.
+- **Temel teknoloji kararı:** Go, React Native ve PostgreSQL ürünün zorunlu teknoloji üçlüsüdür.
+- **Backend:** Go HTTP API ve PostgreSQL. pgx sürücüsü üzerinden ortak bağlantı havuzu kullanılır. Şema, Goose ile sürümlü SQL migration dosyalarından yönetilir; uygulama başlangıcı migration çalıştırmaz ve şema sürümünü kontrol eder.
+- **Depo düzeni:** frontend/ web yönetici paneli, mobile/ sporcu/kulüp/antrenör mobil istemcisi, backend/ ortak Go API ve PostgreSQL erişimi.
 
 ## Kullanıcılar ve ana ihtiyaçlar
 
@@ -62,11 +65,27 @@ Oyuncunun kendi eklediği kulüp/anlaşma bilgisi doğrulanmamışsa açık biç
 
 Yardımcı ölçütler: tamamlanmış oyuncu profilleri, doğrulanmış kulüp/antrenör sayısı, profil görüntülenmesinden isteğe dönüşüm ve isteklerin yanıtlanma süresi. Sayısal hedefler pilot ortakları ve kullanıcı görüşmeleri belirlendikten sonra kararlaştırılır.
 
-## İlk geliştirme dilimi
+## Tamamlanan ilk geliştirme dilimi
 
-Kayıt/giriş, hesap türü seçimi, güvenli cihaz oturumu, oturum geri yükleme ve çıkış uygulandı. React Native kabuğu Ana Sayfa, Keşfet, İstekler ve Profil sekmeleri ile özel bir tab bar içerir. Go servisi SQLite üzerinde hesapları ve oturum hash'lerini saklar.
+Kayıt/giriş, güvenli cihaz oturumu, oturum geri yükleme ve çıkış uygulandı. Herkese açık kayıt sporcu içindir; kulüp/antrenör hesaplarını yönetici açar. React Native kabuğu Ana Sayfa, Keşfet, İstekler ve Profil sekmeleri ile özel bir tab bar içerir. Yönetici ayrı web panelinden giriş yapar. Go servisi PostgreSQL üzerinde hesapları ve oturum hash'lerini saklar.
 
 Bu dilimde keşif ve istek ekranları boş durumlarıyla hazırlanmıştır. Oyuncu profili yayınlama, medya yükleme ve gerçek eşleşme işlemleri henüz uygulanmadı. Çalıştırma ve doğrulama durumu README.md içinde tutulur.
+
+## Oyuncu profili dilimi
+
+Oyuncu hesabı için mevki, baskın ayak, futbol deneyimi, mevcut kulüp beyanı ve uygunluk durumu kaydedilir. Profilin keşifte görünme tercihi sunucu tarafında saklanır. Bu tercih keşif akışı tamamlanana kadar görünürlüğü fiilen değiştirmez. Medya yükleme, gerçek profil keşfi ve tanışma istekleri sonraki geliştirme adımlarıdır. Teknik çalıştırma ve doğrulama durumu README.md içinde tutulur.
+
+## Hesap ve yönetici akışı
+
+- Herkese açık kayıt yalnızca sporcu hesabı oluşturur; yaş sınırı veya yetişkinlik onayı yoktur. Yönetici tarafından hesap oluşturma ve ilk yönetici kurulumu da yaş onayı istemez. Kulüp hesabı ve giriş bilgileri yönetici tarafından hazırlanır; kulüp kendi kendine kayıt olamaz.
+- Sporcu e-posta ve şifreyle, kulüp yönetici tarafından verilen kullanıcı adı ve şifreyle mobil giriş ekranından giriş yapar. Mevcut antrenör hesapları korunur; yönetici antrenör hesabı da açabilir. Yönetici /securityadmin web girişini kullanır.
+- Yönetici kullanıcıları ve kulüpleri sunucu tarafında sayfalama ile listeler; hesap oluşturma, düzenleme, silme, erişimi durdurma ve şifre yenileme işlemlerini yapar. Hesap türü düzenleme yoluyla yöneticiye yükseltilemez.
+- Kulüp bilgisi, kulüp hesabına bağlı olarak tek yerde saklanır. Kulüp kaydı ve giriş hesabı birlikte oluşturulur ve birlikte silinir. Yönetici tarafından eklenmiş olmak doğrulama rozeti anlamına gelmez.
+- İlk yönetici varsayılan şifre olmadan ayrı bir kurulum komutuyla oluşturulur. Yönetici hesapları panelde silinemez veya durdurulamaz. Şifre değişikliği ve hesap erişiminin durdurulması mevcut oturumları iptal eder.
+- Kullanıcı adı 3–32 karakterdir; küçük Latin harfleri, rakam, nokta, alt çizgi ve kısa çizgi kabul edilir. Şifreler yalnızca bcrypt hash olarak saklanır ve panel API'si tarafından geri döndürülmez.
+- Yönetici paneli frontend/ altında bağımsız web uygulamasıdır. Mobil kaynaklarda yönetici ekranları bulunmaz. Mobil tarayıcı önizlemesi geliştirme aracıdır; son kullanıcı web uygulaması değildir.
+- Yönetici oturumu HttpOnly ve SameSite=Strict cookie ile tutulur; HTTPS yayında Secure kullanılır. Tarayıcı depolarına token yazılmaz. Yönetici ve mobil oturumların kullanım alanı veritabanında ayrıdır. Web yazma isteklerinin Origin değeri yapılandırılmış yönetici adresiyle eşleşmelidir.
+- Web paneli ve /api aynı origin üzerinde çalışır. Vite geliştirme sunucusu /api yollarını Go servisine aktarır; üretilmiş web dosyaları yapılandırıldığında Go tarafından /securityadmin altında sunulur. Yayın sağlayıcısı henüz seçilmedi.
 
 ## Tasarım sistemi
 
@@ -103,11 +122,15 @@ Marka rengi çim yeşilinden esinlenen canlı limon yeşilidir. Yeşil tüm ekra
 - Futbol verisi hızlı taranabilir olmalı: mevki, uygunluk ve doğrulama durumu kolay seçilmeli.
 - Hareket kısa ve işlevsel olmalı; hareketsiz kullanım da aynı derecede anlaşılır kalmalı.
 - Türkçe kullanıcı arayüzü metni sade ve doğrudan olmalı.
+- Mobil girişte marka, kısa ürün mesajı ve form net bir sırayla sunulur. Ana sayfa profil yönetimi ve keşif aksiyonlarına odaklanır; şehir, pilot, yaş rozetleri veya uydurma başarı sayıları kullanılmaz.
+- Ekran başlıkları ve form alanları tutarlı bir hiyerarşi izler. Alt gezinmede dört sekmenin de adı sürekli görünür; seçili sekme metin ve ikonla belirtilir.
+- Henüz bağlanmamış keşif ve istek özellikleri genel, dürüst boş durumlarla anlatılır. Teknik geliştirme ayrıntıları ürün metinlerine taşınmaz; henüz çalışmayan işlemler varmış gibi sunulmaz.
 
 ## Ürün kararları ve açık konular
 
-- React Native ile iOS ve Android, Go ile backend seçildi. İlk geliştirme dilimi kayıt, giriş, oturum ve özel tab bar içeren uygulama kabuğudur.
-- Hosting, medya depolama ve üretim veri tabanı sağlayıcısı henüz seçilmedi.
+- React Native ile iOS ve Android, Go ile backend ve PostgreSQL ile kalıcı veri katmanı zorunlu olarak seçildi. İlk geliştirme dilimi kayıt, giriş, oturum ve özel tab bar içeren uygulama kabuğudur.
+- Veritabanı şeması backend/migrations altında sıralı SQL migration dosyalarıyla yönetilir. Uygulanmış migration değiştirilmez; yeni değişiklik yeni dosyaya eklenir.
+- Hosting, medya depolama ve PostgreSQL barındırma sağlayıcısı henüz seçilmedi.
 - İlk kulüp/antrenör ortakları ve pilot hedef sayıları henüz belirlenmedi.
 - Ücretlendirme, pilotta eşleşme değeri görüldükten sonra ele alınacak.
 

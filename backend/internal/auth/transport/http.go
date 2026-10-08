@@ -8,20 +8,20 @@ import (
 	"net"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/ratelimit"
 )
 
 type Handler struct {
 	service *application.Service
-	limiter *limiter
+	limiter *ratelimit.Limiter
 }
 
 func New(service *application.Service) http.Handler {
-	h := &Handler{service: service, limiter: &limiter{entries: make(map[string]bucket)}}
+	h := &Handler{service: service, limiter: ratelimit.New(20, time.Minute)}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) { write(w, 200, map[string]string{"status": "ok"}) })
 	mux.HandleFunc("POST /v1/auth/register", h.register)
@@ -70,7 +70,7 @@ func (h *Handler) limited(w http.ResponseWriter, r *http.Request) bool {
 	if err != nil {
 		host = r.RemoteAddr
 	}
-	if !h.limiter.allow(host) {
+	if !h.limiter.Allow(host) {
 		w.Header().Set("Retry-After", "60")
 		writeError(w, 429, "rate_limited", "Çok fazla deneme yaptın. Bir dakika sonra tekrar dene.", nil)
 		return true
@@ -85,7 +85,9 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrEmailExists):
 		writeError(w, 409, "email_exists", "Bu e-posta ile bir hesap var. Giriş yapabilirsin.", map[string]string{"email": "Bu e-posta zaten kullanımda."})
 	case errors.Is(err, domain.ErrUnauthorized):
-		writeError(w, 401, "unauthorized", "E-posta veya şifren hatalı; oturumun da sona ermiş olabilir.", nil)
+		writeError(w, 401, "unauthorized", "Giriş bilgilerin hatalı veya hesabının erişimi kapalı; oturumun da sona ermiş olabilir.", nil)
+	case errors.Is(err, domain.ErrWrongPortal):
+		writeError(w, 403, "wrong_portal", "Yönetici hesabıyla webde /securityadmin adresinden giriş yap.", nil)
 	default:
 		slog.Error("auth operation failed", "error", err)
 		writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
@@ -147,31 +149,4 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
-}
-
-type bucket struct {
-	start    time.Time
-	attempts int
-}
-type limiter struct {
-	sync.Mutex
-	entries map[string]bucket
-}
-
-func (l *limiter) allow(key string) bool {
-	l.Lock()
-	defer l.Unlock()
-	now := time.Now()
-	for k, v := range l.entries {
-		if now.Sub(v.start) > time.Minute {
-			delete(l.entries, k)
-		}
-	}
-	v := l.entries[key]
-	if v.start.IsZero() {
-		v.start = now
-	}
-	v.attempts++
-	l.entries[key] = v
-	return v.attempts <= 20
 }

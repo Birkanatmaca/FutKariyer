@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { LockKeyhole, LogOut } from 'lucide-react-native';
+import { LockKeyhole } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
+import { PageHeader } from '../../../shared/ui/PageHeader';
 import { confirmSignOut } from './confirm-sign-out';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import { useAuth } from '../application/AuthProvider';
-export function AccountScreen() {
+export function AccountScreen({
+  onEditPlayerProfile,
+}: {
+  onEditPlayerProfile?: () => void;
+} = {}) {
   const { user, signOut } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,46 +44,64 @@ export function AccountScreen() {
     }
   }
   const details = [
-    [copy.profile.name, user.fullName],
-    [copy.profile.email, user.email],
+    [
+      user.role === 'club' ? copy.profile.clubName : copy.profile.name,
+      user.fullName,
+    ],
+    [
+      user.username ? copy.form.username : copy.profile.email,
+      user.username || user.email,
+    ],
     [copy.profile.role, copy.roles[user.role]],
-    [copy.profile.city, user.city],
   ];
   return (
     <Screen>
-      <View style={styles.headingRow}>
-        <Text style={styles.heading}>{copy.profile.title}</Text>
-        <LogOut size={20} color={colors.muted} />
-      </View>
+      <PageHeader
+        eyebrow={copy.profile.eyebrow}
+        title={copy.profile.title}
+        description={copy.profile.description}
+      />
       <View style={styles.identity}>
         <View style={styles.avatar}>
           <Text style={styles.initials}>{initials}</Text>
         </View>
-        <Text style={styles.name}>{user.fullName}</Text>
-        <Text style={styles.role}>
-          {copy.roles[user.role]} · {user.city}
-        </Text>
-        <View style={styles.private}>
-          <LockKeyhole size={11} color={colors.secondary} />
-          <Text style={styles.privateText}>{copy.profile.private}</Text>
+        <View style={styles.identityCopy}>
+          <Text style={styles.name}>{user.fullName}</Text>
+          <Text style={styles.role}>{copy.roles[user.role]}</Text>
         </View>
       </View>
+      {user.role === 'player' && onEditPlayerProfile ? (
+        <View style={styles.football}>
+          <Text accessibilityRole="header" style={styles.footballTitle}>
+            {copy.profile.footballTitle}
+          </Text>
+          <Text style={styles.footballBody}>{copy.profile.footballBody}</Text>
+          <Button
+            label={copy.profile.editPlayerProfile}
+            onPress={onEditPlayerProfile}
+          />
+        </View>
+      ) : null}
       <View style={styles.details}>
         <Text style={styles.eyebrow}>{copy.profile.account}</Text>
         {details.map(([label, value]) => (
           <View key={label} style={styles.detail}>
             <Text style={styles.label}>{label}</Text>
-            <Text style={styles.value}>{value}</Text>
+            <Text selectable style={styles.value}>
+              {value}
+            </Text>
           </View>
         ))}
       </View>
-      <View style={styles.note}>
-        <LockKeyhole size={18} color={colors.brand} />
-        <View style={styles.noteContent}>
-          <Text style={styles.noteTitle}>{copy.profile.privacyTitle}</Text>
-          <Text style={styles.noteText}>{copy.profile.privacyBody}</Text>
+      {user.role === 'player' && (
+        <View style={styles.note}>
+          <LockKeyhole size={18} color={colors.brand} />
+          <View style={styles.noteContent}>
+            <Text style={styles.noteTitle}>{copy.profile.privacyTitle}</Text>
+            <Text style={styles.noteText}>{copy.profile.privacyBody}</Text>
+          </View>
         </View>
-      </View>
+      )}
       <Button
         label={copy.profile.logout}
         secondary
@@ -90,46 +113,46 @@ export function AccountScreen() {
   );
 }
 const styles = StyleSheet.create({
-  headingRow: {
+  identity: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: space.lg,
+    paddingVertical: space.sm,
   },
-  heading: { fontSize: 28, fontWeight: '800', color: colors.text },
-  identity: { alignItems: 'center', gap: space.md, paddingVertical: space.xl },
+  identityCopy: { flex: 1, gap: space.sm },
   avatar: {
-    width: 82,
-    height: 82,
-    borderRadius: radius.lg,
+    width: 72,
+    height: 72,
+    borderRadius: radius.pill,
     backgroundColor: colors.brandWash,
     borderWidth: 1,
-    borderColor: colors.brand,
+    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  initials: { fontSize: 30, fontWeight: '800', color: colors.brand },
+  initials: { fontSize: 24, fontWeight: '800', color: colors.brand },
   name: {
-    fontSize: 23,
+    fontSize: 22,
+    lineHeight: 28,
     fontWeight: '700',
     color: colors.text,
-    textAlign: 'center',
   },
   role: { fontSize: 13, color: colors.secondary },
-  private: {
-    flexDirection: 'row',
-    gap: space.sm,
-    alignItems: 'center',
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    paddingHorizontal: space.md,
-    paddingVertical: space.sm,
+  football: {
+    gap: space.md,
+    paddingVertical: space.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
-  privateText: { fontSize: 9, letterSpacing: 1, color: colors.secondary },
+  footballTitle: { color: colors.text, fontSize: 18, fontWeight: '700' },
+  footballBody: { color: colors.secondary, fontSize: 13, lineHeight: 21 },
   details: {
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     backgroundColor: colors.surface,
     padding: space.xl,
     gap: space.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   eyebrow: {
     fontSize: 10,
@@ -138,8 +161,8 @@ const styles = StyleSheet.create({
     color: colors.muted,
   },
   detail: { gap: space.xs },
-  label: { fontSize: 11, color: colors.muted },
-  value: { fontSize: 15, color: colors.text },
+  label: { fontSize: 12, color: colors.secondary },
+  value: { fontSize: 15, lineHeight: 22, color: colors.text },
   note: {
     flexDirection: 'row',
     padding: space.lg,

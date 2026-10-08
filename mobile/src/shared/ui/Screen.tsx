@@ -6,6 +6,8 @@ export function Screen({ children }: PropsWithChildren) {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safe}>
       <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >

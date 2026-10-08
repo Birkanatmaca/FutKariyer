@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, MoveUpRight } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { Brand } from '../../../shared/ui/Brand';
 import { PitchArt } from '../../../shared/ui/PitchArt';
 import { copy } from '../../../shared/lib/copy';
@@ -51,29 +51,29 @@ export function AuthFrame({
               >
                 <ArrowLeft size={21} color={colors.text} />
               </Pressable>
-            ) : (
-              <View style={styles.pilot}>
-                <Text style={styles.pilotText}>18+</Text>
-              </View>
-            )}
+            ) : null}
           </View>
           <View style={[styles.hero, compact && styles.compact]}>
-            <View style={styles.pitch}>
-              <PitchArt />
-            </View>
+            {!compact && (
+              <View style={styles.pitch} pointerEvents="none">
+                <PitchArt width={155} height={180} />
+              </View>
+            )}
             <View style={styles.eyebrow}>
-              <View style={styles.dot} />
-              <Text style={styles.eyebrowText}>{copy.pilot}</Text>
-              <MoveUpRight size={13} color={colors.brand} />
+              <View style={styles.marker} />
+              <Text style={styles.eyebrowText}>{copy.authEyebrow}</Text>
             </View>
-            <Text style={styles.title}>{title}</Text>
+            <Text
+              accessibilityRole="header"
+              style={[styles.title, compact && styles.compactTitle]}
+            >
+              {title}
+            </Text>
             <Text style={styles.description}>{description}</Text>
           </View>
-          {children}
+          <View style={styles.form}>{children}</View>
           <View style={styles.footerLine}>
-            <View style={styles.line} />
-            <Text style={styles.footer}>{copy.location}</Text>
-            <View style={styles.line} />
+            <Text style={styles.footer}>{copy.tagline}</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
     paddingTop: space.xl,
     paddingBottom: space.xl,
     width: '100%',
-    maxWidth: 520,
+    maxWidth: 480,
     alignSelf: 'center',
     flexGrow: 1,
   },
@@ -97,27 +97,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  pilot: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.pill,
-    paddingVertical: space.sm,
-    paddingHorizontal: space.md,
-  },
-  pilotText: { color: colors.secondary, fontWeight: '600', fontSize: 11 },
   back: {
-    padding: space.md,
-    borderRadius: radius.pill,
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.sm,
     backgroundColor: colors.surface,
   },
-  hero: { paddingVertical: space.xxxl, minHeight: 260 },
-  compact: { paddingVertical: space.xxl, minHeight: 220 },
+  hero: {
+    paddingTop: space.xxxl,
+    paddingBottom: space.xxl,
+    overflow: 'hidden',
+  },
+  compact: { paddingTop: space.xxl, paddingBottom: space.xl },
   pitch: {
     position: 'absolute',
-    right: -38,
-    top: 16,
-    opacity: 0.72,
-    transform: [{ rotate: '-14deg' }],
+    right: -55,
+    top: 40,
+    opacity: 0.45,
+    transform: [{ rotate: '10deg' }],
   },
   eyebrow: {
     flexDirection: 'row',
@@ -125,44 +124,44 @@ const styles = StyleSheet.create({
     gap: space.sm,
     marginBottom: space.lg,
   },
-  dot: {
-    width: 5,
-    height: 5,
+  marker: {
+    width: 20,
+    height: 2,
     backgroundColor: colors.brand,
     borderRadius: radius.pill,
   },
   eyebrowText: {
     fontSize: 10,
-    letterSpacing: 2,
-    color: colors.brand,
+    letterSpacing: 1.8,
+    color: colors.secondary,
     fontWeight: '700',
   },
   title: {
-    fontSize: 43,
-    lineHeight: 47,
+    fontSize: 42,
+    lineHeight: 46,
     fontWeight: '800',
-    letterSpacing: -1.8,
+    letterSpacing: -1.4,
     color: colors.text,
-    maxWidth: '95%',
   },
+  compactTitle: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
   description: {
-    fontSize: 13,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 22,
     color: colors.secondary,
     marginTop: space.lg,
-    maxWidth: 280,
+    maxWidth: 310,
+  },
+  form: {
+    paddingTop: space.xl,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
   },
   footerLine: {
-    flexDirection: 'row',
-    gap: space.lg,
     alignItems: 'center',
     marginTop: space.xxl,
   },
-  line: { height: 1, backgroundColor: colors.border, flex: 1 },
   footer: {
     color: colors.muted,
-    fontSize: 9,
-    letterSpacing: 2,
-    fontWeight: '600',
+    fontSize: 12,
   },
 });

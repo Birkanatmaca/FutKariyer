@@ -20,8 +20,8 @@ function utf8Length(value: string) {
 }
 export function validateLogin(input: LoginInput): FieldErrors {
   const fields: FieldErrors = {};
-  if (!emailPattern.test(input.email.trim())) {
-    fields.email = copy.form.emailError;
+  if (!input.identifier.trim() || input.identifier.trim().length > 254) {
+    fields.identifier = copy.form.identifierError;
   }
   if (!input.password) {
     fields.password = copy.form.passwordRequired;
@@ -29,7 +29,17 @@ export function validateLogin(input: LoginInput): FieldErrors {
   return fields;
 }
 export function validateRegistration(input: RegisterInput): FieldErrors {
-  const fields = validateLogin(input);
+  const fields = validateLogin({
+    identifier: input.email,
+    password: input.password,
+  });
+  delete fields.identifier;
+  if (!emailPattern.test(input.email.trim())) {
+    fields.email = copy.form.emailError;
+  }
+  if (input.role !== 'player') {
+    fields.role = copy.signUp.playerOnly;
+  }
   const nameLength = Array.from(input.fullName.trim()).length;
   if (nameLength < 2 || nameLength > 80) {
     fields.fullName = copy.form.nameError;
@@ -39,9 +49,6 @@ export function validateRegistration(input: RegisterInput): FieldErrors {
   }
   if (utf8Length(input.password) > 72) {
     fields.password = copy.form.passwordMax;
-  }
-  if (!input.adultConfirmed) {
-    fields.adultConfirmed = copy.form.adultError;
   }
   return fields;
 }

@@ -10,4 +10,5 @@ backend/bin/
 **/local.properties
 *.log
 artifacts/
+frontend/dist/
 .DS_Store

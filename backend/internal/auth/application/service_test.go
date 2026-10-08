@@ -3,25 +3,21 @@ package application_test
 import (
 	"context"
 	"errors"
-	"path/filepath"
 	"testing"
 	"time"
 
 	"futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/auth/data"
 	"futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/testsupport/testpostgres"
 )
 
 func TestPersistentAuthLifecycle(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "auth.db")
-	repo, err := data.Open(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer repo.Close()
+	database := testpostgres.New(t)
+	repo := data.New(database.DB)
 	service := application.New(repo, time.Hour)
 	ctx := context.Background()
-	input := application.RegisterInput{FullName: "Deniz Yılmaz", Email: " DENIZ@example.com ", Password: "strong-password-123", Role: "player", AdultConfirmed: true}
+	input := application.RegisterInput{FullName: "Deniz Yılmaz", Email: " DENIZ@example.com ", Password: "strong-password-123", Role: "player"}
 	registered, err := service.Register(ctx, input)
 	if err != nil {
 		t.Fatal(err)
@@ -50,14 +46,8 @@ func TestPersistentAuthLifecycle(t *testing.T) {
 		t.Fatal("session tokens must be unique")
 	}
 	// Re-open the repository to prove accounts and sessions survive process restarts.
-	if err = repo.Close(); err != nil {
-		t.Fatal(err)
-	}
-	repo, err = data.Open(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer repo.Close()
+	database.Reconnect(t)
+	repo = data.New(database.DB)
 	service = application.New(repo, time.Hour)
 	if user, err := service.Me(ctx, loggedIn.Token); err != nil || user.ID != registered.User.ID {
 		t.Fatalf("persistent session: %v", err)
@@ -68,7 +58,7 @@ func TestPersistentAuthLifecycle(t *testing.T) {
 	if _, err = service.Me(ctx, loggedIn.Token); !errors.Is(err, domain.ErrUnauthorized) {
 		t.Fatal("revoked session accepted")
 	}
-	expired := domain.Session{TokenHash: application.HashToken(registered.Token), UserID: registered.User.ID, ExpiresAt: time.Now().Add(-time.Hour)}
+	expired := domain.Session{Audience: "mobile", TokenHash: application.HashToken(registered.Token), UserID: registered.User.ID, ExpiresAt: time.Now().Add(-time.Hour)}
 	if err = repo.DeleteSession(ctx, expired.TokenHash); err != nil {
 		t.Fatal(err)
 	}
@@ -80,15 +70,10 @@ func TestPersistentAuthLifecycle(t *testing.T) {
 	}
 }
 func TestRegistrationRejectsInvalidAccounts(t *testing.T) {
-	repo, err := data.Open(filepath.Join(t.TempDir(), "auth.db"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer repo.Close()
-	service := application.New(repo, time.Hour)
-	_, err = service.Register(context.Background(), application.RegisterInput{FullName: "X", Email: "invalid", Password: "short", Role: "admin", AdultConfirmed: false})
+	service := application.New(nil, time.Hour)
+	_, err := service.Register(context.Background(), application.RegisterInput{FullName: "X", Email: "invalid", Password: "short", Role: "admin"})
 	var fields application.ValidationError
-	if !errors.As(err, &fields) || len(fields) != 5 {
+	if !errors.As(err, &fields) || len(fields) != 4 {
 		t.Fatalf("invalid account was not fully rejected: %v", err)
 	}
 }

@@ -16,7 +16,9 @@ export function EmptyState({
       <View style={styles.icon}>
         <Icon size={27} color={colors.brand} />
       </View>
-      <Text style={styles.title}>{title}</Text>
+      <Text accessibilityRole="header" style={styles.title}>
+        {title}
+      </Text>
       <Text style={styles.body}>{body}</Text>
     </View>
   );
@@ -25,18 +27,18 @@ const styles = StyleSheet.create({
   card: {
     paddingVertical: space.xxxl,
     paddingHorizontal: space.xl,
-    gap: space.lg,
+    gap: space.md,
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
   icon: {
-    width: 60,
-    height: 60,
-    borderRadius: radius.md,
-    backgroundColor: colors.brandWash,
+    width: 56,
+    height: 56,
+    borderRadius: radius.pill,
+    backgroundColor: colors.raised,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -46,6 +48,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
+    maxWidth: 320,
   },
   body: {
     fontSize: 14,

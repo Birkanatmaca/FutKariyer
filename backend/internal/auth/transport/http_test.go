@@ -6,19 +6,16 @@ import (
 	"futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/auth/data"
 	"futcareer/backend/internal/auth/transport"
+	"futcareer/backend/internal/testsupport/testpostgres"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"testing"
 	"time"
 )
 
 func TestAuthHTTPContract(t *testing.T) {
-	repo, err := data.Open(filepath.Join(t.TempDir(), "http.db"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer repo.Close()
+	database := testpostgres.New(t)
+	repo := data.New(database.DB)
 	handler := transport.New(application.New(repo, time.Hour))
 	call := func(method, path, body, token string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(method, path, bytes.NewBufferString(body))
@@ -30,7 +27,7 @@ func TestAuthHTTPContract(t *testing.T) {
 		handler.ServeHTTP(rec, req)
 		return rec
 	}
-	rec := call("POST", "/v1/auth/register", `{"fullName":"Deniz Yılmaz","email":"deniz@example.com","password":"strong-password","role":"player","adultConfirmed":true}`, "")
+	rec := call("POST", "/v1/auth/register", `{"fullName":"Deniz Yılmaz","email":"deniz@example.com","password":"strong-password","role":"player"}`, "")
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("register: %d %s", rec.Code, rec.Body)
 	}
@@ -38,7 +35,7 @@ func TestAuthHTTPContract(t *testing.T) {
 		t.Fatal("password information in public response")
 	}
 	var result application.AuthResult
-	if err = json.Unmarshal(rec.Body.Bytes(), &result); err != nil {
+	if err := json.Unmarshal(rec.Body.Bytes(), &result); err != nil {
 		t.Fatal(err)
 	}
 	if rec = call("GET", "/v1/auth/me", "", result.Token); rec.Code != 200 {

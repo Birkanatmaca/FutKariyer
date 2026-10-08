@@ -62,7 +62,7 @@ function TabItem({
       accessibilityState={{ selected: active }}
       onPress={press}
       onLongPress={onLongPress}
-      style={[styles.item, active && styles.activeItem]}
+      style={styles.item}
       hitSlop={4}
     >
       <Animated.View
@@ -74,14 +74,15 @@ function TabItem({
       >
         <Icon
           size={22}
-          color={active ? colors.brandInk : colors.secondary}
+          color={active ? colors.brand : colors.secondary}
           strokeWidth={active ? 2.4 : 1.8}
         />
-        {active && (
-          <Text numberOfLines={1} style={styles.label}>
-            {copy.tabs[name]}
-          </Text>
-        )}
+        <Text
+          numberOfLines={1}
+          style={[styles.label, active && styles.activeLabel]}
+        >
+          {copy.tabs[name]}
+        </Text>
       </Animated.View>
     </Pressable>
   );
@@ -159,32 +160,31 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: space.sm,
     gap: space.xs,
-    backgroundColor: colors.raised,
-    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    elevation: 12,
+    elevation: 8,
     shadowColor: colors.bg,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
   },
-  item: { flex: 1, minHeight: 48, justifyContent: 'center' },
-  activeItem: { flex: 1.9 },
+  item: { flex: 1, minHeight: 56, justifyContent: 'center' },
   capsule: {
-    minHeight: 48,
+    minHeight: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    flexDirection: 'row',
-    gap: space.sm,
-    borderRadius: radius.pill,
-    paddingHorizontal: space.sm,
+    gap: space.xs,
+    borderRadius: radius.md,
+    paddingHorizontal: space.xs,
   },
-  activeCapsule: { backgroundColor: colors.brand },
+  activeCapsule: { backgroundColor: colors.brandWash },
   label: {
     fontSize: 11,
-    fontWeight: '800',
-    color: colors.brandInk,
+    fontWeight: '600',
+    color: colors.secondary,
     flexShrink: 1,
   },
+  activeLabel: { color: colors.brand, fontWeight: '700' },
 });

@@ -13,7 +13,7 @@ import { copy } from '../lib/copy';
 
 type Props = TextInputProps & {
   label: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   error?: string;
   password?: boolean;
   hint?: string;
@@ -38,7 +38,9 @@ export function Field({
           !!error && styles.invalid,
         ]}
       >
-        <Icon size={19} color={focused ? colors.brand : colors.muted} />
+        {Icon ? (
+          <Icon size={19} color={focused ? colors.brand : colors.muted} />
+        ) : null}
         <TextInput
           {...props}
           accessibilityLabel={label}
@@ -87,7 +89,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: colors.secondary,
-    letterSpacing: 0.3,
   },
   control: {
     flexDirection: 'row',
@@ -102,6 +103,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    minWidth: 0,
     paddingVertical: space.lg,
     color: colors.text,
     fontSize: 15,

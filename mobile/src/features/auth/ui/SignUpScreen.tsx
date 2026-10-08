@@ -1,40 +1,23 @@
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
-import {
-  Check,
-  CircleUserRound,
-  LockKeyhole,
-  Mail,
-  Shield,
-  UserRound,
-  Whistle,
-} from 'lucide-react-native';
+import { LockKeyhole, Mail, UserRound } from 'lucide-react-native';
 import { AuthFrame } from './AuthFrame';
 import { Field } from '../../../shared/ui/Field';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
-import { colors, radius, space } from '../../../styles/tokens';
+import { colors, space } from '../../../styles/tokens';
 import { useAuth } from '../application/AuthProvider';
 import {
   validateRegistration,
   type FieldErrors,
 } from '../application/validation';
-import type { AccountRole } from '../domain/models';
-
-const roles = [
-  { role: 'player', Icon: CircleUserRound },
-  { role: 'coach', Icon: Whistle },
-  { role: 'club', Icon: Shield },
-] as const;
 export function SignUpScreen({ onSignIn }: { onSignIn(): void }) {
   const { signUp } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<AccountRole>('player');
-  const [adultConfirmed, setAdultConfirmed] = useState(false);
   const [fields, setFields] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -46,8 +29,7 @@ export function SignUpScreen({ onSignIn }: { onSignIn(): void }) {
       fullName,
       email: email.trim(),
       password,
-      role,
-      adultConfirmed,
+      role: 'player' as const,
     };
     const errors = validateRegistration(input);
     setFields(errors);
@@ -78,35 +60,9 @@ export function SignUpScreen({ onSignIn }: { onSignIn(): void }) {
       compact
     >
       <View style={styles.form}>
-        <Text style={styles.heading}>{copy.signUp.formTitle}</Text>
-        <View style={styles.roleGroup}>
-          <Text style={styles.label}>{copy.signUp.roleLabel}</Text>
-          <View style={styles.roles}>
-            {roles.map(({ role: option, Icon }) => (
-              <Pressable
-                key={option}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: role === option }}
-                disabled={busy}
-                onPress={() => setRole(option)}
-                style={[styles.role, role === option && styles.roleSelected]}
-              >
-                <Icon
-                  size={21}
-                  color={role === option ? colors.brand : colors.secondary}
-                />
-                <Text
-                  style={[
-                    styles.roleText,
-                    role === option && styles.roleTextSelected,
-                  ]}
-                >
-                  {copy.roles[option]}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
+        <Text accessibilityRole="header" style={styles.heading}>
+          {copy.signUp.formTitle}
+        </Text>
         <Field
           label={copy.signUp.name}
           icon={UserRound}
@@ -147,27 +103,7 @@ export function SignUpScreen({ onSignIn }: { onSignIn(): void }) {
           hint={copy.signUp.passwordHelp}
           editable={!busy}
         />
-        <View style={styles.confirmGroup}>
-          <Pressable
-            accessibilityRole="checkbox"
-            accessibilityLabel={copy.signUp.adult}
-            accessibilityState={{ checked: adultConfirmed }}
-            disabled={busy}
-            onPress={() => setAdultConfirmed(!adultConfirmed)}
-            style={styles.confirm}
-          >
-            <View style={[styles.checkbox, adultConfirmed && styles.checked]}>
-              {adultConfirmed && (
-                <Check size={15} strokeWidth={3} color={colors.brandInk} />
-              )}
-            </View>
-            <Text style={styles.confirmText}>{copy.signUp.adult}</Text>
-          </Pressable>
-          {!!fields.adultConfirmed && (
-            <Text style={styles.error}>{fields.adultConfirmed}</Text>
-          )}
-          <Text style={styles.privacy}>{copy.signUp.privacy}</Text>
-        </View>
+        <Text style={styles.privacy}>{copy.signUp.privacy}</Text>
         <ErrorBanner message={error} />
         <Button label={copy.signUp.button} onPress={submit} loading={busy} />
         <View style={styles.switch}>
@@ -181,63 +117,32 @@ export function SignUpScreen({ onSignIn }: { onSignIn(): void }) {
             <Text style={styles.link}>{copy.signUp.link}</Text>
           </Pressable>
         </View>
+        <Text style={styles.clubHelp}>{copy.signUp.clubHelp}</Text>
       </View>
     </AuthFrame>
   );
 }
 const styles = StyleSheet.create({
-  form: { gap: space.xl },
+  form: { gap: space.lg },
   heading: {
     fontSize: 20,
     fontWeight: '700',
     color: colors.text,
     letterSpacing: -0.4,
   },
-  label: { color: colors.secondary, fontSize: 12, fontWeight: '600' },
-  roleGroup: { gap: space.md },
-  roles: { flexDirection: 'row', gap: space.sm },
-  role: {
-    flex: 1,
-    gap: space.sm,
-    minHeight: 78,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+  privacy: { color: colors.secondary, fontSize: 12, lineHeight: 19 },
+  clubHelp: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 19,
+    textAlign: 'center',
   },
-  roleSelected: {
-    borderColor: colors.brand,
-    backgroundColor: colors.brandWash,
-  },
-  roleText: { color: colors.secondary, fontSize: 12, fontWeight: '600' },
-  roleTextSelected: { color: colors.brand },
-  confirmGroup: { gap: space.md },
-  confirm: {
-    flexDirection: 'row',
-    gap: space.md,
-    alignItems: 'center',
-    minHeight: 40,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checked: { backgroundColor: colors.brand, borderColor: colors.brand },
-  confirmText: { color: colors.secondary, fontSize: 13, flex: 1 },
-  privacy: { color: colors.muted, fontSize: 11, lineHeight: 18 },
-  error: { color: colors.danger, fontSize: 12, lineHeight: 18 },
   switch: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: space.sm,
+    paddingVertical: space.sm,
   },
   question: { color: colors.secondary, fontSize: 13 },
   link: { color: colors.brand, fontSize: 13, fontWeight: '700' },

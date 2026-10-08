@@ -12,6 +12,7 @@ import {
 } from '../features/auth';
 import { DiscoverScreen } from '../features/discovery';
 import { ConnectionsScreen } from '../features/connections';
+import { PlayerProfileScreen } from '../features/players';
 import { Brand } from '../shared/ui/Brand';
 import { Button } from '../shared/ui/Button';
 import { ErrorBanner } from '../shared/ui/ErrorBanner';
@@ -28,8 +29,10 @@ type MainRoutes = {
   Connections: undefined;
   Profile: undefined;
 };
+type ProfileRoutes = { Account: undefined; PlayerProfile: undefined };
 const Stack = createNativeStackNavigator<AuthRoutes>();
 const Tabs = createBottomTabNavigator<MainRoutes>();
+const ProfileStack = createNativeStackNavigator<ProfileRoutes>();
 const theme = {
   ...DarkTheme,
   colors: {
@@ -70,8 +73,36 @@ function MainTabs() {
           />
         )}
       </Tabs.Screen>
-      <Tabs.Screen name="Profile" component={AccountScreen} />
+      <Tabs.Screen name="Profile" component={ProfileNavigator} />
     </Tabs.Navigator>
+  );
+}
+
+function ProfileNavigator() {
+  const { token } = useAuth();
+  return (
+    <ProfileStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.bg },
+      }}
+    >
+      <ProfileStack.Screen name="Account">
+        {({ navigation }) => (
+          <AccountScreen
+            onEditPlayerProfile={() => navigation.navigate('PlayerProfile')}
+          />
+        )}
+      </ProfileStack.Screen>
+      <ProfileStack.Screen name="PlayerProfile">
+        {({ navigation }) => (
+          <PlayerProfileScreen
+            token={token}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </ProfileStack.Screen>
+    </ProfileStack.Navigator>
   );
 }
 export function AppNavigator() {
