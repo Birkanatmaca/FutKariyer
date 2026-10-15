@@ -14,7 +14,10 @@ export const sessionStorage: SessionStorage = {
         typeof value.token === 'string' &&
         value.token.length === 43 &&
         typeof value.expiresAt === 'string' &&
-        Number.isFinite(Date.parse(value.expiresAt))
+        Number.isFinite(Date.parse(value.expiresAt)) &&
+        (value.kind === undefined ||
+          value.kind === 'user' ||
+          value.kind === 'admin')
       ) {
         return value;
       }

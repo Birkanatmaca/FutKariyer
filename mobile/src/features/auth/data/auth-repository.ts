@@ -1,6 +1,13 @@
 import { request, ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
-import type { AuthRepository, AuthSession, User } from '../domain/models';
+import type {
+  AccountApplicationResult,
+  AdminSession,
+  AdminUser,
+  AuthRepository,
+  AuthSession,
+  User,
+} from '../domain/models';
 
 function isUser(value: User): boolean {
   return (
@@ -10,10 +17,11 @@ function isUser(value: User): boolean {
     typeof value.email === 'string' &&
     typeof value.username === 'string' &&
     typeof value.active === 'boolean' &&
+    typeof value.verified === 'boolean' &&
     typeof value.city === 'string' &&
     typeof value.createdAt === 'string' &&
     Number.isFinite(Date.parse(value.createdAt)) &&
-    ['player', 'coach', 'club'].includes(value.role)
+    ['player', 'coach', 'club', 'organizer'].includes(value.role)
   );
 }
 function session(value: AuthSession): AuthSession {
@@ -28,6 +36,35 @@ function session(value: AuthSession): AuthSession {
     throw new ApiError(copy.form.unexpected);
   }
   return value;
+}
+function isAdminUser(value: AdminUser): boolean {
+  return (
+    !!value &&
+    typeof value.id === 'string' &&
+    value.id.length > 0 &&
+    typeof value.fullName === 'string' &&
+    typeof value.email === 'string' &&
+    typeof value.username === 'string' &&
+    value.role === 'admin'
+  );
+}
+function adminSession(value: AdminSession): AdminSession {
+  if (
+    !value ||
+    typeof value.token !== 'string' ||
+    value.token.length !== 43 ||
+    typeof value.expiresAt !== 'string' ||
+    !Number.isFinite(Date.parse(value.expiresAt)) ||
+    !isAdminUser(value.user)
+  ) {
+    throw new ApiError(copy.form.unexpected);
+  }
+  const { id, fullName, email, username } = value.user;
+  return {
+    token: value.token,
+    expiresAt: value.expiresAt,
+    user: { id, fullName, email, username, role: 'admin' },
+  };
 }
 export const authRepository: AuthRepository = {
   async login(input) {
@@ -46,6 +83,16 @@ export const authRepository: AuthRepository = {
       }),
     );
   },
+  async apply(input) {
+    const data = await request<AccountApplicationResult>(
+      '/v1/auth/applications',
+      { method: 'POST', body: input },
+    );
+    if (data?.status !== 'pending') {
+      throw new ApiError(copy.form.unexpected);
+    }
+    return data;
+  },
   async me(token) {
     const data = await request<{ user: User }>('/v1/auth/me', { token });
     if (!isUser(data.user)) {
@@ -55,5 +102,27 @@ export const authRepository: AuthRepository = {
   },
   async logout(token) {
     await request<void>('/v1/auth/logout', { method: 'POST', token });
+  },
+  // Admin accounts get a bearer token for the /v1/admin API only.
+  async adminLogin(input) {
+    return adminSession(
+      await request<AdminSession>('/v1/admin/auth/token', {
+        method: 'POST',
+        body: { identifier: input.identifier, password: input.password },
+      }),
+    );
+  },
+  async adminMe(token) {
+    const data = await request<{ user: AdminUser }>('/v1/admin/auth/me', {
+      token,
+    });
+    if (!data || !isAdminUser(data.user)) {
+      throw new ApiError(copy.form.unexpected);
+    }
+    const { id, fullName, email, username } = data.user;
+    return { id, fullName, email, username, role: 'admin' };
+  },
+  async adminLogout(token) {
+    await request<void>('/v1/admin/auth/logout', { method: 'POST', token });
   },
 };

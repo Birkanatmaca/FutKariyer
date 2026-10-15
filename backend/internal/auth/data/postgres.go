@@ -33,6 +33,12 @@ func (r *Postgres) Register(ctx context.Context, user domain.User, session domai
 		}
 		return err
 	}
+	if user.Role == "player" {
+		if _, err = tx.ExecContext(ctx, `INSERT INTO player_profiles(user_id,availability,discoverable,updated_at,football_type,license_status)
+			VALUES($1,'not_available',FALSE,$2,COALESCE(NULLIF($3,''),'unknown'),COALESCE(NULLIF($4,''),'unknown'))`, user.ID, user.CreatedAt, user.FootballType, user.LicenseStatus); err != nil {
+			return err
+		}
+	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,expires_at) VALUES($1,$2,$3)", session.TokenHash, session.UserID, session.ExpiresAt); err != nil {
 		return err
 	}
@@ -41,7 +47,7 @@ func (r *Postgres) Register(ctx context.Context, user domain.User, session domai
 
 func scanUser(row *sql.Row) (domain.User, error) {
 	var user domain.User
-	err := row.Scan(&user.ID, &user.FullName, &user.Email, &user.PasswordHash, &user.Role, &user.City, &user.CreatedAt, &user.Username, &user.Active, &user.AuthVersion)
+	err := row.Scan(&user.ID, &user.FullName, &user.Email, &user.PasswordHash, &user.Role, &user.City, &user.CreatedAt, &user.Username, &user.Active, &user.AuthVersion, &user.Verified, &user.ApprovalStatus)
 	if errors.Is(err, sql.ErrNoRows) {
 		return user, domain.ErrNotFound
 	}
@@ -49,7 +55,7 @@ func scanUser(row *sql.Row) (domain.User, error) {
 	return user, err
 }
 
-const columns = "id,full_name,COALESCE(email,''),password_hash,role,city,created_at,COALESCE(username,''),active,auth_version"
+const columns = "id,full_name,COALESCE(email,''),password_hash,role,city,created_at,COALESCE(username,''),active,auth_version,verified,approval_status"
 
 func (r *Postgres) UserByLogin(ctx context.Context, login string) (domain.User, error) {
 	return scanUser(r.db.QueryRowContext(ctx, "SELECT "+columns+" FROM users WHERE email=$1 OR username=$1", login))
@@ -93,4 +99,38 @@ func (r *Postgres) DeleteSession(ctx context.Context, hash string) error {
 func (r *Postgres) DeleteExpiredSessions(ctx context.Context) error {
 	_, err := r.db.ExecContext(ctx, "DELETE FROM sessions WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err
+}
+
+// Apply creates an inactive, pending club or organizer account with its application.
+func (r *Postgres) Apply(ctx context.Context, user domain.User, app domain.Application) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	_, err = tx.ExecContext(ctx, `INSERT INTO users(id,full_name,email,password_hash,role,city,created_at,username,active,approval_status)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,FALSE,'pending')`,
+		user.ID, user.FullName, user.Email, user.PasswordHash, user.Role, user.City, user.CreatedAt, user.Username)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			switch pgErr.ConstraintName {
+			case "users_email_key":
+				return domain.ErrEmailExists
+			case "users_username_key":
+				return domain.ErrUsernameExists
+			}
+		}
+		return err
+	}
+	if user.Role == "club" {
+		if _, err = tx.ExecContext(ctx, `INSERT INTO clubs(user_id,football_type,district,updated_at) VALUES($1,$2,$3,$4)`, user.ID, app.FootballType, app.District, user.CreatedAt); err != nil {
+			return err
+		}
+	}
+	if _, err = tx.ExecContext(ctx, `INSERT INTO account_applications(user_id,role,contact_name,phone,district,note,submitted_at) VALUES($1,$2,$3,$4,$5,$6,$7)`,
+		user.ID, user.Role, app.ContactName, app.Phone, app.District, app.Note, user.CreatedAt); err != nil {
+		return err
+	}
+	return tx.Commit()
 }

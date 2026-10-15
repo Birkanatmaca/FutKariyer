@@ -1,0 +1,96 @@
+import { ApiError, request } from '../../../shared/api/client';
+import { config } from '../../../shared/lib/config';
+import { copy } from '../../../shared/lib/copy';
+import type {
+  Advertisement,
+  Article,
+  ContentRepository,
+  HomeContent,
+  NewsPage,
+} from '../domain/models';
+function imageID(value: unknown, optional = false) {
+  return (
+    typeof value === 'string' &&
+    ((optional && value === '') || /^[a-f0-9]{32}$/.test(value))
+  );
+}
+function base(value: unknown): value is Article | Advertisement {
+  const item = value as Article;
+  return (
+    !!item &&
+    imageID(item.id) &&
+    typeof item.title === 'string' &&
+    typeof item.createdAt === 'string' &&
+    Number.isFinite(Date.parse(item.createdAt)) &&
+    typeof item.updatedAt === 'string' &&
+    Number.isFinite(Date.parse(item.updatedAt))
+  );
+}
+function ad(value: unknown): value is Advertisement {
+  const item = value as Advertisement;
+  return (
+    base(value) &&
+    imageID(item.imageId) &&
+    item.active === true &&
+    Number.isInteger(item.sortOrder) &&
+    item.sortOrder >= 0 &&
+    item.sortOrder <= 10000
+  );
+}
+function article(value: unknown): value is Article {
+  const item = value as Article;
+  return (
+    base(value) &&
+    typeof item.summary === 'string' &&
+    typeof item.body === 'string' &&
+    imageID(item.imageId, true) &&
+    item.published === true &&
+    typeof item.showOnHome === 'boolean'
+  );
+}
+export const contentRepository: ContentRepository = {
+  async home(token) {
+    const out = await request<HomeContent>('/v1/content/home', { token });
+    if (
+      !out ||
+      !Array.isArray(out.advertisements) ||
+      out.advertisements.length > 20 ||
+      !out.advertisements.every(ad) ||
+      !Array.isArray(out.news) ||
+      out.news.length > 3 ||
+      !out.news.every(item => article(item) && item.showOnHome)
+    )
+      throw new ApiError(copy.form.unexpected);
+    return out;
+  },
+  async news(token, page) {
+    const out = await request<NewsPage>('/v1/content/news?page=' + page, {
+      token,
+    });
+    if (
+      !out ||
+      !Array.isArray(out.items) ||
+      !out.items.every(article) ||
+      out.items.length > 20 ||
+      out.page !== page ||
+      out.pageSize !== 20 ||
+      !Number.isSafeInteger(out.total) ||
+      out.total < 0 ||
+      out.totalPages !== Math.ceil(out.total / 20)
+    )
+      throw new ApiError(copy.form.unexpected);
+    return out;
+  },
+  async article(token, id) {
+    const out = await request<{ article: unknown }>(
+      '/v1/content/news/' + encodeURIComponent(id),
+      { token },
+    );
+    if (!out || !article(out.article) || out.article.id !== id)
+      throw new ApiError(copy.form.unexpected);
+    return out.article;
+  },
+  imageUrl(id) {
+    return config.apiBaseUrl + '/v1/content/images/' + encodeURIComponent(id);
+  },
+};

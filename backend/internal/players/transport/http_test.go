@@ -25,7 +25,7 @@ func TestPlayerProfilePersistenceAndAuthorization(t *testing.T) {
 	register := func(role, email string) authapplication.AuthResult {
 		t.Helper()
 		result, err := auth.Register(context.Background(), authapplication.RegisterInput{
-			FullName: "Deniz Yılmaz", Email: email, Password: "strong-password", Role: role,
+			FullName: "Deniz Yılmaz", Email: email, Password: "strong-password", Role: role, FootballType: "amateur", LicenseStatus: "licensed",
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -34,7 +34,7 @@ func TestPlayerProfilePersistenceAndAuthorization(t *testing.T) {
 	}
 	player := register("player", "player@example.com")
 	_, err := adminapplication.New(admindata.New(database.DB)).Create(context.Background(), adminapplication.CreateInput{
-		AccountInput: authapplication.AccountInput{FullName: "Ankara Kulübü", Username: "ankara.club", Password: "strong-password"},
+		AccountInput: authapplication.AccountInput{FullName: "Ankara Kulübü", Username: "ankara.club", Password: "strong-password"}, FootballType: "amateur",
 	}, true)
 	if err != nil {
 		t.Fatal(err)
@@ -76,7 +76,7 @@ func TestPlayerProfilePersistenceAndAuthorization(t *testing.T) {
 	if profile := read(); profile.Discoverable || profile.Availability != "not_available" {
 		t.Fatal("a new player must start private and unavailable")
 	}
-	input := `{"position":"Orta saha","dominantFoot":"both","experienceYears":8,"currentClub":"Çankaya Spor","availability":"open_to_offers","discoverable":true}`
+	input := `{"position":"Orta saha","dominantFoot":"both","experienceYears":8,"currentClub":"Çankaya Spor","availability":"open_to_offers","discoverable":true,"footballType":"amateur","licenseStatus":"licensed"}`
 	if response := call("PUT", input, player.Token); response.Code != 200 {
 		t.Fatalf("save: %d %s", response.Code, response.Body)
 	}
@@ -90,14 +90,14 @@ func TestPlayerProfilePersistenceAndAuthorization(t *testing.T) {
 	if _, err := time.Parse(time.RFC3339, profile.UpdatedAt); err != nil {
 		t.Fatal("profile timestamp is not RFC3339")
 	}
-	invalid := `{"position":"Orta saha","dominantFoot":"both","experienceYears":61,"currentClub":"Çankaya Spor","availability":"open_to_offers","discoverable":false}`
+	invalid := `{"position":"Orta saha","dominantFoot":"both","experienceYears":61,"currentClub":"Çankaya Spor","availability":"open_to_offers","discoverable":false,"footballType":"professional","licenseStatus":"unlicensed"}`
 	if response := call("PUT", invalid, player.Token); response.Code != 422 {
 		t.Fatal("invalid experience was accepted")
 	}
 	if profile := read(); profile.ExperienceYears != 8 || !profile.Discoverable {
 		t.Fatal("failed validation modified persisted profile")
 	}
-	input = `{"position":"Forvet","dominantFoot":"right","experienceYears":0,"currentClub":"","availability":"seeking_team","discoverable":false}`
+	input = `{"position":"Forvet","dominantFoot":"right","experienceYears":0,"currentClub":"","availability":"seeking_team","discoverable":false,"footballType":"professional","licenseStatus":"unlicensed"}`
 	if response := call("PUT", input, player.Token); response.Code != 200 {
 		t.Fatalf("update: %d %s", response.Code, response.Body)
 	}

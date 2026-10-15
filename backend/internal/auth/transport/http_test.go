@@ -27,7 +27,7 @@ func TestAuthHTTPContract(t *testing.T) {
 		handler.ServeHTTP(rec, req)
 		return rec
 	}
-	rec := call("POST", "/v1/auth/register", `{"fullName":"Deniz Yılmaz","email":"deniz@example.com","password":"strong-password","role":"player"}`, "")
+	rec := call("POST", "/v1/auth/register", `{"fullName":"Deniz Yılmaz","email":"deniz@example.com","password":"strong-password","role":"player","footballType":"amateur","licenseStatus":"licensed"}`, "")
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("register: %d %s", rec.Code, rec.Body)
 	}

@@ -34,7 +34,7 @@ func run() error {
 	if err = migrations.CheckCurrent(ctx, db); err != nil {
 		return err
 	}
-	account, err := admin.New(data.New(db)).Bootstrap(ctx, auth.AccountInput{FullName: os.Getenv("ADMIN_FULL_NAME"), Username: os.Getenv("ADMIN_USERNAME"), Password: os.Getenv("ADMIN_PASSWORD")})
+	account, err := admin.New(data.New(db)).Bootstrap(ctx, auth.AccountInput{FullName: os.Getenv("ADMIN_FULL_NAME"), Email: os.Getenv("ADMIN_EMAIL"), Username: os.Getenv("ADMIN_USERNAME"), Password: os.Getenv("ADMIN_PASSWORD")})
 	if err != nil {
 		var fields auth.ValidationError
 		if errors.As(err, &fields) {

@@ -14,6 +14,10 @@ import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Field } from '../../../shared/ui/Field';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
+import type {
+  DeclaredLicenseStatus,
+  PlayerFootballType,
+} from '../../../shared/domain/football';
 import { createPlayerProfileService } from '../application/profile-service';
 import { playerProfileRepository } from '../data/http-profile-repository';
 import type {
@@ -50,6 +54,8 @@ const blankProfile: PlayerProfile = {
   currentClub: '',
   availability: 'not_available',
   discoverable: false,
+  footballType: 'unknown',
+  licenseStatus: 'unknown',
   updatedAt: '',
 };
 
@@ -99,6 +105,14 @@ export function PlayerProfileScreen({ token, onBack }: Props) {
     if (!token || saving) {
       return;
     }
+    if (
+      profile.footballType === 'unknown' ||
+      profile.licenseStatus === 'unknown'
+    ) {
+      setError(copy.playerProfile.matchingRequired);
+      setSaved(false);
+      return;
+    }
     setError(null);
     setSaved(false);
     setSaving(true);
@@ -109,6 +123,8 @@ export function PlayerProfileScreen({ token, onBack }: Props) {
       currentClub: profile.currentClub,
       availability: profile.availability,
       discoverable: profile.discoverable,
+      footballType: profile.footballType as PlayerFootballType,
+      licenseStatus: profile.licenseStatus as DeclaredLicenseStatus,
     };
     try {
       setProfile(await profileService.save(token, input));
@@ -155,6 +171,49 @@ export function PlayerProfileScreen({ token, onBack }: Props) {
         </>
       ) : (
         <>
+          <View style={styles.section}>
+            <View style={styles.sectionIntro}>
+              <Text style={styles.sectionTitle}>
+                {copy.playerProfile.matching}
+              </Text>
+              <Text style={styles.helper}>
+                {copy.playerProfile.matchingHint}
+              </Text>
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>{copy.signUp.footballType}</Text>
+              <View style={styles.choices}>
+                {(['amateur', 'professional', 'halisaha'] as const).map(
+                  value => (
+                    <Choice
+                      key={value}
+                      label={copy.football.types[value]}
+                      selected={profile.footballType === value}
+                      disabled={saving}
+                      onPress={() => update('footballType', value)}
+                    />
+                  ),
+                )}
+              </View>
+            </View>
+            <View style={styles.field}>
+              <Text style={styles.label}>{copy.signUp.licenseStatus}</Text>
+              <View style={styles.choices}>
+                {(['licensed', 'unlicensed'] as const).map(value => (
+                  <Choice
+                    key={value}
+                    label={copy.football.licenseStatuses[value]}
+                    selected={profile.licenseStatus === value}
+                    disabled={saving}
+                    onPress={() => update('licenseStatus', value)}
+                  />
+                ))}
+              </View>
+              <Text style={styles.helper}>
+                {copy.playerProfile.licenseDeclaration}
+              </Text>
+            </View>
+          </View>
           <View style={styles.section}>
             <View style={styles.sectionIntro}>
               <Text style={styles.sectionTitle}>

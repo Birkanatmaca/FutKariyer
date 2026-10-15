@@ -1,0 +1,64 @@
+package domain
+
+import (
+	"context"
+	"errors"
+
+	players "futcareer/backend/internal/players/domain"
+)
+
+var ErrForbidden = errors.New("discovery access denied")
+var ErrVerificationRequired = errors.New("provider verification required")
+var ErrNotFound = errors.New("discoverable profile not found")
+
+type Viewer struct {
+	ID       string
+	Role     string
+	Verified bool
+}
+
+// Profile is a public projection; credentials and contact information never enter discovery.
+type Profile struct {
+	ID            string
+	FullName      string
+	Role          string
+	Verified      bool
+	IsPro         bool
+	District      string
+	PlayerProfile *players.Profile
+}
+
+type Insights struct {
+	ProfileViews int `json:"profileViews"`
+	Followers    int `json:"followers"`
+	Following    int `json:"following"`
+}
+
+type Query struct {
+	ViewerID      string
+	Role          string
+	Search        string
+	Position      string
+	DominantFoot  string
+	Availability  string
+	FootballType  string
+	LicenseStatus string
+	Page          int
+	PageSize      int
+}
+
+type Page struct {
+	Items []Profile
+	Total int
+}
+
+type Repository interface {
+	List(context.Context, Query) (Page, error)
+	Get(context.Context, string, string) (Profile, error)
+	RecordView(context.Context, string, string, string) error
+	Following(context.Context, string, string) (bool, error)
+	Follow(context.Context, string, string, string, bool) error
+	Insights(context.Context, string) (Insights, error)
+	// Visitors returns the owner (with current Pro state) and the per-visitor aggregates of the window.
+	Visitors(context.Context, string) (VisitorOwner, []Visit, error)
+}

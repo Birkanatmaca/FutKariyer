@@ -2,12 +2,14 @@ import type {
   AccountForm,
   AdminRepository,
   AdminSection,
+  ProAction,
 } from '../domain/models';
 export function createAdminService(repository: AdminRepository) {
   return {
     list: (section: AdminSection, page: number, search: string) =>
       repository.list(section, page, search.trim()),
     get: (section: AdminSection, id: string) => repository.get(section, id),
+    clubOverview: (id: string) => repository.clubOverview(id),
     save(section: AdminSection, form: AccountForm, id?: string) {
       const normalized = {
         ...form,
@@ -15,6 +17,12 @@ export function createAdminService(repository: AdminRepository) {
         email: form.email.trim().toLowerCase(),
         username: form.username.trim().toLowerCase(),
         district: form.district.trim(),
+        description: form.description.trim(),
+        venueName: form.venueName.trim(),
+        venueAddress: form.venueAddress.trim(),
+        trainingGroundName: form.trainingGroundName.trim(),
+        trainingGroundAddress: form.trainingGroundAddress.trim(),
+        trainingSchedule: form.trainingSchedule.trim(),
       };
       return id
         ? repository.update(section, id, normalized)
@@ -24,6 +32,9 @@ export function createAdminService(repository: AdminRepository) {
       repository.remove(section, id),
     resetPassword: (section: AdminSection, id: string, password: string) =>
       repository.resetPassword(section, id, password),
+    proStatus: (id: string) => repository.proStatus(id),
+    changePro: (id: string, action: ProAction) =>
+      repository.changePro(id, action),
   };
 }
 export type AdminService = ReturnType<typeof createAdminService>;

@@ -1,9 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Brand } from '../../../shared/ui/Brand';
 import { Button } from '../../../shared/ui/Button';
 import { Feedback } from '../../../shared/ui/Feedback';
 import { copy } from '../../../shared/lib/copy';
-import type { Account } from '../../../shared/domain/account';
 import type { AdminSection } from '../domain/models';
 import type { AdminService } from '../application/admin-service';
 import { useAccountPage } from '../application/useAccountPage';
@@ -13,19 +11,13 @@ import { AccountEditor } from './AccountEditor';
 export function AdminPanel({
   service,
   section,
-  onSection,
-  user,
-  onLogout,
   logoutBusy,
-  logoutError,
+  onOpenClub,
 }: {
   service: AdminService;
   section: AdminSection;
-  onSection(section: AdminSection): void;
-  user: Account;
-  onLogout(): void;
   logoutBusy: boolean;
-  logoutError: string | null;
+  onOpenClub(id: string): void;
 }) {
   const [query, setQuery] = useState({ section, page: 1, search: '' });
   const [draft, setDraft] = useState('');
@@ -63,49 +55,7 @@ export function AdminPanel({
     reload();
   }
   return (
-    <div className="admin-layout">
-      <aside className="sidebar">
-        <Brand />
-        <p className="sidebar-label">{copy.panel.eyebrow}</p>
-        <nav aria-label={copy.panel.eyebrow}>
-          {(['users', 'clubs'] as const).map(value => (
-            <a
-              key={value}
-              href={'/securityadmin/' + value}
-              aria-current={section === value ? 'page' : undefined}
-              onClick={event => {
-                if (
-                  event.button === 0 &&
-                  !event.ctrlKey &&
-                  !event.metaKey &&
-                  !event.shiftKey &&
-                  !event.altKey
-                ) {
-                  event.preventDefault();
-                  onSection(value);
-                }
-              }}
-            >
-              <span aria-hidden="true">{value === 'users' ? '◎' : '▱'}</span>
-              {copy.panel[value]}
-              <span className="nav-arrow" aria-hidden="true">
-                ↗
-              </span>
-            </a>
-          ))}
-        </nav>
-        <div className="sidebar-account">
-          <span className="avatar">{user.fullName.slice(0, 1)}</span>
-          <div>
-            <strong>{user.fullName}</strong>
-            <span>{copy.admin}</span>
-          </div>
-        </div>
-        <Button variant="secondary" busy={logoutBusy} onClick={onLogout}>
-          {copy.panel.logout}
-          <span aria-hidden="true">↗</span>
-        </Button>
-      </aside>
+    <>
       <main className="panel-content">
         <header className="panel-header">
           <div>
@@ -129,7 +79,6 @@ export function AdminPanel({
             {section === 'clubs' ? copy.panel.newClub : copy.panel.newUser}
           </Button>
         </header>
-        <Feedback message={logoutError} />
         <Feedback message={notice} success />
         {section === 'clubs' && <p className="notice">{copy.panel.clubNote}</p>}
         <section className="list-panel" aria-label={copy.panel[section]}>
@@ -183,6 +132,7 @@ export function AdminPanel({
                         id: account.id,
                       })
                     }
+                    onOverview={account => onOpenClub(account.id)}
                   />
                 ) : (
                   <div className="empty">
@@ -244,6 +194,6 @@ export function AdminPanel({
           }}
         />
       )}
-    </div>
+    </>
   );
 }

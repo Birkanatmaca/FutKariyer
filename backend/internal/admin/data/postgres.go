@@ -18,22 +18,22 @@ var _ domain.Repository = (*Postgres)(nil)
 
 func New(db *sql.DB) *Postgres { return &Postgres{db: db} }
 
-const columns = `u.id,u.full_name,COALESCE(u.email,''),COALESCE(u.username,''),u.password_hash,u.role,u.city,u.active,u.created_at,c.district,c.updated_at`
+const columns = `u.id,u.full_name,COALESCE(u.email,''),COALESCE(u.username,''),u.password_hash,u.role,u.city,u.active,u.verified,u.created_at,c.football_type,c.district,c.description,c.venue_name,c.venue_address,c.training_ground_name,c.training_ground_address,c.training_schedule,c.updated_at`
 
 type scanner interface{ Scan(...any) error }
 
 func scan(row scanner) (domain.Record, error) {
 	var record domain.Record
-	var district sql.NullString
+	var clubValues [8]sql.NullString
 	var updated sql.NullTime
 	u := &record.User
-	err := row.Scan(&u.ID, &u.FullName, &u.Email, &u.Username, &u.PasswordHash, &u.Role, &u.City, &u.Active, &u.CreatedAt, &district, &updated)
+	err := row.Scan(&u.ID, &u.FullName, &u.Email, &u.Username, &u.PasswordHash, &u.Role, &u.City, &u.Active, &u.Verified, &u.CreatedAt, &clubValues[0], &clubValues[1], &clubValues[2], &clubValues[3], &clubValues[4], &clubValues[5], &clubValues[6], &clubValues[7], &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return record, auth.ErrNotFound
 	}
 	u.CreatedAt = u.CreatedAt.UTC()
-	if district.Valid {
-		record.Club = &clubs.Club{UserID: u.ID, District: district.String, UpdatedAt: updated.Time.UTC()}
+	if clubValues[0].Valid {
+		record.Club = &clubs.Club{UserID: u.ID, FootballType: clubValues[0].String, District: clubValues[1].String, Description: clubValues[2].String, VenueName: clubValues[3].String, VenueAddress: clubValues[4].String, TrainingGroundName: clubValues[5].String, TrainingGroundAddress: clubValues[6].String, TrainingSchedule: clubValues[7].String, UpdatedAt: updated.Time.UTC()}
 	}
 	return record, err
 }
@@ -99,7 +99,7 @@ func (r *Postgres) Create(ctx context.Context, record domain.Record) error {
 		return err
 	}
 	if record.Club != nil {
-		_, err = tx.ExecContext(ctx, "INSERT INTO clubs(user_id,district,updated_at) VALUES($1,$2,$3)", record.User.ID, record.Club.District, record.Club.UpdatedAt)
+		_, err = tx.ExecContext(ctx, `INSERT INTO clubs(user_id,football_type,district,description,venue_name,venue_address,training_ground_name,training_ground_address,training_schedule,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, record.User.ID, record.Club.FootballType, record.Club.District, record.Club.Description, record.Club.VenueName, record.Club.VenueAddress, record.Club.TrainingGroundName, record.Club.TrainingGroundAddress, record.Club.TrainingSchedule, record.Club.UpdatedAt)
 		if err != nil {
 			return err
 		}
@@ -132,12 +132,12 @@ func (r *Postgres) Update(ctx context.Context, record domain.Record) error {
 	}
 	u := record.User
 	// Roles cannot be changed through CRUD.
-	_, err = tx.ExecContext(ctx, "UPDATE users SET full_name=$2,email=NULLIF($3,''),username=NULLIF($4,''),active=$5 WHERE id=$1", u.ID, u.FullName, u.Email, u.Username, u.Active)
+	_, err = tx.ExecContext(ctx, "UPDATE users SET full_name=$2,email=NULLIF($3,''),username=NULLIF($4,''),active=$5,verified=$6,approval_status=CASE WHEN $5 THEN 'approved' ELSE approval_status END WHERE id=$1", u.ID, u.FullName, u.Email, u.Username, u.Active, u.Verified)
 	if err != nil {
 		return conflict(err)
 	}
 	if old.Role == "club" && record.Club != nil {
-		_, err = tx.ExecContext(ctx, "UPDATE clubs SET district=$2,updated_at=$3 WHERE user_id=$1", u.ID, record.Club.District, record.Club.UpdatedAt)
+		_, err = tx.ExecContext(ctx, `UPDATE clubs SET football_type=$2,district=$3,description=$4,venue_name=$5,venue_address=$6,training_ground_name=$7,training_ground_address=$8,training_schedule=$9,updated_at=$10 WHERE user_id=$1`, u.ID, record.Club.FootballType, record.Club.District, record.Club.Description, record.Club.VenueName, record.Club.VenueAddress, record.Club.TrainingGroundName, record.Club.TrainingGroundAddress, record.Club.TrainingSchedule, record.Club.UpdatedAt)
 		if err != nil {
 			return err
 		}

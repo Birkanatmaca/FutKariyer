@@ -1,4 +1,4 @@
-export type AccountRole = 'player' | 'coach' | 'club' | 'admin';
+export type AccountRole = 'player' | 'coach' | 'club' | 'organizer' | 'admin';
 export type Account = {
   id: string;
   fullName: string;
@@ -7,6 +7,7 @@ export type Account = {
   role: AccountRole;
   city: string;
   active: boolean;
+  verified: boolean;
   createdAt: string;
 };
 export function isAccount(value: unknown): value is Account {
@@ -19,8 +20,9 @@ export function isAccount(value: unknown): value is Account {
     typeof candidate.username === 'string' &&
     typeof candidate.city === 'string' &&
     typeof candidate.active === 'boolean' &&
+    typeof candidate.verified === 'boolean' &&
     typeof candidate.createdAt === 'string' &&
     Number.isFinite(Date.parse(candidate.createdAt)) &&
-    ['player', 'coach', 'club', 'admin'].includes(candidate.role)
+    ['player', 'coach', 'club', 'organizer', 'admin'].includes(candidate.role)
   );
 }

@@ -19,12 +19,17 @@ export async function request<T>(
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), 12000);
   try {
+    const multipart = options.body instanceof FormData;
     const response = await fetch('/api' + path, {
       method: options.method || 'GET',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
+      headers: multipart ? undefined : { 'Content-Type': 'application/json' },
       body:
-        options.body === undefined ? undefined : JSON.stringify(options.body),
+        options.body === undefined
+          ? undefined
+          : multipart
+          ? (options.body as FormData)
+          : JSON.stringify(options.body),
       signal: controller.signal,
     });
     if (response.status === 401 && path !== '/v1/admin/auth/login') {

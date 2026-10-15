@@ -17,7 +17,7 @@ func TestPersistentAuthLifecycle(t *testing.T) {
 	repo := data.New(database.DB)
 	service := application.New(repo, time.Hour)
 	ctx := context.Background()
-	input := application.RegisterInput{FullName: "Deniz Yılmaz", Email: " DENIZ@example.com ", Password: "strong-password-123", Role: "player"}
+	input := application.RegisterInput{FullName: "Deniz Yılmaz", Email: " DENIZ@example.com ", Password: "strong-password-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed"}
 	registered, err := service.Register(ctx, input)
 	if err != nil {
 		t.Fatal(err)
@@ -73,7 +73,7 @@ func TestRegistrationRejectsInvalidAccounts(t *testing.T) {
 	service := application.New(nil, time.Hour)
 	_, err := service.Register(context.Background(), application.RegisterInput{FullName: "X", Email: "invalid", Password: "short", Role: "admin"})
 	var fields application.ValidationError
-	if !errors.As(err, &fields) || len(fields) != 4 {
+	if !errors.As(err, &fields) || len(fields) != 6 {
 		t.Fatalf("invalid account was not fully rejected: %v", err)
 	}
 }

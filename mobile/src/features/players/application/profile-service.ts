@@ -1,7 +1,9 @@
 import type { PlayerProfileRepository } from '../domain/repository';
 import type { SavePlayerProfile } from '../domain/profile';
 
-export function createPlayerProfileService(repository: PlayerProfileRepository) {
+export function createPlayerProfileService(
+  repository: PlayerProfileRepository,
+) {
   return {
     get(token: string) {
       return repository.get(token);
@@ -15,3 +17,6 @@ export function createPlayerProfileService(repository: PlayerProfileRepository) 
     },
   };
 }
+export type PlayerProfileService = ReturnType<
+  typeof createPlayerProfileService
+>;

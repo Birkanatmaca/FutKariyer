@@ -12,3 +12,6 @@ backend/bin/
 artifacts/
 frontend/dist/
 .DS_Store
+
+deploy/out/
+deploy/.env

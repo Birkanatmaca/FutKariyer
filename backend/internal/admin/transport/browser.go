@@ -18,7 +18,10 @@ type BrowserConfig struct {
 	secure bool
 }
 
-func BrowserOrigin(raw string) (BrowserConfig, error) {
+// BrowserOrigin validates the admin panel origin. Plain HTTP is accepted only
+// for loopback, or when allowInsecure is set explicitly (ADMIN_ALLOW_INSECURE_HTTP)
+// for a server without a domain yet; the session cookie is then sent unencrypted.
+func BrowserOrigin(raw string, allowInsecure bool) (BrowserConfig, error) {
 	parsed, err := url.Parse(raw)
 	if err != nil || parsed.Host == "" || parsed.User != nil || (parsed.Path != "" && parsed.Path != "/") || parsed.RawQuery != "" || parsed.Fragment != "" {
 		return BrowserConfig{}, errors.New("ADMIN_ORIGIN must contain only scheme and host, for example https://example.com")
@@ -26,8 +29,8 @@ func BrowserOrigin(raw string) (BrowserConfig, error) {
 	host := strings.ToLower(parsed.Hostname())
 	ip := net.ParseIP(host)
 	loopback := host == "localhost" || (ip != nil && ip.IsLoopback())
-	if parsed.Scheme != "https" && !(parsed.Scheme == "http" && loopback) {
-		return BrowserConfig{}, errors.New("ADMIN_ORIGIN requires HTTPS except for localhost development")
+	if parsed.Scheme != "https" && !(parsed.Scheme == "http" && (loopback || allowInsecure)) {
+		return BrowserConfig{}, errors.New("ADMIN_ORIGIN requires HTTPS except for localhost development or ADMIN_ALLOW_INSECURE_HTTP=true")
 	}
 	parsed.Path = ""
 	parsed.Host = strings.ToLower(parsed.Host)
@@ -50,7 +53,18 @@ func cookieToken(r *http.Request) string {
 	}
 	return cookie.Value
 }
-func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
+
+// bearerToken returns the token of an "Authorization: Bearer" header, used by the mobile app.
+func bearerToken(r *http.Request) (string, bool) {
+	value := r.Header.Get("Authorization")
+	if !strings.HasPrefix(value, "Bearer ") {
+		return "", false
+	}
+	return strings.TrimSpace(strings.TrimPrefix(value, "Bearer ")), true
+}
+
+// allowLogin rate-limits admin login attempts per client address.
+func (h *Handler) allowLogin(w http.ResponseWriter, r *http.Request) bool {
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		host = r.RemoteAddr
@@ -58,6 +72,31 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	if !h.limiter.Allow(host) {
 		w.Header().Set("Retry-After", "60")
 		writeError(w, 429, "rate_limited", "Çok fazla deneme yaptın. Bir dakika sonra tekrar dene.", nil)
+		return false
+	}
+	return true
+}
+
+// tokenLogin signs an admin in from the mobile app and returns the session
+// token in the body; the web panel keeps using the HttpOnly cookie login.
+func (h *Handler) tokenLogin(w http.ResponseWriter, r *http.Request) {
+	if !h.allowLogin(w, r) {
+		return
+	}
+	var in auth.LoginInput
+	if !decode(w, r, &in) {
+		return
+	}
+	result, err := h.auth.AdminLogin(r.Context(), in)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, map[string]any{"token": result.Token, "user": result.User, "expiresAt": result.ExpiresAt})
+}
+
+func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
+	if !h.allowLogin(w, r) {
 		return
 	}
 	var in auth.LoginInput
@@ -80,10 +119,16 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	write(w, 200, map[string]any{"user": result.User, "expiresAt": result.ExpiresAt})
 }
 func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
-	if err := h.auth.Logout(r.Context(), cookieToken(r)); err != nil {
+	token, bearer := bearerToken(r)
+	if !bearer {
+		token = cookieToken(r)
+	}
+	if err := h.auth.Logout(r.Context(), token); err != nil {
 		failure(w, err)
 		return
 	}
-	h.clearCookie(w)
+	if !bearer {
+		h.clearCookie(w)
+	}
 	w.WriteHeader(204)
 }

@@ -8,32 +8,44 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Compass, House, MessagesSquare, UserRound } from 'lucide-react-native';
+import {
+  Ellipsis,
+  House,
+  Shield,
+  Trophy,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { copy } from '../shared/lib/copy';
 import { useReducedMotion } from '../shared/lib/useReducedMotion';
-import { colors, radius, space } from '../styles/tokens';
-const icons = {
+import { colors, radius, shadow, space } from '../styles/tokens';
+import { FootballTabIcon } from './FootballTabIcon';
+// The Social tab always renders the raised football button instead.
+type TabIcon = LucideIcon;
+const userIcons: Record<string, TabIcon> = {
   Home: House,
-  Discover: Compass,
-  Connections: MessagesSquare,
-  Profile: UserRound,
+  Leagues: Trophy,
+  Teams: Shield,
+  More: Ellipsis,
 };
-type TabName = keyof typeof icons;
 function TabItem({
   name,
+  label,
+  icon: Icon,
   active,
   onPress,
   onLongPress,
 }: {
-  name: TabName;
+  name: string;
+  label: string;
+  icon: TabIcon;
   active: boolean;
   onPress(): void;
   onLongPress(): void;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
-  const Icon = icons[name];
+  const social = name === 'Social';
   const reducedMotion = useReducedMotion();
   function press() {
     if (reducedMotion) {
@@ -44,11 +56,11 @@ function TabItem({
       Animated.timing(scale, {
         toValue: 0.94,
         duration: 75,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.spring(scale, {
         toValue: 1,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
         speed: 24,
         bounciness: 4,
       }),
@@ -58,36 +70,59 @@ function TabItem({
   return (
     <Pressable
       accessibilityRole="tab"
-      accessibilityLabel={copy.tabs[name]}
+      accessibilityLabel={label}
       accessibilityState={{ selected: active }}
+      aria-selected={active}
       onPress={press}
       onLongPress={onLongPress}
-      style={styles.item}
-      hitSlop={4}
+      style={[styles.item, social && styles.socialItem]}
     >
       <Animated.View
         style={[
           styles.capsule,
-          active && styles.activeCapsule,
+          social && styles.socialCapsule,
+          active && !social && styles.activeCapsule,
           { transform: [{ scale }] },
         ]}
       >
-        <Icon
-          size={22}
-          color={active ? colors.brand : colors.secondary}
-          strokeWidth={active ? 2.4 : 1.8}
-        />
+        {social ? (
+          <View
+            style={[styles.socialCircle, active && styles.activeSocialCircle]}
+          >
+            <FootballTabIcon />
+          </View>
+        ) : (
+          <Icon
+            size={22}
+            color={active ? colors.brand : colors.secondary}
+            strokeWidth={active ? 2.4 : 1.8}
+          />
+        )}
         <Text
           numberOfLines={1}
-          style={[styles.label, active && styles.activeLabel]}
+          style={[
+            styles.label,
+            social && styles.socialLabel,
+            active && styles.activeLabel,
+          ]}
         >
-          {copy.tabs[name]}
+          {label}
         </Text>
+        {active && !social ? <View style={styles.activeDot} /> : null}
       </Animated.View>
     </Pressable>
   );
 }
-export function FutTabBar({ state, navigation }: BottomTabBarProps) {
+// The admin shell reuses the same bar with its own tab names and icons.
+export function FutTabBar({
+  state,
+  navigation,
+  icons = userIcons,
+  labels = copy.tabs,
+}: BottomTabBarProps & {
+  icons?: Record<string, TabIcon>;
+  labels?: Record<string, string>;
+}) {
   const insets = useSafeAreaInsets();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   useEffect(() => {
@@ -115,13 +150,16 @@ export function FutTabBar({ state, navigation }: BottomTabBarProps) {
       ]}
     >
       <View style={styles.bar}>
+        <View style={styles.barSurface} />
         {state.routes.map((route, index) => {
-          const name = route.name as TabName;
+          const name = route.name;
           const active = state.index === index;
           return (
             <TabItem
               key={route.key}
               name={name}
+              label={labels[name] ?? name}
+              icon={icons[name] ?? Ellipsis}
               active={active}
               onPress={() => {
                 const event = navigation.emit({
@@ -149,8 +187,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: space.lg,
-    paddingTop: space.sm,
+    paddingHorizontal: space.md,
+    paddingTop: space.xs,
   },
   bar: {
     alignSelf: 'center',
@@ -158,30 +196,58 @@ const styles = StyleSheet.create({
     maxWidth: 460,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: space.sm,
-    gap: space.xs,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    elevation: 8,
-    shadowColor: colors.bg,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    padding: space.xs,
+    paddingTop: 30,
   },
-  item: { flex: 1, minHeight: 56, justifyContent: 'center' },
+  barSurface: {
+    pointerEvents: 'none',
+    position: 'absolute',
+    top: 26,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    ...shadow.layer,
+  },
+  item: { flex: 1, minWidth: 44, minHeight: 56, justifyContent: 'center' },
+  socialItem: { marginTop: -28, minHeight: 84, minWidth: 66 },
   capsule: {
     minHeight: 56,
     justifyContent: 'center',
     alignItems: 'center',
     gap: space.xs,
     borderRadius: radius.md,
-    paddingHorizontal: space.xs,
   },
-  activeCapsule: { backgroundColor: colors.brandWash },
+  activeCapsule: { backgroundColor: colors.brandWash, borderRadius: radius.lg },
+  activeDot: {
+    position: 'absolute',
+    bottom: 2,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.brand,
+  },
+  socialCapsule: { minHeight: 84 },
+  socialCircle: {
+    position: 'absolute',
+    top: 0,
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    borderWidth: 2,
+    borderColor: colors.brand,
+    backgroundColor: colors.raised,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadow.glow,
+  },
+  activeSocialCircle: { backgroundColor: colors.brand },
+  socialLabel: { position: 'absolute', bottom: 4, fontWeight: '700' },
   label: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '600',
     color: colors.secondary,
     flexShrink: 1,

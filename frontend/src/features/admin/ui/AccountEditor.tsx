@@ -3,9 +3,14 @@ import { ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
 import { Button } from '../../../shared/ui/Button';
 import { Feedback } from '../../../shared/ui/Feedback';
-import type { AccountForm, AdminSection } from '../domain/models';
+import {
+  proEligibleRoles,
+  type AccountForm,
+  type AdminSection,
+} from '../domain/models';
 import type { AdminService } from '../application/admin-service';
 import { AccountFields } from './AccountFields';
+import { AccountProActions } from './AccountProActions';
 import { AccountSecurityActions } from './AccountSecurityActions';
 
 export function AccountEditor({
@@ -26,10 +31,18 @@ export function AccountEditor({
     fullName: '',
     email: '',
     username: '',
+    footballType: 'unknown',
     district: '',
+    description: '',
+    venueName: '',
+    venueAddress: '',
+    trainingGroundName: '',
+    trainingGroundAddress: '',
+    trainingSchedule: '',
     password: '',
     role: section === 'clubs' ? 'club' : 'player',
     active: true,
+    verified: false,
   });
   const [loading, setLoading] = useState(!!id);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -62,6 +75,7 @@ export function AccountEditor({
         }
         setForm({
           ...account,
+          footballType: account.footballType || 'unknown',
           role: account.role,
           password: '',
         });
@@ -170,6 +184,14 @@ export function AccountEditor({
                 </Button>
               </div>
             </form>
+            {id && proEligibleRoles.includes(form.role) && (
+              <AccountProActions
+                service={service}
+                id={id}
+                disabled={busy}
+                onBusy={setActionBusy}
+              />
+            )}
             {id && (
               <AccountSecurityActions
                 service={service}

@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"net/mail"
+	"regexp"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -21,10 +22,12 @@ type ValidationError map[string]string
 func (e ValidationError) Error() string { return "Bilgilerini kontrol edip tekrar dene." }
 
 type RegisterInput struct {
-	FullName string `json:"fullName"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Role     string `json:"role"`
+	FullName      string `json:"fullName"`
+	Email         string `json:"email"`
+	Password      string `json:"password"`
+	Role          string `json:"role"`
+	FootballType  string `json:"footballType"`
+	LicenseStatus string `json:"licenseStatus"`
 }
 type LoginInput struct {
 	Identifier string `json:"identifier"`
@@ -37,6 +40,7 @@ type PublicUser struct {
 	Email     string    `json:"email"`
 	Username  string    `json:"username"`
 	Active    bool      `json:"active"`
+	Verified  bool      `json:"verified"`
 	Role      string    `json:"role"`
 	City      string    `json:"city"`
 	CreatedAt time.Time `json:"createdAt"`
@@ -58,7 +62,7 @@ func New(repo domain.Repository, ttl time.Duration) *Service {
 	return &Service{repo: repo, ttl: ttl, dummyHash: dummy, now: time.Now}
 }
 func Public(u domain.User) PublicUser {
-	return PublicUser{ID: u.ID, FullName: u.FullName, Email: u.Email, Username: u.Username, Active: u.Active, Role: u.Role, City: u.City, CreatedAt: u.CreatedAt}
+	return PublicUser{ID: u.ID, FullName: u.FullName, Email: u.Email, Username: u.Username, Active: u.Active, Verified: u.Verified, Role: u.Role, City: u.City, CreatedAt: u.CreatedAt}
 }
 func canonicalEmail(email string) string { return strings.ToLower(strings.TrimSpace(email)) }
 func validEmail(email string) bool {
@@ -81,6 +85,12 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	if in.Role != "player" {
 		fields["role"] = "Kendi kaydını yalnızca sporcu olarak oluşturabilirsin."
 	}
+	if in.FootballType != "amateur" && in.FootballType != "professional" && in.FootballType != "halisaha" {
+		fields["footballType"] = "Futbol türünü seç."
+	}
+	if in.LicenseStatus != "licensed" && in.LicenseStatus != "unlicensed" {
+		fields["licenseStatus"] = "Lisans durumunu seç."
+	}
 	if len(fields) > 0 {
 		return AuthResult{}, fields
 	}
@@ -92,7 +102,7 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	if _, err = rand.Read(idBytes); err != nil {
 		return AuthResult{}, err
 	}
-	user := domain.User{ID: hex.EncodeToString(idBytes), FullName: in.FullName, Email: in.Email, PasswordHash: string(hash), Role: in.Role, City: "Ankara", Active: true, CreatedAt: s.now().UTC()}
+	user := domain.User{ID: hex.EncodeToString(idBytes), FullName: in.FullName, Email: in.Email, PasswordHash: string(hash), Role: in.Role, City: "Ankara", FootballType: in.FootballType, LicenseStatus: in.LicenseStatus, Active: true, CreatedAt: s.now().UTC()}
 	token, session, err := s.newSession(user.ID)
 	if err != nil {
 		return AuthResult{}, err
@@ -121,7 +131,17 @@ func (s *Service) login(ctx context.Context, in LoginInput, audience string) (Au
 	if err != nil {
 		return AuthResult{}, err
 	}
-	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)) != nil || !user.Active {
+	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)) != nil {
+		return AuthResult{}, domain.ErrUnauthorized
+	}
+	// The application state is only revealed after the password matched.
+	if !user.Active {
+		switch user.ApprovalStatus {
+		case "pending":
+			return AuthResult{}, domain.ErrPendingApproval
+		case "rejected":
+			return AuthResult{}, domain.ErrApplicationRejected
+		}
 		return AuthResult{}, domain.ErrUnauthorized
 	}
 	if (user.Role == "admin") != (audience == "admin") {
@@ -187,4 +207,82 @@ func (s *Service) newSession(userID string) (string, domain.Session, error) {
 	}
 	token := base64.RawURLEncoding.EncodeToString(bytes)
 	return token, domain.Session{Audience: "mobile", TokenHash: HashToken(token), UserID: userID, ExpiresAt: s.now().UTC().Add(s.ttl)}, nil
+}
+
+type ApplyInput struct {
+	Role         string `json:"role"`
+	FullName     string `json:"fullName"`
+	ContactName  string `json:"contactName"`
+	Username     string `json:"username"`
+	Email        string `json:"email"`
+	Password     string `json:"password"`
+	Phone        string `json:"phone"`
+	District     string `json:"district"`
+	FootballType string `json:"footballType"`
+	Note         string `json:"note"`
+}
+
+var phonePattern = regexp.MustCompile(`^[0-9 +()-]{0,30}$`)
+
+// Apply records a club or organizer sign-up. The account cannot sign in until an
+// administrator approves it, so no session is created here.
+func (s *Service) Apply(ctx context.Context, in ApplyInput) error {
+	repo, ok := s.repo.(domain.ApplicationRepository)
+	if !ok {
+		return errors.New("account applications are not supported by this repository")
+	}
+	in.FullName = strings.TrimSpace(in.FullName)
+	in.ContactName = strings.TrimSpace(in.ContactName)
+	in.Username = strings.ToLower(strings.TrimSpace(in.Username))
+	in.Email = canonicalEmail(in.Email)
+	in.Phone = strings.TrimSpace(in.Phone)
+	in.District = strings.TrimSpace(in.District)
+	in.Note = strings.TrimSpace(in.Note)
+	fields := ValidationError{}
+	if in.Role != "club" && in.Role != "organizer" {
+		fields["role"] = "Başvuru türü kulüp veya organizasyon olmalı."
+	}
+	if n := utf8.RuneCountInString(in.FullName); n < 2 || n > 80 {
+		fields["fullName"] = "Ad 2–80 karakter arasında olmalı."
+	}
+	if n := utf8.RuneCountInString(in.ContactName); n < 2 || n > 80 {
+		fields["contactName"] = "Yetkili kişinin adı 2–80 karakter olmalı."
+	}
+	if !usernamePattern.MatchString(in.Username) {
+		fields["username"] = "3–32 karakter; küçük Latin harfi, rakam, nokta, alt çizgi veya kısa çizgi kullan."
+	}
+	if !validEmail(in.Email) {
+		fields["email"] = "Geçerli bir e-posta adresi gir."
+	}
+	if utf8.RuneCountInString(in.Password) < 10 || len(in.Password) > 72 {
+		fields["password"] = "Şifre en az 10 karakter olmalı ve 72 bayttan uzun olmamalı."
+	}
+	if !phonePattern.MatchString(in.Phone) {
+		fields["phone"] = "Telefon en fazla 30 karakter olmalı ve yalnızca rakam, boşluk, +, -, ( ) içermeli."
+	}
+	if utf8.RuneCountInString(in.District) > 80 {
+		fields["district"] = "İlçe en fazla 80 karakter olabilir."
+	}
+	if utf8.RuneCountInString(in.Note) > 500 {
+		fields["note"] = "Not en fazla 500 karakter olabilir."
+	}
+	if in.Role == "club" && in.FootballType != "amateur" && in.FootballType != "professional" && in.FootballType != "halisaha" {
+		fields["footballType"] = "Takım türünü seç."
+	}
+	if in.Role != "club" {
+		in.FootballType = ""
+	}
+	if len(fields) > 0 {
+		return fields
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	idBytes := make([]byte, 16)
+	if _, err = rand.Read(idBytes); err != nil {
+		return err
+	}
+	user := domain.User{ID: hex.EncodeToString(idBytes), FullName: in.FullName, Email: in.Email, Username: in.Username, PasswordHash: string(hash), Role: in.Role, City: "Ankara", CreatedAt: s.now().UTC()}
+	return repo.Apply(ctx, user, domain.Application{ContactName: in.ContactName, Phone: in.Phone, District: in.District, Note: in.Note, FootballType: in.FootballType})
 }

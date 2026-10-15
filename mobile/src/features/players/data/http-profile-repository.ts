@@ -7,25 +7,10 @@ import type {
   PlayerProfile,
   SavePlayerProfile,
 } from '../domain/profile';
-
-function isProfile(value: unknown): value is PlayerProfile {
-  const candidate = value as PlayerProfile;
-  return (
-    !!candidate &&
-    typeof candidate.position === 'string' &&
-    ['', 'right', 'left', 'both'].includes(candidate.dominantFoot) &&
-    Number.isInteger(candidate.experienceYears) &&
-    typeof candidate.currentClub === 'string' &&
-    ['seeking_team', 'open_to_offers', 'not_available'].includes(
-      candidate.availability,
-    ) &&
-    typeof candidate.discoverable === 'boolean' &&
-    typeof candidate.updatedAt === 'string'
-  );
-}
+import { isPlayerProfile } from '../domain/profile';
 
 function profile(value: unknown): PlayerProfile {
-  if (!isProfile(value)) {
+  if (!isPlayerProfile(value)) {
     throw new ApiError(copy.form.unexpected);
   }
   return value;

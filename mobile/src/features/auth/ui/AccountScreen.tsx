@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { LockKeyhole } from 'lucide-react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ArrowLeft, LockKeyhole } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
@@ -10,9 +10,14 @@ import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import { useAuth } from '../application/AuthProvider';
 export function AccountScreen({
-  onEditPlayerProfile,
+  onBack,
+  settings = !!onBack,
+  extra,
 }: {
-  onEditPlayerProfile?: () => void;
+  onBack?: () => void;
+  settings?: boolean;
+  // Settings supplied by the app shell (e.g. Pro private browsing).
+  extra?: React.ReactNode;
 } = {}) {
   const { user, signOut } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -45,7 +50,11 @@ export function AccountScreen({
   }
   const details = [
     [
-      user.role === 'club' ? copy.profile.clubName : copy.profile.name,
+      user.role === 'club'
+        ? copy.profile.clubName
+        : user.role === 'organizer'
+        ? copy.profile.organizerName
+        : copy.profile.name,
       user.fullName,
     ],
     [
@@ -56,10 +65,22 @@ export function AccountScreen({
   ];
   return (
     <Screen>
+      {onBack && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={copy.form.back}
+          onPress={onBack}
+          style={styles.back}
+        >
+          <ArrowLeft size={20} color={colors.text} />
+        </Pressable>
+      )}
       <PageHeader
         eyebrow={copy.profile.eyebrow}
-        title={copy.profile.title}
-        description={copy.profile.description}
+        title={settings ? copy.playerOverview.settings : copy.profile.title}
+        description={
+          settings ? copy.playerOverview.settingsHint : copy.profile.description
+        }
       />
       <View style={styles.identity}>
         <View style={styles.avatar}>
@@ -70,18 +91,6 @@ export function AccountScreen({
           <Text style={styles.role}>{copy.roles[user.role]}</Text>
         </View>
       </View>
-      {user.role === 'player' && onEditPlayerProfile ? (
-        <View style={styles.football}>
-          <Text accessibilityRole="header" style={styles.footballTitle}>
-            {copy.profile.footballTitle}
-          </Text>
-          <Text style={styles.footballBody}>{copy.profile.footballBody}</Text>
-          <Button
-            label={copy.profile.editPlayerProfile}
-            onPress={onEditPlayerProfile}
-          />
-        </View>
-      ) : null}
       <View style={styles.details}>
         <Text style={styles.eyebrow}>{copy.profile.account}</Text>
         {details.map(([label, value]) => (
@@ -102,6 +111,7 @@ export function AccountScreen({
           </View>
         </View>
       )}
+      {settings ? extra : null}
       <Button
         label={copy.profile.logout}
         secondary
@@ -113,6 +123,14 @@ export function AccountScreen({
   );
 }
 const styles = StyleSheet.create({
+  back: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   identity: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -138,14 +156,6 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   role: { fontSize: 13, color: colors.secondary },
-  football: {
-    gap: space.md,
-    paddingVertical: space.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  footballTitle: { color: colors.text, fontSize: 18, fontWeight: '700' },
-  footballBody: { color: colors.secondary, fontSize: 13, lineHeight: 21 },
   details: {
     borderRadius: radius.md,
     backgroundColor: colors.surface,

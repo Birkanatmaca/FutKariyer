@@ -1,0 +1,5985 @@
+[
+  {
+    "id": "1-fc-kaiserslautern",
+    "name": "1. FC Kaiserslautern",
+    "espnId": "130",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8466",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/130.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "1-fc-koln",
+    "name": "1. FC Köln",
+    "espnId": "122",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q104770",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/122.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "1-fc-nurnberg",
+    "name": "1. FC Nürnberg",
+    "espnId": "269",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q15786",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/269.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "1-fc-pforzheim",
+    "name": "1. FC Pforzheim",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q162364"
+  },
+  {
+    "id": "1-fc-slovacko",
+    "name": "1. FC Slovácko",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q847499"
+  },
+  {
+    "id": "1-fc-union-berlin",
+    "name": "1. FC Union Berlin",
+    "espnId": "598",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q141971",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/598.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "1-fsv-mainz-05",
+    "name": "1. FSV Mainz 05",
+    "espnId": "2950",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q105254",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2950.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "a-c-lumezzane",
+    "name": "AC Lumezzane",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q289339"
+  },
+  {
+    "id": "a-c-perugia-calcio",
+    "name": "Perugia Calcio",
+    "espnId": "116",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16344",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/116.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "a-c-prato",
+    "name": "A.C. Prato",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q289656"
+  },
+  {
+    "id": "a-c-r-messina",
+    "name": "ACR Messina",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q29390"
+  },
+  {
+    "id": "a-c-reggiana-1919",
+    "name": "AC Reggiana 1919",
+    "espnId": "3942",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q289707",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3942.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "a-c-sambonifacese",
+    "name": "A.C. Sambonifacese",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3470711"
+  },
+  {
+    "id": "a-e-kifisia-f-c",
+    "name": "AE Kifisia FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16245443"
+  },
+  {
+    "id": "a-s-excelsior",
+    "name": "A.S. Excelsior",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q60785879"
+  },
+  {
+    "id": "aalesunds-fk",
+    "name": "Aalesunds FK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q214992"
+  },
+  {
+    "id": "aarhus-gymnastikforening",
+    "name": "Aarhus GF",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q301431"
+  },
+  {
+    "id": "abha",
+    "name": "Abha FC",
+    "espnId": "21833",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2620016",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/21833.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ac-bellinzona",
+    "name": "AC Bellinzona",
+    "espnId": "7690",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q289112",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ac-chievoverona",
+    "name": "AC ChievoVerona",
+    "espnId": "238",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2037",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/238.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ac-nagano-parceiro",
+    "name": "AC Nagano Parceiro",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q289451"
+  },
+  {
+    "id": "ac-semassi-f-c",
+    "name": "AC Semassi F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2819082"
+  },
+  {
+    "id": "ac-sparta-prague",
+    "name": "AC Sparta Prag",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q193481"
+  },
+  {
+    "id": "accra-hearts-of-oak-sc",
+    "name": "Accra Hearts of Oak SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q339560"
+  },
+  {
+    "id": "acf-fiorentina",
+    "name": "ACF Fiorentina",
+    "espnId": "109",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2052",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/109.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ad-fafe",
+    "name": "AD Fafe",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q290860"
+  },
+  {
+    "id": "admira-wacker",
+    "name": "FC Admira Wacker Mödling",
+    "espnId": "11485",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q698702",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/11485.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ado-den-haag",
+    "name": "ADO Den Haag",
+    "espnId": "2726",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q24904",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2726.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "aek-athens-f-c",
+    "name": "AEK",
+    "espnId": "887",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q201584",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/887.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ael-limassol-fc",
+    "name": "AEL Limassol",
+    "espnId": "8357",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q291471",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "afc-bournemouth",
+    "name": "AFC Bournemouth",
+    "espnId": "349",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19568",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/349.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "aglianese-calcio-1923",
+    "name": "Aglianese Calcio 1923",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3606594"
+  },
+  {
+    "id": "agovv-apeldoorn",
+    "name": "AGOVV Apeldoorn",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q292618"
+  },
+  {
+    "id": "aik-fotboll",
+    "name": "AIK Fotboll",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q221602"
+  },
+  {
+    "id": "aj-auxerre",
+    "name": "AJ Auxerre",
+    "espnId": "172",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q182876",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/172.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ajax",
+    "name": "Ajax",
+    "espnId": "139",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q81888",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/139.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "al-ahli-fc",
+    "name": "Al-Ahli SC",
+    "espnId": "8346",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q44441",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/8346.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "al-ahli-sc",
+    "name": "Al Ahli SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q284452"
+  },
+  {
+    "id": "al-ahly-sc",
+    "name": "Al-Ahly",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q223566"
+  },
+  {
+    "id": "al-ain-fc",
+    "name": "Al Ain FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q812720"
+  },
+  {
+    "id": "al-arabi-sc",
+    "name": "RUMA SPORTİNG SAİNT FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q283760"
+  },
+  {
+    "id": "al-bidaa-sc",
+    "name": "Al Bidaa SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q60318566"
+  },
+  {
+    "id": "al-diriyah-club",
+    "name": "Diriye",
+    "espnId": "131746",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q7069287",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/131746.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "al-duhail-sc",
+    "name": "Lekhwiya SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1056948"
+  },
+  {
+    "id": "al-gharafa-sc",
+    "name": "Al-Gharafa",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q428211"
+  },
+  {
+    "id": "al-hilal-sfc",
+    "name": "El-Hilâl",
+    "espnId": "929",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q73965",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/929.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "al-ittifaq-f-c",
+    "name": "Al-Ittifaq F. C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q107337028"
+  },
+  {
+    "id": "al-ittihad-fc",
+    "name": "Ittihad FC",
+    "espnId": "2276",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q309480",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2276.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "al-jazira-club",
+    "name": "Al-Jazira Club",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q429630"
+  },
+  {
+    "id": "al-mokawloon-al-arab-sc",
+    "name": "El-Mukâvilûn'ül-Arab",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2073915"
+  },
+  {
+    "id": "al-nassr",
+    "name": "En-Nasr",
+    "espnId": "817",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q482764",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/817.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "al-rayyan",
+    "name": "Al-Rayyan",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q311268"
+  },
+  {
+    "id": "al-sadd-sports-club",
+    "name": "Al-Sadd SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q283545"
+  },
+  {
+    "id": "al-shabab-football-club",
+    "name": "Eş-Şebab",
+    "espnId": "793",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2636005",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/793.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "al-shahaniya-sports-club",
+    "name": "Al-Shahaniya Sports Club",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q4703218"
+  },
+  {
+    "id": "al-shamal-sports-club",
+    "name": "Al-Shamal Sports Club",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q812760"
+  },
+  {
+    "id": "alanyaspor",
+    "name": "Alanyaspor",
+    "espnId": "9078",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1636019",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9078.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "albirex-niigata",
+    "name": "Albirex Niigata",
+    "espnId": "7113",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q383358",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7113.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "altay-s-k",
+    "name": "Altay SK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q434929"
+  },
+  {
+    "id": "america-football-club",
+    "name": "America Football Club",
+    "espnId": "10982",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q463147",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "america-futebol-clube",
+    "name": "América Futebol Clube",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q338285"
+  },
+  {
+    "id": "amiens-sc",
+    "name": "Amiens SC",
+    "espnId": "3335",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q866884",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3335.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "amrun-spartans-f-c",
+    "name": "Ħamrun Spartans FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q343030"
+  },
+  {
+    "id": "ankara-keciorengucu-s-k",
+    "name": "Ankara Keçiörengücü SK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1536956"
+  },
+  {
+    "id": "antalyaspor",
+    "name": "Antalyaspor",
+    "espnId": "3794",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q43710",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3794.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "antiguoko",
+    "name": "Antiguoko",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1967477"
+  },
+  {
+    "id": "apollon-smyrnis-f-c",
+    "name": "Apollon Smyrni FC",
+    "espnId": "15722",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2001271",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/15722.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "arabian-falcons-fc",
+    "name": "Arabian Falcons FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q130493288"
+  },
+  {
+    "id": "argentinos-juniors",
+    "name": "Argentinos Juniors",
+    "espnId": "3",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q220621",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "aris-limassol-f-c",
+    "name": "Aris Lemesu",
+    "espnId": "21530",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q367788",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/21530.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "aris-thessaloniki-f-c",
+    "name": "Aris FC",
+    "espnId": "11553",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q219926",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/11553.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "arminia-bielefeld",
+    "name": "Arminia Bielefeld",
+    "espnId": "2506",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q105844",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2506.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "arsenal",
+    "name": "Arsenal",
+    "espnId": "359",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q9617",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "arta-solar7",
+    "name": "Arta/Solar7",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16539606"
+  },
+  {
+    "id": "as-athletic-adjame",
+    "name": "AS Athlétic Adjamé",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q298200"
+  },
+  {
+    "id": "as-cannes",
+    "name": "AS Cannes",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q298267"
+  },
+  {
+    "id": "as-reggina-1914",
+    "name": "Reggina 1914",
+    "espnId": "117",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8476",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/117.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "as-saint-etienne",
+    "name": "AS Saint-Étienne",
+    "espnId": "178",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19521",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/178.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "asa-2013-targu-mure",
+    "name": "ASA 2013 Târgu Mureș",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q240563"
+  },
+  {
+    "id": "asc-jaraaf",
+    "name": "ASC Jaraaf",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q297345"
+  },
+  {
+    "id": "asec-mimosas",
+    "name": "ASEC Mimosas",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q852266"
+  },
+  {
+    "id": "associacao-academica-de-coimbra-o-a-f",
+    "name": "Associação Académica de Coimbra – OAF",
+    "espnId": "3698",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q243235",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3698.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "aston-villa-f-c",
+    "name": "Aston Villa FC",
+    "espnId": "362",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18711",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/362.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "atalanta-bc",
+    "name": "Atalanta BC",
+    "espnId": "105",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1886",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/105.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "athletic-club",
+    "name": "Athletic Bilbao",
+    "espnId": "93",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8687",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/93.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "athlitiki-enosi-larissa-f-c",
+    "name": "Larissa FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q275626"
+  },
+  {
+    "id": "atk",
+    "name": "Atlético de Kolkata",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16836329"
+  },
+  {
+    "id": "atlanta-united-fc",
+    "name": "Atlanta United FC",
+    "espnId": "18418",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16836317",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/18418.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "atlante-f-c",
+    "name": "Atlante FC",
+    "espnId": "226",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q849949",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/226.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "atlas-f-c",
+    "name": "Club Atlas",
+    "espnId": "216",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1023532",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/216.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "atletico",
+    "name": "Atlético Madrid",
+    "espnId": "1068",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8701",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1068.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "atletico-clube-alcanenense",
+    "name": "Atlético Clube Alcanenense",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q9636730"
+  },
+  {
+    "id": "atletico-dallas",
+    "name": "Atlético Dallas",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q131384708"
+  },
+  {
+    "id": "atletico-malagueno",
+    "name": "Atlético Malagueño",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q780509"
+  },
+  {
+    "id": "atletico-nacional",
+    "name": "Atlético Nacional",
+    "espnId": "5264",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q332605",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5264.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "audax-sao-paulo-esporte-clube",
+    "name": "Audax São Paulo Esporte Clube",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3277878"
+  },
+  {
+    "id": "avai-futebol-clube",
+    "name": "Avaí FC",
+    "espnId": "9966",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q374069",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9966.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "aviron-bayonnais-fc",
+    "name": "Aviron Bayonnais FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q791128"
+  },
+  {
+    "id": "avispa-fukuoka",
+    "name": "Avispa Fukuoka",
+    "espnId": "7107",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q791164",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7107.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "az-alkmaar",
+    "name": "AZ Alkmaar",
+    "espnId": "140",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q191264",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/140.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "azul-claro-numazu",
+    "name": "Azul Claro Numazu",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q11283587"
+  },
+  {
+    "id": "baghdad-fc",
+    "name": "Baghdad FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3195941"
+  },
+  {
+    "id": "bank-tejarat-f-c",
+    "name": "Bank Tejarat F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q4855990"
+  },
+  {
+    "id": "barcelona",
+    "name": "Barcelona",
+    "espnId": "83",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q7156",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/83.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "barnet-f-c",
+    "name": "Barnet FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q9408"
+  },
+  {
+    "id": "barnsley-f-c",
+    "name": "Barnsley FC",
+    "espnId": "397",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19442",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/397.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "barranquilla-f-c",
+    "name": "Barranquilla F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3293573"
+  },
+  {
+    "id": "bartinspor",
+    "name": "Bartınspor",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2886183"
+  },
+  {
+    "id": "batuque-fc",
+    "name": "Batuque FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3063074"
+  },
+  {
+    "id": "bayer-04-leverkusen",
+    "name": "Bayer 04 Leverkusen",
+    "espnId": "131",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q104761",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/131.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "bayern",
+    "name": "Bayern Münih",
+    "espnId": "132",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q15789",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/132.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "beerschot-a-c",
+    "name": "Beerschot AC",
+    "espnId": "991",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q646079",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/991.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "beijing-guoan-f-c",
+    "name": "Beijing Guoan",
+    "espnId": "2052",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q814738",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2052.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "benevento-calcio",
+    "name": "Benevento Calcio",
+    "espnId": "4059",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q652516",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/4059.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "besiktas",
+    "name": "Beşiktaş",
+    "espnId": "1895",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q172567",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1895.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "bg-pathum-united-f-c",
+    "name": "BG Pathum United F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1386893"
+  },
+  {
+    "id": "bhayangkara-f-c",
+    "name": "Bhayangkara F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q24264243"
+  },
+  {
+    "id": "birmingham-city-f-c",
+    "name": "Birmingham City FC",
+    "espnId": "392",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19444",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/392.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "blackburn-rovers-f-c",
+    "name": "Blackburn Rovers FC",
+    "espnId": "365",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19446",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/365.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "blaublitz-akita",
+    "name": "Blaublitz Akita",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q882425"
+  },
+  {
+    "id": "boca-juniors",
+    "name": "Boca Juniors",
+    "espnId": "5",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q170703",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "bodrum-fk",
+    "name": "Bodrum FK",
+    "espnId": "22321",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q20472948",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/22321.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "bologna-f-c-1909",
+    "name": "Bologna FC 1909",
+    "espnId": "107",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1893",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/107.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "bolton-wanderers-f-c",
+    "name": "Bolton Wanderers FC",
+    "espnId": "358",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19451",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/358.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "bordeaux",
+    "name": "Bordeaux",
+    "espnId": "159",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q172476",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/159.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "borussia-monchengladbach",
+    "name": "Borussia Mönchengladbach",
+    "espnId": "268",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q101959",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/268.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "borussia-neunkirchen",
+    "name": "Borussia Neunkirchen",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q819382"
+  },
+  {
+    "id": "boston-united-f-c",
+    "name": "Boston United FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q894605"
+  },
+  {
+    "id": "botafogo-f-r",
+    "name": "Botafogo FR",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q80958"
+  },
+  {
+    "id": "bradford-city-a-f-c",
+    "name": "Bradford City AFC",
+    "espnId": "387",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q48879",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/387.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "brasiliense-futebol-clube",
+    "name": "Brasiliense Futebol Clube",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q522566"
+  },
+  {
+    "id": "bremen",
+    "name": "Werder Bremen",
+    "espnId": "137",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q51976",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/137.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "brentford-f-c",
+    "name": "Brentford FC",
+    "espnId": "337",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19571",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/337.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "brescia-calcio",
+    "name": "Brescia Calcio",
+    "espnId": "108",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q6651",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/108.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "bridge-f-c",
+    "name": "Bridge F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1294346"
+  },
+  {
+    "id": "brighton-hove-albion-f-c",
+    "name": "Brighton & Hove Albion FC",
+    "espnId": "331",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19453",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/331.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "brisbane-roar-fc",
+    "name": "Brisbane Roar FC",
+    "espnId": "5326",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q839997",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5326.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "bristol-city-f-c",
+    "name": "Bristol City FC",
+    "espnId": "333",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19456",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/333.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "bryne-fk",
+    "name": "Bryne FK",
+    "espnId": "22530",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q995313",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/22530.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "bsc-old-boys",
+    "name": "BSC Old Boys",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q195765"
+  },
+  {
+    "id": "burnley-f-c",
+    "name": "Burnley FC",
+    "espnId": "379",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19458",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/379.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "burton-albion-f-c",
+    "name": "Burton Albion FC",
+    "espnId": "2567",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q48929",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2567.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "c-a-cerro",
+    "name": "CA Cerro",
+    "espnId": "5490",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q719344",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5490.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "c-d-fatima",
+    "name": "C.D. Fátima",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q176099"
+  },
+  {
+    "id": "c-d-guadalajara",
+    "name": "CD Guadalajara",
+    "espnId": "219",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q503321",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/219.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "c-d-tenerife",
+    "name": "CD Tenerife",
+    "espnId": "245",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q216661",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/245.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "c-s-maritimo",
+    "name": "CS Marítimo",
+    "espnId": "552",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q216503",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/552.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ca-river-ebro",
+    "name": "CA River Ebro",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q970474"
+  },
+  {
+    "id": "cagliari-calcio",
+    "name": "Cagliari Calcio",
+    "espnId": "2925",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1900",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2925.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "calcio-foggia-1920",
+    "name": "Calcio Foggia 1920",
+    "espnId": "4054",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q139399",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/4054.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "calcio-padova",
+    "name": "Calcio Padova",
+    "espnId": "3952",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8428",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3952.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cardiff-city-f-c",
+    "name": "Cardiff City FC",
+    "espnId": "347",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18662",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/347.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "casa-pia-a-c",
+    "name": "Casa Pia AC",
+    "espnId": "21581",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1046440",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/21581.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "catania-fc",
+    "name": "Catania FC",
+    "espnId": "3258",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2018",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3258.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "caykur-rizespor",
+    "name": "Çaykur Rizespor",
+    "espnId": "7656",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q272712",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7656.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cd-aurrera-de-vitoria",
+    "name": "CD Aurrerá de Vitoria",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q856073"
+  },
+  {
+    "id": "cd-baskonia",
+    "name": "CD Baskonia",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q727093"
+  },
+  {
+    "id": "cd-berceo",
+    "name": "CD Berceo",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q5010044"
+  },
+  {
+    "id": "cd-laguna-de-tenerife",
+    "name": "CD Laguna de Tenerife",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q5010092"
+  },
+  {
+    "id": "cd-leganes",
+    "name": "CD Leganés",
+    "espnId": "17534",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q856119",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/17534.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cd-logrones",
+    "name": "CD Logroñés",
+    "espnId": "7206",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q657865",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7206.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cd-toledo",
+    "name": "CD Toledo",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q856179"
+  },
+  {
+    "id": "ce-mataro",
+    "name": "CE Mataró",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3160759"
+  },
+  {
+    "id": "celtic-f-c",
+    "name": "Celtic FC",
+    "espnId": "256",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19593",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/256.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "central-coast-mariners-fc",
+    "name": "Central Coast Mariners FC",
+    "espnId": "5325",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q762294",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5325.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cerezo-osaka",
+    "name": "Cerezo Osaka",
+    "espnId": "7109",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q855809",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7109.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cf-balaguer",
+    "name": "CF Balaguer",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2578091"
+  },
+  {
+    "id": "cf-montreal",
+    "name": "CF Montréal",
+    "espnId": "9720",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q167615",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9720.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cf-platges-de-calvia",
+    "name": "CF Platges de Calvià",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q63107468"
+  },
+  {
+    "id": "cf-rayo-majadahonda",
+    "name": "CF Rayo Majadahonda",
+    "espnId": "9028",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2511257",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9028.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cfr-cluj",
+    "name": "CFR Cluj",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q205998"
+  },
+  {
+    "id": "charlton-athletic-f-c",
+    "name": "Charlton Athletic FC",
+    "espnId": "372",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19462",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/372.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "chelsea",
+    "name": "Chelsea",
+    "espnId": "363",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q9616",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/363.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "chemnitzer-fc",
+    "name": "Chemnitzer FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q161554"
+  },
+  {
+    "id": "chennaiyin-fc",
+    "name": "Chennaiyin FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q17594408"
+  },
+  {
+    "id": "chester-city-f-c",
+    "name": "Chester City FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1070732"
+  },
+  {
+    "id": "chicago-fire-fc",
+    "name": "Chicago Fire FC",
+    "espnId": "182",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q308683",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/182.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "clausenengen-fk",
+    "name": "Clausenengen FK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2699446"
+  },
+  {
+    "id": "club-almagro",
+    "name": "Club Almagro",
+    "espnId": "2",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1102935",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-america",
+    "name": "Club América",
+    "espnId": "227",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q459090",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/227.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-athletico-paranaense",
+    "name": "CA Paranaense",
+    "espnId": "3458",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q506832",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3458.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-atletico-3-de-febrero",
+    "name": "Club Atlético 3 de Febrero",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2134801"
+  },
+  {
+    "id": "club-atletico-independiente",
+    "name": "CA Independiente",
+    "espnId": "11",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q214978",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/11.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-atletico-osasuna",
+    "name": "CA Osasuna",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q10286"
+  },
+  {
+    "id": "club-atletico-penarol",
+    "name": "CA Peñarol",
+    "espnId": "2683",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16320",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2683.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-atletico-platense",
+    "name": "Club Atlético Platense",
+    "espnId": "7764",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q151907",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7764.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-atletico-river-plate",
+    "name": "Club Atlético River Plate",
+    "espnId": "16",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q15799",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/16.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-atletico-rosario-central",
+    "name": "CA Rosario Central",
+    "espnId": "17",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q318307",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/17.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-atletico-velez-sarsfield",
+    "name": "CA Vélez Sársfield",
+    "espnId": "21",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q215163",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/21.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-brugge-k-v",
+    "name": "Club Brugge KV",
+    "espnId": "570",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q190916",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/570.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-de-futbol-monterrey",
+    "name": "CF Monterrey",
+    "espnId": "220",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q768253",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/220.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-deportivo-el-nacional",
+    "name": "Club Deportivo El Nacional",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q249633"
+  },
+  {
+    "id": "club-deportivo-pamplona",
+    "name": "Club Deportivo Pamplona",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q956779"
+  },
+  {
+    "id": "club-deportivo-universidad-catolica",
+    "name": "Club Deportivo Universidad Católica",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q427446"
+  },
+  {
+    "id": "club-leon",
+    "name": "Club León",
+    "espnId": "228",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q633223",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/228.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-libertad",
+    "name": "Club Libertad",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q848642"
+  },
+  {
+    "id": "club-nacional-de-football",
+    "name": "Club Nacional de Fútbol",
+    "espnId": "2684",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q499616",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2684.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "club-social-y-deportivo-colo-colo",
+    "name": "CSD Colo-Colo",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q207373"
+  },
+  {
+    "id": "club-sport-emelec",
+    "name": "Club Sport Emelec",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q249612"
+  },
+  {
+    "id": "clube-atletico-mineiro",
+    "name": "Atlético Mineiro",
+    "espnId": "7632",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q270995",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7632.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "clube-de-regatas-do-flamengo",
+    "name": "Clube de Regatas do Flamengo",
+    "espnId": "819",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q17479",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/819.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "clube-de-regatas-guara",
+    "name": "Clube de Regatas Guará",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q777267"
+  },
+  {
+    "id": "clube-desportivo-das-aves",
+    "name": "CD Aves",
+    "espnId": "3711",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1023163",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cobh-ramblers-f-c",
+    "name": "Cobh Ramblers F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1104682"
+  },
+  {
+    "id": "cobreloa",
+    "name": "Cobreloa",
+    "espnId": "2678",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q643338",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2678.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "columbus-crew",
+    "name": "Columbus Crew",
+    "espnId": "183",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q457163",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/183.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "como-1907",
+    "name": "Como Calcio",
+    "espnId": "2572",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1120838",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2572.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "coritiba-f-c",
+    "name": "Coritiba FC",
+    "espnId": "3456",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q478317",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3456.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "coton-sport-fc-de-garoua",
+    "name": "Coton Sport FC de Garoua",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1051164"
+  },
+  {
+    "id": "coventry-city-f-c",
+    "name": "Coventry City FC",
+    "espnId": "388",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19580",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/388.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cr-vasco-da-gama",
+    "name": "CR Vasco da Gama",
+    "espnId": "3454",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q5014111",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3454.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cruzeiro-e-c",
+    "name": "Cruzeiro EC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q188277"
+  },
+  {
+    "id": "crystal-palace-f-c",
+    "name": "Crystal Palace FC",
+    "espnId": "384",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19467",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/384.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "cuoiovaldarno-r-f-c",
+    "name": "Cuoiovaldarno R.F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q602108"
+  },
+  {
+    "id": "d-c-united",
+    "name": "DC United",
+    "espnId": "193",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q238593",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/193.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "dagenham-redbridge-f-c",
+    "name": "Dagenham & Redbridge FC",
+    "espnId": "275",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q48938",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/275.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "dalian-professional-f-c",
+    "name": "Dalian Aerbin F.C.",
+    "espnId": "19139",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1157920",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/19139.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "danubio-f-c",
+    "name": "Danubio FC",
+    "espnId": "4817",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q584316",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/4817.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "dardanel-spor-a-s",
+    "name": "Çanakkale Dardanel SK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q179930"
+  },
+  {
+    "id": "de-graafschap",
+    "name": "De Graafschap",
+    "espnId": "144",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q221927",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/144.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "de-treffers",
+    "name": "De Treffers",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2229157"
+  },
+  {
+    "id": "defensa-y-justicia",
+    "name": "CSD Defensa y Justicia",
+    "espnId": "8950",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1024338",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/8950.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "defensor-sporting-club",
+    "name": "Defensor Sporting",
+    "espnId": "1007",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q844238",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1007.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "defensores-de-belgrano",
+    "name": "Defensores de Belgrano",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2979817"
+  },
+  {
+    "id": "delfino-pescara-1936",
+    "name": "Delfino Pescara 1936",
+    "espnId": "3290",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2710",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3290.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "deportivo-alaves",
+    "name": "Deportivo Alavés",
+    "espnId": "96",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q223620",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/96.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "deportivo-aragon",
+    "name": "Deportivo Aragón",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q741695"
+  },
+  {
+    "id": "deportivo-de-a-coruna",
+    "name": "Deportivo La Coruña",
+    "espnId": "90",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8760",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/90.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "deportivo-independiente-medellin",
+    "name": "Independiente Medellín",
+    "espnId": "2690",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q332527",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2690.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "deportivo-saprissa",
+    "name": "Deportivo Saprissa",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q868582"
+  },
+  {
+    "id": "deportivo-wanka",
+    "name": "Deportivo Wanka",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q5260770"
+  },
+  {
+    "id": "derby-county-f-c",
+    "name": "Derby County FC",
+    "espnId": "374",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19470",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/374.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "dijon-fco",
+    "name": "Dijon FCO",
+    "espnId": "3170",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q503317",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3170.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "djurgardens-if-fotboll",
+    "name": "Djurgårdens IF Fotboll",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q622430"
+  },
+  {
+    "id": "doncaster-rovers-f-c",
+    "name": "Doncaster Rovers FC",
+    "espnId": "279",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19589",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/279.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "dorados-de-sinaloa",
+    "name": "Dorados de Sinaloa",
+    "espnId": "3432",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1243720",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3432.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "dortmund",
+    "name": "Dortmund",
+    "espnId": "124",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q41420",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/124.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "dukla-prague",
+    "name": "FK Dukla Prag",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1199965"
+  },
+  {
+    "id": "dundee-united-f-c",
+    "name": "Dundee United FC",
+    "espnId": "264",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q192873",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/264.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "dynamo-dresden",
+    "name": "Dinamo Dresden",
+    "espnId": "7017",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q141931",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7017.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "e-c-vitoria",
+    "name": "Esporte Clube Vitória",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q274465"
+  },
+  {
+    "id": "eintracht-frankfurt",
+    "name": "Eintracht Frankfurt",
+    "espnId": "125",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q38245",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/125.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "elche-cf",
+    "name": "Elche CF",
+    "espnId": "3751",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q10512",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3751.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "emirates-club",
+    "name": "Emirates Club",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1191998"
+  },
+  {
+    "id": "empoli-fc",
+    "name": "Empoli FC",
+    "espnId": "2574",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q6703",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2574.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "en-avant-de-guingamp",
+    "name": "En avant Guingamp",
+    "espnId": "171",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q459148",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/171.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "enosi-neon-ypsona-digenis-ipsona",
+    "name": "Krasava ENY Ypsonas FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q17444660"
+  },
+  {
+    "id": "envigado-futbol-club",
+    "name": "Envigado Fútbol Club",
+    "espnId": "5481",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q332636",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5481.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "es-troyes-ac",
+    "name": "Troyes AC",
+    "espnId": "170",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q501693",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/170.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "esbjerg-fb",
+    "name": "Esbjerg fB",
+    "espnId": "12504",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q389879",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/12504.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "eskisehirspor",
+    "name": "Eskişehirspor",
+    "espnId": "6840",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q748445",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "esporte-clube-bahia",
+    "name": "EC Bahia",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q198032"
+  },
+  {
+    "id": "esporte-clube-juventude",
+    "name": "Esporte Clube Juventude",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q910453"
+  },
+  {
+    "id": "esporte-clube-pelotas",
+    "name": "Esporte Clube Pelotas",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2506413"
+  },
+  {
+    "id": "estudiantes-de-la-plata",
+    "name": "Estudiantes de La Plata",
+    "espnId": "8",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q214940",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/8.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "etoile-frejus-saint-raphael",
+    "name": "EFC Fréjus Saint-Raphaël",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q290481"
+  },
+  {
+    "id": "everton-f-c",
+    "name": "Everton FC",
+    "espnId": "368",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q5794",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/368.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "extremadura-ud",
+    "name": "Extremadura UD",
+    "espnId": "16741",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q994224",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/16741.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "eyupspor",
+    "name": "Eyüpspor",
+    "espnId": "20729",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q118919",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/20729.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "f-c-copenhagen",
+    "name": "FC Kopenhag",
+    "espnId": "909",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q188430",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/909.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "f-c-crotone",
+    "name": "FC Crotone",
+    "espnId": "3173",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q6690",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3173.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "f-c-ebedei",
+    "name": "F.C. Ebedei",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3747643"
+  },
+  {
+    "id": "f-c-lorient",
+    "name": "FC Lorient",
+    "espnId": "273",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q48911",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/273.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "f-c-pacos-de-ferreira",
+    "name": "FC Paços de Ferreira",
+    "espnId": "3713",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q371136",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3713.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fagiano-okayama",
+    "name": "Fagiano Okayama",
+    "espnId": "22522",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q595489",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/22522.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fatih-karagumruk-s-k",
+    "name": "Fatih Karagümrük SK",
+    "espnId": "20736",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1398111",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/20736.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-08-homburg",
+    "name": "FC 08 Homburg",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q137499"
+  },
+  {
+    "id": "fc-aarau",
+    "name": "FC Aarau",
+    "espnId": "3035",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q603271",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-akron-tolyatti",
+    "name": "Akron Tolyatti",
+    "espnId": "22271",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q65124755",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/22271.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-aktobe",
+    "name": "Aktöbe FK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q194170"
+  },
+  {
+    "id": "fc-amkar-perm",
+    "name": "FK Amkar Perm",
+    "espnId": "3791",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q274642",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3791.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-anzhi-makhachkala",
+    "name": "FK Anji Mahaçkala",
+    "espnId": "593",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19353",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/593.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-arge",
+    "name": "FC Argeş Piteşti",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q841245"
+  },
+  {
+    "id": "fc-augsburg",
+    "name": "FC Augsburg",
+    "espnId": "3841",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q15755",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3841.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-banik-ostrava",
+    "name": "FC Baník Ostrava",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q329471"
+  },
+  {
+    "id": "fc-banik-prievidza",
+    "name": "FC Baník Prievidza",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q17166548"
+  },
+  {
+    "id": "fc-basel",
+    "name": "FC Basel 1893",
+    "espnId": "989",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q189671",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/989.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-carl-zeiss-jena",
+    "name": "FC Carl Zeiss Jena",
+    "espnId": "9865",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q155186",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9865.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-chiasso",
+    "name": "FC Chiasso",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q668573"
+  },
+  {
+    "id": "fc-concordia-basel",
+    "name": "FC Concordia Basel",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q666289"
+  },
+  {
+    "id": "fc-den-bosch",
+    "name": "FC Den Bosch",
+    "espnId": "271",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q875169",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/271.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-desna-chernihiv",
+    "name": "FC Desna Chernihiv",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1980760"
+  },
+  {
+    "id": "fc-differdange-03",
+    "name": "FC Differdange 03",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q591339"
+  },
+  {
+    "id": "fc-dinamo-juni-minsk",
+    "name": "FC Dinamo-Juni Minsk",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q281861"
+  },
+  {
+    "id": "fc-dinamo-moscow",
+    "name": "FK Dinamo Moskova",
+    "espnId": "596",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q17497",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/596.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-dinamo-tbilisi",
+    "name": "FC Dinamo Tiflis",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q201006"
+  },
+  {
+    "id": "fc-dynamo-kyiv",
+    "name": "FK Dinamo Kiev",
+    "espnId": "440",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q179075",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/440.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "fc-dynamo-stavropol",
+    "name": "PFK Dinamo",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1269120"
+  },
+  {
+    "id": "fc-emmen",
+    "name": "FC Emmen",
+    "espnId": "3707",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1061627",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3707.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-energie-cottbus",
+    "name": "Energie Cottbus",
+    "espnId": "123",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q107818",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/123.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-gifu",
+    "name": "FC Gifu",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q778887"
+  },
+  {
+    "id": "fc-goa",
+    "name": "FC Goa",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16839398"
+  },
+  {
+    "id": "fc-groningen",
+    "name": "FC Groningen",
+    "espnId": "145",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q24711",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/145.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-imabari",
+    "name": "FC Imabari",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q11198999"
+  },
+  {
+    "id": "fc-isloch-minsk-raion",
+    "name": "FC Isloch Minsk Raion",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q11624718"
+  },
+  {
+    "id": "fc-kairat",
+    "name": "Kairat FK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q420594"
+  },
+  {
+    "id": "fc-kaisar",
+    "name": "Kaisar FK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q740568"
+  },
+  {
+    "id": "fc-khimki",
+    "name": "FK Himki",
+    "espnId": "7424",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q727147",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7424.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-koper",
+    "name": "FC Koper",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q44305"
+  },
+  {
+    "id": "fc-krylia-sovetov-samara",
+    "name": "Krilya Sovyetov",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q274778"
+  },
+  {
+    "id": "fc-kuban-krasnodar",
+    "name": "FK Kuban Krasnodar",
+    "espnId": "7425",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q29103",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7425.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-libourne",
+    "name": "FC Libourne",
+    "espnId": "6991",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1387311",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-lokomotiv-moscow",
+    "name": "FK Lokomotiv Moskova",
+    "espnId": "442",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q29115",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/442.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-lugano",
+    "name": "FC Lugano",
+    "espnId": "7672",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q633521",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7672.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-luzern",
+    "name": "FC Luzern",
+    "espnId": "7640",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q223262",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7640.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-machida-zelvia",
+    "name": "FC Machida Zelvia",
+    "espnId": "22167",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1366905",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/22167.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-maritsa-plovdiv",
+    "name": "FC Maritsa Plovdiv",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2466360"
+  },
+  {
+    "id": "fc-metz",
+    "name": "FC Metz",
+    "espnId": "177",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q221525",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/177.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-midtjylland",
+    "name": "FC Midtjylland",
+    "espnId": "572",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q618520",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/572.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-nantes",
+    "name": "FC Nantes",
+    "espnId": "165",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q192071",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/165.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-nordsjaelland",
+    "name": "FC Nordsjælland",
+    "espnId": "3101",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q210025",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3101.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-pune-city",
+    "name": "FC Pune City",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16967914"
+  },
+  {
+    "id": "fc-pyunik",
+    "name": "Pyunik FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q244317"
+  },
+  {
+    "id": "fc-red-bull-salzburg",
+    "name": "FC Red Bull Salzburg",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q994811"
+  },
+  {
+    "id": "fc-rostov",
+    "name": "FK Rostov",
+    "espnId": "3852",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q182930",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3852.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-ryukyu-okinawa",
+    "name": "FC Ryukyu",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q59645"
+  },
+  {
+    "id": "fc-santa-coloma",
+    "name": "FC Santa Coloma",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q221766"
+  },
+  {
+    "id": "fc-schaffhausen",
+    "name": "FC Schaffhausen",
+    "espnId": "7639",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q172247",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-shakhtar-donetsk",
+    "name": "FK Şahtar Donetsk",
+    "espnId": "493",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q172969",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/493.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "fc-sion",
+    "name": "FC Sion",
+    "espnId": "3076",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q321061",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3076.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-sochaux-montbeliard",
+    "name": "FC Sochaux-Montbéliard",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19512"
+  },
+  {
+    "id": "fc-spartak-tambov",
+    "name": "FC Spartak Tambov",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1957763"
+  },
+  {
+    "id": "fc-spartak-trnava",
+    "name": "FC Spartak Trnava",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q459218"
+  },
+  {
+    "id": "fc-teutonia-ottensen",
+    "name": "FC Teutonia Ottensen",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q827956"
+  },
+  {
+    "id": "fc-tokyo",
+    "name": "FC Tokyo",
+    "espnId": "3384",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q856619",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3384.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-twente",
+    "name": "FC Twente",
+    "espnId": "152",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19603",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/152.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-utrecht",
+    "name": "FC Utrecht",
+    "espnId": "153",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q24680",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/153.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-viktoria-plzen",
+    "name": "FC Viktoria Plzeň",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q206838"
+  },
+  {
+    "id": "fc-winterthur",
+    "name": "FC Winterthur",
+    "espnId": "20996",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q201969",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/20996.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-zenit-saint-petersburg",
+    "name": "Zenit St. Petersburg",
+    "espnId": "2533",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q29108",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2533.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fc-znamya-noginsk",
+    "name": "FC Znamya Noginsk",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q4192898"
+  },
+  {
+    "id": "fc-zurich",
+    "name": "FC Zürich",
+    "espnId": "3019",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q206692",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3019.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fenerbahce-istanbul",
+    "name": "Fenerbahçe",
+    "espnId": "436",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q6601875",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/436.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ferencvarosi-tc",
+    "name": "Ferencvárosi TC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q208396"
+  },
+  {
+    "id": "ferro-carril-oeste",
+    "name": "Ferro Carril Oeste",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q910444"
+  },
+  {
+    "id": "feyenoord-rotterdam",
+    "name": "Feyenoord",
+    "espnId": "142",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q134241",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/142.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "figueirense-futebol-clube",
+    "name": "Figueirense FC",
+    "espnId": "3461",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q218334",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3461.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fk-austria-wien",
+    "name": "FK Austria Wien",
+    "espnId": "1382",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q131209",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1382.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fk-belasica",
+    "name": "FK Belasica",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1642914"
+  },
+  {
+    "id": "fk-bsk-borca",
+    "name": "FK BSK Borča",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q651198"
+  },
+  {
+    "id": "fk-chmel-blsany",
+    "name": "FK Chmel Blšany",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q612017"
+  },
+  {
+    "id": "fk-crvena-zvezda",
+    "name": "FK Crvena zvezda",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q173009"
+  },
+  {
+    "id": "fk-cukaricki",
+    "name": "FK Čukarički",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q213161"
+  },
+  {
+    "id": "fk-kolubara",
+    "name": "FK Kolubara",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2662732"
+  },
+  {
+    "id": "fk-partizan",
+    "name": "FK Partizan",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q188656"
+  },
+  {
+    "id": "fk-rabotnicki",
+    "name": "FK Rabotnički",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q208574"
+  },
+  {
+    "id": "fk-radnicki-1923",
+    "name": "FK Radnički 1923",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q421665"
+  },
+  {
+    "id": "fk-radnicki-nis",
+    "name": "FK Radnički Niš",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1137993"
+  },
+  {
+    "id": "fk-radnicki-pirot",
+    "name": "FK Radnički Pirot",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3063283"
+  },
+  {
+    "id": "fk-sarajevo",
+    "name": "FK Sarajevo",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q239663"
+  },
+  {
+    "id": "fk-spartak-subotica",
+    "name": "FK Spartak Zlatibor Voda",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q94605"
+  },
+  {
+    "id": "fk-srem",
+    "name": "FK Srem",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2505672"
+  },
+  {
+    "id": "fk-teleoptik",
+    "name": "FK Teleoptik",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2184917"
+  },
+  {
+    "id": "fk-teljeznicar-sarajevo",
+    "name": "FK Željezničar Sarajevo",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q219929"
+  },
+  {
+    "id": "fk-vojvodina",
+    "name": "FK Vojvodina",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q207501"
+  },
+  {
+    "id": "fleetwood-town-f-c",
+    "name": "Fleetwood Town FC",
+    "espnId": "3891",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q48941",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3891.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "floridsdorfer-ac",
+    "name": "Floridsdorfer AC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q696474"
+  },
+  {
+    "id": "fluminense-f-c",
+    "name": "Fluminense FC",
+    "espnId": "3445",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q80987",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3445.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fortuna-dusseldorf",
+    "name": "Fortuna Düsseldorf",
+    "espnId": "9707",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q151747",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9707.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fortuna-sittard",
+    "name": "Fortuna Sittard",
+    "espnId": "143",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q854167",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/143.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fredrikstad-fk",
+    "name": "Fredrikstad FK",
+    "espnId": "3039",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q216131",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3039.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "fukushima-united-fc",
+    "name": "Fukushima United FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3916541"
+  },
+  {
+    "id": "fulham",
+    "name": "Fulham",
+    "espnId": "370",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18708",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/370.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "g-d-chaves",
+    "name": "G.D. Chaves",
+    "espnId": "12705",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q543467",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/12705.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "g-d-estoril-praia",
+    "name": "GD Estoril Praia",
+    "espnId": "12216",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q634829",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/12216.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "g-d-ribeirao",
+    "name": "G.D. Ribeirão",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3084434"
+  },
+  {
+    "id": "gainare-tottori",
+    "name": "Gainare Tottori",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q957420"
+  },
+  {
+    "id": "galatasaray",
+    "name": "Galatasaray",
+    "espnId": "432",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q495299",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/432.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "gamba-osaka",
+    "name": "Gamba Osaka",
+    "espnId": "7102",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q738423",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7102.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "gaziantep-f-k",
+    "name": "Gaziantep FK",
+    "espnId": "20070",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q824850",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/20070.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "gaziantepspor",
+    "name": "Gaziantepspor",
+    "espnId": "539",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q285722",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/539.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "genclerbirligi-s-k",
+    "name": "Gençlerbirliği SK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q641373"
+  },
+  {
+    "id": "genoa-cfc",
+    "name": "Genoa CFC",
+    "espnId": "3263",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2074",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3263.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "getafe-cf",
+    "name": "Getafe CF",
+    "espnId": "2922",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8806",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2922.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "gil-paja",
+    "name": "SP Tre Penne",
+    "espnId": "8592",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q704857",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/8592.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "gil-vicente-f-c",
+    "name": "Gil Vicente FC",
+    "espnId": "3699",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q926438",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3699.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "gimnasia-de-la-plata",
+    "name": "Gimnasia de la plata",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q5969828"
+  },
+  {
+    "id": "gimnastic-de-tarragona",
+    "name": "Gimnàstic de Tarragona",
+    "espnId": "4492",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q257984",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/4492.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "girona-fc",
+    "name": "Girona FC",
+    "espnId": "9812",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q11945",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9812.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "gnk-dinamo-zagreb",
+    "name": "GNK Dinamo Zagreb",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q172803"
+  },
+  {
+    "id": "gornik-zabrze",
+    "name": "Górnik Zabrze",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q134255"
+  },
+  {
+    "id": "goztepe-s-k",
+    "name": "Göztepe SK",
+    "espnId": "789",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1423118",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/789.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "granada-cf",
+    "name": "Granada CF",
+    "espnId": "3747",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8812",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3747.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "grasshopper-club-zurich",
+    "name": "Grasshopper Club Zürich",
+    "espnId": "492",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q201360",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/492.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "gremio-fbpa",
+    "name": "Grêmio Foot-Ball Porto Alegrense",
+    "espnId": "6273",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q221695",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/6273.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "grenoble-foot-38",
+    "name": "Grenoble Foot 38",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q209509"
+  },
+  {
+    "id": "guizhou-renhe-f-c",
+    "name": "Guizhou Renhe FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q631695"
+  },
+  {
+    "id": "gulf-united-fc",
+    "name": "Gulf United FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q115822651"
+  },
+  {
+    "id": "gyeongju-korea-hydro-and-nuclear-power-f",
+    "name": "Gyeongju Korea Hydro and Nuclear Power FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q624792"
+  },
+  {
+    "id": "halmstads-bk",
+    "name": "Halmstads BK",
+    "espnId": "3017",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q584858",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3017.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "hamburger-sv",
+    "name": "Hamburger SV",
+    "espnId": "127",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q51974",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/127.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "hannover-96",
+    "name": "Hannover 96",
+    "espnId": "2428",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q33748",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2428.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "heartland-f-c",
+    "name": "Heartland FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1463828"
+  },
+  {
+    "id": "hebei-f-c",
+    "name": "Hebei China Fortune F.C.",
+    "espnId": "18200",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q402038",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/18200.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "hellas-verona-fc",
+    "name": "Hellas Verona FC",
+    "espnId": "119",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8639",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/119.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "helsingin-jalkapalloklubi",
+    "name": "HJK Helsinki",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q208584"
+  },
+  {
+    "id": "hertha-bsc",
+    "name": "Hertha BSC",
+    "espnId": "129",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q102720",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/129.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "hibernian-f-c",
+    "name": "Hibernian F.C.",
+    "espnId": "258",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q192597",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/258.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "hifk-fotboll",
+    "name": "HIFK Fotboll",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q11336634"
+  },
+  {
+    "id": "hk-kopavogur",
+    "name": "HK Kópavogur",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q139504898"
+  },
+  {
+    "id": "hnk-hajduk-split",
+    "name": "HNK Hajduk Split",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q181216"
+  },
+  {
+    "id": "hnk-ribenik",
+    "name": "HNK Šibenik",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q833050"
+  },
+  {
+    "id": "hnk-rijeka",
+    "name": "NK Rijeka",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q318969"
+  },
+  {
+    "id": "hogaborgs-bk",
+    "name": "Högaborgs BK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3106294"
+  },
+  {
+    "id": "hokkaido-consadole-sapporo",
+    "name": "Hokkaido Consadole Sapporo",
+    "espnId": "9249",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q586787",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9249.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "hong-kong-pegasus-fc",
+    "name": "Hong Kong Pegasus FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q137747"
+  },
+  {
+    "id": "hrk-zrinjski-mostar",
+    "name": "HŠK Zrinjski Mostar",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q399282"
+  },
+  {
+    "id": "hull-city-a-f-c",
+    "name": "Hull City AFC",
+    "espnId": "306",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19477",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/306.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ifk-aspudden-tellus",
+    "name": "IFK Aspudden-Tellus",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16841102"
+  },
+  {
+    "id": "ifk-goteborg",
+    "name": "IFK Göteborg",
+    "espnId": "2556",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q201567",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2556.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "incheon-united-fc",
+    "name": "Incheon United",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q482562"
+  },
+  {
+    "id": "instituto-atletico-central-cordoba",
+    "name": "Instituto Atlético Central Córdoba",
+    "espnId": "2975",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1421829",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2975.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "inter",
+    "name": "Inter",
+    "espnId": "110",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q631",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/110.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "inter-miami",
+    "name": "Inter Miami CF",
+    "espnId": "20232",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16844931",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/20232.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "ipswich-town-f-c",
+    "name": "Ipswich Town FC",
+    "espnId": "373",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q9653",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/373.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "istanbul-basaksehir-f-k",
+    "name": "İstanbul Başakşehir FK",
+    "espnId": "7914",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q857938",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7914.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "itabirito-futebol-clube",
+    "name": "Itabirito Futebol Clube",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q114555490"
+  },
+  {
+    "id": "ituano-futebol-clube",
+    "name": "Ituano Futebol Clube",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1675351"
+  },
+  {
+    "id": "izmirspor",
+    "name": "İzmirspor",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1676156"
+  },
+  {
+    "id": "jamshedpur-fc",
+    "name": "Jamshedpur FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q30644987"
+  },
+  {
+    "id": "jef-united-chiba",
+    "name": "JEF United Ichihara Chiba",
+    "espnId": "7111",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q646204",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7111.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "jerez-industrial-cf",
+    "name": "Jerez Industrial CF",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q847030"
+  },
+  {
+    "id": "js-saint-pierroise",
+    "name": "JS Saint-Pierroise",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2347256"
+  },
+  {
+    "id": "jsm-cheraga",
+    "name": "JSM Chéraga",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3178121"
+  },
+  {
+    "id": "jubilo-iwata",
+    "name": "Júbilo Iwata",
+    "espnId": "7106",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q855401",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7106.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "junior-de-barranquilla",
+    "name": "Junior de Barranquilla",
+    "espnId": "4815",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q332524",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/4815.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "juth-f-c",
+    "name": "JUTH F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2522218"
+  },
+  {
+    "id": "juventud-de-las-piedras",
+    "name": "Juventud de Las Piedras",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q217644"
+  },
+  {
+    "id": "juventus",
+    "name": "Juventus",
+    "espnId": "111",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1422",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/111.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "k-a-s-eupen",
+    "name": "KAS Eupen",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1423718"
+  },
+  {
+    "id": "k-r-c-genk",
+    "name": "KRC Genk",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q216032"
+  },
+  {
+    "id": "k-r-c-zuid-west-vlaanderen",
+    "name": "K.R.C. Zuid-West-Vlaanderen",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2694024"
+  },
+  {
+    "id": "k-s-k-beveren",
+    "name": "KSK Beveren",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q849139"
+  },
+  {
+    "id": "k-v-c-westerlo",
+    "name": "KVC Westerlo",
+    "espnId": "606",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q849544",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/606.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "kaa-gent",
+    "name": "KAA Gent",
+    "espnId": "3611",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18232",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3611.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "kano-pillars-f-c",
+    "name": "Kano Pillars FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1512917"
+  },
+  {
+    "id": "karlsruher-sc",
+    "name": "Karlsruher SC",
+    "espnId": "4471",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q105853",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/4471.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "kashima-antlers",
+    "name": "Kashima Antlers",
+    "espnId": "7115",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16932",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7115.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "kashiwa-reysol",
+    "name": "Kashiwa Reysol",
+    "espnId": "7476",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q844931",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7476.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "kawasaki-frontale",
+    "name": "Kawasaki Frontale",
+    "espnId": "7112",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q874016",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7112.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "kayserispor",
+    "name": "Kayserispor",
+    "espnId": "3643",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q608122",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3643.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "kerala-blasters-fc",
+    "name": "Kerala Blasters FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16842784"
+  },
+  {
+    "id": "kitchee-sc",
+    "name": "Kitchee SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q141045"
+  },
+  {
+    "id": "knattspyrnufelagid-vikingur",
+    "name": "Knattspyrnufélagið Víkingur",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1140538"
+  },
+  {
+    "id": "kocaelispor",
+    "name": "Kocaelispor",
+    "espnId": "995",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q513237",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/995.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "konyaspor",
+    "name": "Konyaspor",
+    "espnId": "7648",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q513840",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7648.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ks-lechia-gdansk",
+    "name": "Lechia Gdańsk",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q734785"
+  },
+  {
+    "id": "kuwait-sc",
+    "name": "Kuwait SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q812716"
+  },
+  {
+    "id": "kv-oostende",
+    "name": "KV Oostende",
+    "espnId": "3612",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q370206",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3612.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "kyoto-sanga-fc",
+    "name": "Kyoto Sanga FC",
+    "espnId": "21361",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1047535",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/21361.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "la-galaxy",
+    "name": "Los Angeles Galaxy",
+    "espnId": "187",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q204357",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/187.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "lask-linz",
+    "name": "LASK Linz",
+    "espnId": "4411",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q392310",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/4411.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "lb-chateauroux",
+    "name": "LB Châteauroux",
+    "espnId": "2995",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q845067",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2995.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "le-havre-ac",
+    "name": "Le Havre AC",
+    "espnId": "3236",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q328658",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3236.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "le-mans-f-c",
+    "name": "Le Mans FC",
+    "espnId": "2697",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q210864",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2697.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "lech-poznan",
+    "name": "Lech Poznań",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q52942"
+  },
+  {
+    "id": "leeds-united-f-c",
+    "name": "Leeds United AFC",
+    "espnId": "357",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1128631",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/357.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "legia-warsaw",
+    "name": "Legia Warszawa",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q193749"
+  },
+  {
+    "id": "legon-cities-fc",
+    "name": "Legon Cities FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1440611"
+  },
+  {
+    "id": "leicester-city-f-c",
+    "name": "Leicester City FC",
+    "espnId": "375",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19481",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/375.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "levante-ud",
+    "name": "Levante UD",
+    "espnId": "1538",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8823",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1538.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "liberty-professionals-f-c",
+    "name": "Liberty Professionals F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q603633"
+  },
+  {
+    "id": "liga-deportiva-alajuelense",
+    "name": "Liga Deportiva Alajuelense",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1322654"
+  },
+  {
+    "id": "lille-osc",
+    "name": "Lille OSC",
+    "espnId": "166",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19516",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/166.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "liverpool",
+    "name": "Liverpool",
+    "espnId": "364",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1130849",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/364.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "lorca-deportiva-cf",
+    "name": "Lorca Deportiva CF",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q239049"
+  },
+  {
+    "id": "los-angeles-fc",
+    "name": "Los Angeles FC",
+    "espnId": "18966",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18380286",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/18966.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "lr-vicenza",
+    "name": "LR Vicenza",
+    "espnId": "120",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q56542463",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/120.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "luton-town-f-c",
+    "name": "Luton Town FC",
+    "espnId": "301",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18520",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/301.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "lyn-1896-fk",
+    "name": "Lyn 1896 FK",
+    "espnId": "2711",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q737937",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "macarthur-fc",
+    "name": "Macarthur FC",
+    "espnId": "19340",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q59773416",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/19340.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "maidstone-united-f-c",
+    "name": "Maidstone United F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1764590"
+  },
+  {
+    "id": "malaga-cf",
+    "name": "Málaga CF",
+    "espnId": "99",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8857",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/99.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "malmo-ff",
+    "name": "Malmö FF",
+    "espnId": "2720",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q204881",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2720.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "man-city",
+    "name": "Manchester City",
+    "espnId": "382",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q50602",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "man-united",
+    "name": "Manchester United",
+    "espnId": "360",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18656",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/360.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "marconi-stallions-fc",
+    "name": "Marconi Stallions FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1894039"
+  },
+  {
+    "id": "marsala-football-club",
+    "name": "SC Marsala 1912",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2251415"
+  },
+  {
+    "id": "marseille",
+    "name": "Marseille",
+    "espnId": "176",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q132885",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/176.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "melbourne-city-fc",
+    "name": "Melbourne City FC",
+    "espnId": "11143",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q748725",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/11143.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "melbourne-victory-fc",
+    "name": "Melbourne Victory FC",
+    "espnId": "5328",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q316789",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5328.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "memphis-901-fc",
+    "name": "Memphis 901 FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q58236450"
+  },
+  {
+    "id": "miami-united-fc",
+    "name": "Miami United FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16844935"
+  },
+  {
+    "id": "middelfart-boldklub",
+    "name": "Middelfart Boldklub",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q4994478"
+  },
+  {
+    "id": "middlesbrough-f-c",
+    "name": "Middlesbrough FC",
+    "espnId": "369",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18661",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/369.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "milan",
+    "name": "AC Milan",
+    "espnId": "103",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1543",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/103.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "millonarios",
+    "name": "Club Deportivo Los Millonarios",
+    "espnId": "5484",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q391984",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5484.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "millwall-f-c",
+    "name": "Millwall FC",
+    "espnId": "391",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19487",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/391.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "milton-keynes-dons-f-c",
+    "name": "Milton Keynes Dons FC",
+    "espnId": "390",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q248188",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/390.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "mito-hollyhock",
+    "name": "Mito HollyHock",
+    "espnId": "131701",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1060184",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/131701.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "mke-ankaragucu",
+    "name": "MKE Ankaragücü",
+    "espnId": "2429",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q492826",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2429.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "modena-f-c",
+    "name": "Modena FC",
+    "espnId": "2573",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8408",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2573.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "mogi-mirim-esporte-clube",
+    "name": "Mogi Mirim Esporte Clube",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2419887"
+  },
+  {
+    "id": "molde-fk",
+    "name": "Molde FK",
+    "espnId": "2715",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q208552",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2715.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "monaco",
+    "name": "AS Monaco",
+    "espnId": "174",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q180305",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/174.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "montedio-yamagata",
+    "name": "Montedio Yamagata",
+    "espnId": "6915",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1045524",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/6915.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "montevideo-wanderers-futbol-club",
+    "name": "Montevideo Wanderers FC",
+    "espnId": "5501",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q872702",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5501.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "montpellier-herault-sport-club",
+    "name": "Montpellier HSC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19513"
+  },
+  {
+    "id": "mrk-tilina",
+    "name": "MŠK Žilina",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q209640"
+  },
+  {
+    "id": "msv-duisburg",
+    "name": "MSV Duisburg",
+    "espnId": "3308",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q154293",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3308.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "mumbai-city-fc",
+    "name": "Mumbai City FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16845355"
+  },
+  {
+    "id": "n-e-c",
+    "name": "NEC Nijmegen",
+    "espnId": "147",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q318348",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/147.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "n-k-zagreb",
+    "name": "NK Zagreb",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q462411"
+  },
+  {
+    "id": "nacional-atletico-clube",
+    "name": "Nacional Atlético Clube",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q6957264"
+  },
+  {
+    "id": "nagoya-grampus",
+    "name": "Nagoya Grampus",
+    "espnId": "7108",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q249662",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7108.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "nankatsu-sc",
+    "name": "Nankatsu SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q28693099"
+  },
+  {
+    "id": "neom-sc",
+    "name": "Niyûm",
+    "espnId": "130899",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q12247491",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/130899.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "new-england-revolution",
+    "name": "New England Revolution",
+    "espnId": "189",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q309095",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/189.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "new-york-city-fc",
+    "name": "New York City FC",
+    "espnId": "17606",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q13361030",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/17606.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "new-york-cosmos",
+    "name": "New York Cosmos",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q646135"
+  },
+  {
+    "id": "newcastle-jets-fc",
+    "name": "Newcastle Jets FC",
+    "espnId": "5323",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q732929",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5323.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "newcastle-united-f-c",
+    "name": "Newcastle United FC",
+    "espnId": "361",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18716",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/361.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "newell-s-old-boys",
+    "name": "Newell's Old Boys",
+    "espnId": "14",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q221882",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/14.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "nimes-olympique",
+    "name": "Nîmes Olympique",
+    "espnId": "7730",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q730809",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7730.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "nk-croatia-sesvete",
+    "name": "NK Croatia Sesvete",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q248800"
+  },
+  {
+    "id": "nk-domtale",
+    "name": "NK Domžale",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q384850"
+  },
+  {
+    "id": "nk-hrvatski-dragovoljac",
+    "name": "NK Hrvatski Dragovoljac",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1258871"
+  },
+  {
+    "id": "nk-inter-zapresic",
+    "name": "NK Inter Zaprešić",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q723644"
+  },
+  {
+    "id": "nk-lokomotiva",
+    "name": "NK Lokomotiva",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q959086"
+  },
+  {
+    "id": "nk-marsonia",
+    "name": "NK Marsonia",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1274317"
+  },
+  {
+    "id": "nk-olimpija-ljubljana",
+    "name": "NK Olimpija Ljubljana",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q31932"
+  },
+  {
+    "id": "nk-osijek",
+    "name": "NK Osijek",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q738876"
+  },
+  {
+    "id": "nk-zadar",
+    "name": "NK Zadar",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q738427"
+  },
+  {
+    "id": "north-jersey-imperials",
+    "name": "North Jersey Imperials",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q14884144"
+  },
+  {
+    "id": "northampton-town-f-c",
+    "name": "Northampton Town FC",
+    "espnId": "353",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q48945",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/353.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "northeast-united-fc",
+    "name": "NorthEast United FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16840338"
+  },
+  {
+    "id": "northern-spirit-fc",
+    "name": "Northern Spirit FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1749908"
+  },
+  {
+    "id": "norwich-city-f-c",
+    "name": "Norwich City FC",
+    "espnId": "381",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18721",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/381.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "nottingham-forest-f-c",
+    "name": "Nottingham Forest FC",
+    "espnId": "393",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19490",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/393.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "notts-county-f-c",
+    "name": "Notts County FC",
+    "espnId": "340",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19598",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/340.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "novara-calcio",
+    "name": "Novara F.C.",
+    "espnId": "3954",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8416",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3954.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "odisha-fc",
+    "name": "Delhi Dynamos FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16838244"
+  },
+  {
+    "id": "ogc-nice",
+    "name": "OGC Nice",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q185163"
+  },
+  {
+    "id": "oita-trinita",
+    "name": "Oita Trinita",
+    "espnId": "7105",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q385074",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7105.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "okinawa-sv",
+    "name": "Okinawa SV",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q22661551"
+  },
+  {
+    "id": "olympiacos-f-c",
+    "name": "Olympiakos CFP",
+    "espnId": "435",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19628",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/435.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "olympique-lyonnais",
+    "name": "Olympique Lyonnais",
+    "espnId": "167",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q704",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/167.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "orlando-city-sc",
+    "name": "Orlando City SC",
+    "espnId": "12011",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q15214308",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/12011.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "p-a-s-lamia-1964",
+    "name": "PAS Lamia",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q6481836"
+  },
+  {
+    "id": "pafos-fc",
+    "name": "Pafos FC",
+    "espnId": "22281",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q17442894",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/22281.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "palermo-f-c",
+    "name": "Palermo FC",
+    "espnId": "2923",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2674",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2923.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "panathinaikos-f-c",
+    "name": "Panathinaikos",
+    "espnId": "443",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q4122219",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/443.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "paok-fc",
+    "name": "PAOK FC",
+    "espnId": "605",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q204888",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/605.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "parana-soccer-technical-center",
+    "name": "Paraná Soccer Technical Center",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q6120147"
+  },
+  {
+    "id": "paris-fc",
+    "name": "Paris FC",
+    "espnId": "6851",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1051013",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/6851.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "parma-calcio-1913",
+    "name": "Parma Calcio 1913",
+    "espnId": "115",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2693",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/115.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "paro-fc",
+    "name": "Paro FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q16962745"
+  },
+  {
+    "id": "paulista-futebol-clube",
+    "name": "Paulista Futebol Clube",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1422177"
+  },
+  {
+    "id": "persepolis-f-c",
+    "name": "Persepolis FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q242260"
+  },
+  {
+    "id": "perth-glory-fc",
+    "name": "Perth Glory FC",
+    "espnId": "5322",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q852033",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5322.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "pfc-cska-moscow",
+    "name": "PFK CSKA Moskova",
+    "espnId": "1963",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q176371",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1963.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "pfc-pirin-blagoevgrad",
+    "name": "PFC Pirin Blagoevgrad",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1515410"
+  },
+  {
+    "id": "phoenix-rising-fc",
+    "name": "Phoenix Rising FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q111516"
+  },
+  {
+    "id": "piacenza-calcio",
+    "name": "Piacenza Calcio",
+    "espnId": "240",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q459794",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "pisa-sc",
+    "name": "AC Pisa 1909 SSD",
+    "espnId": "3956",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q289613",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3956.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "poitiers-fc",
+    "name": "Poitiers FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3393891"
+  },
+  {
+    "id": "police-tebrau-f-c",
+    "name": "Police Tebrau F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q602827"
+  },
+  {
+    "id": "portimonense-s-c",
+    "name": "Portimonense SC",
+    "espnId": "3719",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q621120",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3719.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "portland-timbers",
+    "name": "Portland Timbers",
+    "espnId": "9723",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1031200",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9723.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "porto",
+    "name": "FC Porto",
+    "espnId": "437",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q128446",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/437.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "portsmouth-f-c",
+    "name": "Portsmouth FC",
+    "espnId": "385",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19604",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/385.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "preston-north-end-f-c",
+    "name": "Preston North End FC",
+    "espnId": "394",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19612",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/394.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "psg",
+    "name": "Paris Saint-Germain",
+    "espnId": "160",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q483020",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/160.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "psv-eindhoven",
+    "name": "PSV Eindhoven",
+    "espnId": "148",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q11938",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/148.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "pumas-unam",
+    "name": "Pumas UNAM",
+    "espnId": "233",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1143000",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/233.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "pune-fc",
+    "name": "Pune FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1525331"
+  },
+  {
+    "id": "qatar-sc",
+    "name": "Katar SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1051203"
+  },
+  {
+    "id": "qingdao-f-c",
+    "name": "Qingdao F.C.",
+    "espnId": "20681",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3866968",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/20681.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "queen-s-park-f-c",
+    "name": "Queen's Park FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q852753"
+  },
+  {
+    "id": "queens-park-rangers-f-c",
+    "name": "Queens Park Rangers FC",
+    "espnId": "334",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18723",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/334.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "queretaro-f-c",
+    "name": "Querétaro FC",
+    "espnId": "222",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q606210",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/222.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "quick-boys",
+    "name": "Quick Boys",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2108810"
+  },
+  {
+    "id": "quimper-kerfeunteun-f-c",
+    "name": "Quimper Kerfeunteun F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1431996"
+  },
+  {
+    "id": "r-c-lens",
+    "name": "RC Lens",
+    "espnId": "175",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q191843",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/175.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "r-e-virton",
+    "name": "R.E. Virton",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q650917"
+  },
+  {
+    "id": "r-s-c-anderlecht",
+    "name": "RSC Anderlecht",
+    "espnId": "441",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q187528",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/441.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "racing-club",
+    "name": "Racing Club de Avellaneda",
+    "espnId": "15",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q276533",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/15.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "racing-club-de-ferrol",
+    "name": "Racing de Ferrol",
+    "espnId": "8448",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q843396",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/8448.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "racing-f-c-bafoussam",
+    "name": "Racing F.C. Bafoussam",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2900046"
+  },
+  {
+    "id": "rangers-f-c",
+    "name": "Rangers FC",
+    "espnId": "257",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19597",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/257.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rayo-vallecano",
+    "name": "Rayo Vallecano",
+    "espnId": "101",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q10300",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/101.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rb-leipzig",
+    "name": "RB Leipzig",
+    "espnId": "11420",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q702455",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/11420.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rb-omiya-ardija",
+    "name": "Omiya Ardija",
+    "espnId": "7110",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q385496",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7110.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rc-celta-de-vigo",
+    "name": "Celta de Vigo",
+    "espnId": "85",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8749",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/85.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rc-strasbourg-alsace",
+    "name": "RC Strasbourg",
+    "espnId": "180",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q126334",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/180.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rcd-espanyol-de-barcelona",
+    "name": "RCD Espanyol",
+    "espnId": "88",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8780",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/88.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rcd-mallorca",
+    "name": "RCD Mallorca",
+    "espnId": "84",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8835",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/84.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "reading-f-c",
+    "name": "Reading FC",
+    "espnId": "338",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18729",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/338.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "real-betis-balompie",
+    "name": "Real Betis",
+    "espnId": "244",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8723",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/244.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "real-betis-cantera",
+    "name": "Real Betis cantera",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q30115785"
+  },
+  {
+    "id": "real-madrid",
+    "name": "Real Madrid",
+    "espnId": "86",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8682",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/86.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "real-oviedo",
+    "name": "Real Oviedo",
+    "espnId": "92",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q271574",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/92.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "real-sociedad",
+    "name": "Real Sociedad",
+    "espnId": "89",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q10315",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/89.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "real-valladolid",
+    "name": "Real Valladolid",
+    "espnId": "95",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q10319",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/95.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "real-zaragoza",
+    "name": "Real Zaragoza",
+    "espnId": "91",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q10308",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/91.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "red-bull-new-york",
+    "name": "New York Red Bulls",
+    "espnId": "190",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q204220",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/190.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "reipas-lahti",
+    "name": "Reipas Lahti",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q11834079"
+  },
+  {
+    "id": "retro-futebol-clube-brasil",
+    "name": "Retrô Futebol Clube Brasil",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q65164985"
+  },
+  {
+    "id": "rio-ave-f-c",
+    "name": "Rio Ave FC",
+    "espnId": "3822",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q622432",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3822.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rk-slovan-bratislava",
+    "name": "ŠK Slovan Bratislava",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q192253"
+  },
+  {
+    "id": "rkc-waalwijk",
+    "name": "RKC Waalwijk",
+    "espnId": "155",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q24699",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/155.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rnk-split",
+    "name": "RNK Split",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1255000"
+  },
+  {
+    "id": "roasso-kumamoto",
+    "name": "Roasso Kumamoto",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q287571"
+  },
+  {
+    "id": "roma",
+    "name": "AS Roma",
+    "espnId": "104",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2739",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/104.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "rosenborg-bk",
+    "name": "Rosenborg BK",
+    "espnId": "438",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q186785",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/438.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rot-weiss-ahlen",
+    "name": "Rot Weiss Ahlen",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q170125"
+  },
+  {
+    "id": "rot-weiss-frankfurt",
+    "name": "Rot-Weiss Frankfurt",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q543035"
+  },
+  {
+    "id": "royal-antwerp-f-c",
+    "name": "Royal Antwerp FC",
+    "espnId": "17544",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q732002",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/17544.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "royal-charleroi-s-c",
+    "name": "R. Charleroi SC",
+    "espnId": "3616",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19585",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3616.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "royal-excelsior-mouscron",
+    "name": "RE Mouscron",
+    "espnId": "1026",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q865735",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "rozwoj-katowice",
+    "name": "Rozwój Katowice",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q9323399"
+  },
+  {
+    "id": "rubin-kazan",
+    "name": "FK Rubin Kazan",
+    "espnId": "3851",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q170040",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3851.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "s-bail-fk",
+    "name": "Sebail FK",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q30309373"
+  },
+  {
+    "id": "s-c-beira-mar",
+    "name": "SC Beira-Mar",
+    "espnId": "1423",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q688300",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1423.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "s-c-braga",
+    "name": "SC Braga",
+    "espnId": "2994",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q75684",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2994.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "s-c-corinthians-paulista",
+    "name": "SC Corinthians Paulista",
+    "espnId": "874",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q35933",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/874.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "s-c-freamunde",
+    "name": "SC Freamunde",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1031307"
+  },
+  {
+    "id": "s-c-internacional",
+    "name": "SC Internacional",
+    "espnId": "1936",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q80845",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1936.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "s-c-ravenna-sport",
+    "name": "S.C. Ravenna Sport",
+    "espnId": "4347",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1349814",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "s-l-benfica",
+    "name": "SL Benfica",
+    "espnId": "1929",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q131499",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1929.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "saba-qom-f-c",
+    "name": "Saba Qom F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q613931"
+  },
+  {
+    "id": "sagan-tosu",
+    "name": "Sagan Tosu",
+    "espnId": "6911",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1051238",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/6911.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "saipa-f-c",
+    "name": "Saipa FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q782983"
+  },
+  {
+    "id": "sakaryaspor",
+    "name": "Sakaryaspor",
+    "espnId": "3607",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1369461",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "salford-city-f-c",
+    "name": "Salford City FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18460"
+  },
+  {
+    "id": "samsunspor-fc",
+    "name": "Samsunspor",
+    "espnId": "11429",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q430107",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/11429.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "san-frediano-rondinella-s-s",
+    "name": "San Frediano Rondinella S.S.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q4006951"
+  },
+  {
+    "id": "san-jose-earthquakes",
+    "name": "San Jose Earthquakes",
+    "espnId": "191",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q575370",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/191.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "san-lorenzo-de-almagro",
+    "name": "CA San Lorenzo de Almagro",
+    "espnId": "18",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q218282",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/18.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sanfrecce-hiroshima",
+    "name": "Sanfrecce Hiroshima",
+    "espnId": "7114",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q630279",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7114.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "santa-cruz-futebol-clube",
+    "name": "Santa Cruz Futebol Clube",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q10367798"
+  },
+  {
+    "id": "santos",
+    "name": "Santos",
+    "espnId": "2674",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q80955",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2674.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "sao-paulo-fc",
+    "name": "São Paulo FC",
+    "espnId": "2026",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q38568",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2026.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sbv-vitesse",
+    "name": "SBV Vitesse",
+    "espnId": "154",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q219233",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/154.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sc-bastia",
+    "name": "SC Bastia",
+    "espnId": "173",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q208399",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/173.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sc-freiburg",
+    "name": "SC Freiburg",
+    "espnId": "126",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q106394",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/126.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sc-heerenveen",
+    "name": "SC Heerenveen",
+    "espnId": "146",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q200321",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/146.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sc-sagamihara",
+    "name": "SC Sagamihara",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q7387169"
+  },
+  {
+    "id": "sc-verl",
+    "name": "SC Verl",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q666010"
+  },
+  {
+    "id": "schalke-04",
+    "name": "FC Schalke 04",
+    "espnId": "133",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q32494",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/133.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sd-eibar",
+    "name": "SD Eibar",
+    "espnId": "3752",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q770740",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3752.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "seattle-sounders-fc",
+    "name": "Seattle Sounders FC",
+    "espnId": "9726",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q632511",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9726.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sepahan-f-c",
+    "name": "Sepahan FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q31660"
+  },
+  {
+    "id": "servette-fc",
+    "name": "Servette FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q219235"
+  },
+  {
+    "id": "sevilla-fc",
+    "name": "Sevilla FC",
+    "espnId": "243",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q10329",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/243.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sg-wattenscheid-09",
+    "name": "SG Wattenscheid 09",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q524378"
+  },
+  {
+    "id": "shabab-alahli-dubai-club",
+    "name": "Al-Ahli Dubai",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q424943"
+  },
+  {
+    "id": "shandong-taishan-f-c",
+    "name": "Shandong Luneng Taishan FC",
+    "espnId": "7521",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1046367",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7521.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "shanghai-port-f-c",
+    "name": "Şanghay Port FC",
+    "espnId": "15515",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q564216",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/15515.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "shanghai-shenhua-f-c",
+    "name": "Shanghai Shenhua FC",
+    "espnId": "977",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q725367",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/977.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sheffield-united-f-c",
+    "name": "Sheffield United FC",
+    "espnId": "398",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19607",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/398.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "shenzhen-f-c",
+    "name": "Shenzhen F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1139956"
+  },
+  {
+    "id": "shimizu-s-pulse",
+    "name": "Shimizu S-Pulse",
+    "espnId": "7104",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q823384",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7104.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "shonan-bellmare",
+    "name": "Shonan Bellmare",
+    "espnId": "6902",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q692856",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/6902.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "shrewsbury-town-f-c",
+    "name": "Shrewsbury Town FC",
+    "espnId": "302",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19626",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/302.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sint-truidense-v-v",
+    "name": "K. Sint-Truidense VV",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q138248"
+  },
+  {
+    "id": "sivasspor",
+    "name": "Sivasspor",
+    "espnId": "3691",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q372599",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3691.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sk-rollon",
+    "name": "SK Rollon",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1780975"
+  },
+  {
+    "id": "sk-sigma-olomouc",
+    "name": "SK Sigma Olomouc",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q385518"
+  },
+  {
+    "id": "sk-sturm-graz",
+    "name": "SK Sturm Graz",
+    "espnId": "3746",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q124007617",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3746.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "slask-wroclaw",
+    "name": "Śląsk Wrocław",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q328655"
+  },
+  {
+    "id": "sociedade-esportiva-e-recreativa-caxias",
+    "name": "Sociedade Esportiva e Recreativa Caxias do Sul",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1703589"
+  },
+  {
+    "id": "sociedade-esportiva-palmeiras",
+    "name": "SE Palmeiras",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q80964"
+  },
+  {
+    "id": "south-china-aa",
+    "name": "South China AA",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1140533"
+  },
+  {
+    "id": "southampton-f-c",
+    "name": "Southampton FC",
+    "espnId": "376",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18732",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/376.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "southport-f-c",
+    "name": "Southport FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18525"
+  },
+  {
+    "id": "sparta-rotterdam",
+    "name": "Sparta Rotterdam",
+    "espnId": "151",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q209895",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/151.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "spartak-moscow",
+    "name": "FK Spartak Moskova",
+    "espnId": "1941",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q29112",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/1941.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "spezia-calcio",
+    "name": "Spezia Calcio",
+    "espnId": "4056",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8615",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/4056.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sport-club-corinthians-alagoano",
+    "name": "Sport Club Corinthians Alagoano",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1632704"
+  },
+  {
+    "id": "sport-club-do-recife",
+    "name": "Sport Club do Recife",
+    "espnId": "7635",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q219098",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7635.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sporting",
+    "name": "Sporting CP",
+    "espnId": "2250",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q75729",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2250.png",
+    "espnMatch": "legacy"
+  },
+  {
+    "id": "sporting-de-gijon",
+    "name": "Sporting Gijón",
+    "espnId": "3788",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q12278",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3788.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ss-lazio",
+    "name": "SS Lazio",
+    "espnId": "112",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2609",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/112.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ssc-bari",
+    "name": "AS Bari",
+    "espnId": "106",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q6641",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/106.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ssc-farul-constan-a",
+    "name": "FCV Farul Constanța",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q368104"
+  },
+  {
+    "id": "ssc-napoli",
+    "name": "SSC Napoli",
+    "espnId": "114",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2641",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/114.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "ssv-ulm-1846",
+    "name": "SSV Ulm 1846",
+    "espnId": "15710",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q701290",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/15710.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "st-lucia-f-c",
+    "name": "St. Lucia F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q142581"
+  },
+  {
+    "id": "stade-brestois-29",
+    "name": "Stade Brestois 29",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q218372"
+  },
+  {
+    "id": "stade-de-reims",
+    "name": "Stade de Reims",
+    "espnId": "3243",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q208228",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3243.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "stade-lavallois",
+    "name": "Stade Lavallois",
+    "espnId": "3266",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q760736",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3266.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "stade-malherbe-caen",
+    "name": "Stade Malherbe Caen",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q193377"
+  },
+  {
+    "id": "stade-rennais-f-c",
+    "name": "Stade Rennais FC",
+    "espnId": "169",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19509",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/169.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "standard-liege",
+    "name": "Standard Liège",
+    "espnId": "559",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q190561",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/559.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "stella-club-d-adjame",
+    "name": "Stella Club d'Adjamé",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1897533"
+  },
+  {
+    "id": "stevenage-f-c",
+    "name": "Stevenage FC",
+    "espnId": "285",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q9426",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/285.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "stocksbridge-park-steels-f-c",
+    "name": "Stocksbridge Park Steels F.C.",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18305"
+  },
+  {
+    "id": "stoke-city-f-c",
+    "name": "Stoke City FC",
+    "espnId": "336",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18736",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/336.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "stromsgodset-tf",
+    "name": "Strømsgodset Toppfotball",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q7482049"
+  },
+  {
+    "id": "stuttgarter-kickers",
+    "name": "Stuttgarter Kickers",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q170105"
+  },
+  {
+    "id": "su-agen-football",
+    "name": "SU Agen Football",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3494142"
+  },
+  {
+    "id": "sunderland-a-f-c",
+    "name": "Sunderland AFC",
+    "espnId": "366",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18739",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/366.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sv-horn",
+    "name": "SV Horn",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q689889"
+  },
+  {
+    "id": "sv-nord-wedding-1893",
+    "name": "SV Nord Wedding 1893",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q318725"
+  },
+  {
+    "id": "sv-sandhausen",
+    "name": "SV Sandhausen",
+    "espnId": "6392",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q639525",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/6392.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sv-turkgucu-ataspor-munchen",
+    "name": "SV Türkgücü-Ataspor München",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q877111"
+  },
+  {
+    "id": "swansea-city-a-f-c",
+    "name": "Swansea City AFC",
+    "espnId": "318",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18659",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/318.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "swindon-town-f-c",
+    "name": "Swindon Town FC",
+    "espnId": "341",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19634",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/341.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sydney-fc",
+    "name": "Sydney FC",
+    "espnId": "5327",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q330143",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5327.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "sydney-united-fc",
+    "name": "Sydney United FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q582423"
+  },
+  {
+    "id": "talleres-de-cordoba",
+    "name": "Talleres de Córdoba",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1022939"
+  },
+  {
+    "id": "tampa-bay-rowdies",
+    "name": "Tampa Bay Rowdies",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1046445"
+  },
+  {
+    "id": "tegevajaro-miyazaki",
+    "name": "Tegevajaro Miyazaki",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q11232186"
+  },
+  {
+    "id": "thespa-gunma",
+    "name": "Thespakusatsu Gunma",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1069071"
+  },
+  {
+    "id": "tochigi-sc",
+    "name": "Tochigi SC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1069091"
+  },
+  {
+    "id": "tokushima-vortis",
+    "name": "Tokushima Vortis",
+    "espnId": "6903",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q513145",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/6903.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "tokyo-united-fc",
+    "name": "Tokyo United FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q22118054"
+  },
+  {
+    "id": "tokyo-verdy",
+    "name": "Tokyo Verdy",
+    "espnId": "3393",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q620499",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3393.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "torino-fc",
+    "name": "Torino FC",
+    "espnId": "239",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2768",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/239.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "toronto-fc",
+    "name": "Toronto FC",
+    "espnId": "7318",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q327238",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7318.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "tottenham-hotspur-f-c",
+    "name": "Tottenham Hotspur FC",
+    "espnId": "367",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18741",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/367.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "toulouse-fc",
+    "name": "Toulouse FC",
+    "espnId": "179",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19518",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/179.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "tours-fc",
+    "name": "Tours FC",
+    "espnId": "6992",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q822021",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/6992.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "tp-rport-podbrezova",
+    "name": "FK Železiarne Podbrezová",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q535121"
+  },
+  {
+    "id": "trabzonspor",
+    "name": "Trabzonspor",
+    "espnId": "997",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q192641",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/997.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "trelleborgs-ff",
+    "name": "Trelleborgs FF",
+    "espnId": "8138",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q818624",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "tsg-1899-hoffenheim",
+    "name": "TSG 1899 Hoffenheim",
+    "espnId": "7911",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q22707",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7911.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "tsv-1860-munchen",
+    "name": "TSV 1860 Münih",
+    "espnId": "135",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q131603",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/135.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "tus-bovinghausen",
+    "name": "TuS Bövinghausen",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q105528999"
+  },
+  {
+    "id": "u-c-sampdoria",
+    "name": "UC Sampdoria",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1457"
+  },
+  {
+    "id": "u-d-leiria",
+    "name": "UD Leiria",
+    "espnId": "2724",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q211401",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "u-s-salernitana-1919",
+    "name": "U.S. Salernitana 1919",
+    "espnId": "3240",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q847587",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3240.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "uconn-huskies-men-s-soccer",
+    "name": "UConn Huskies men's soccer",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q5161552"
+  },
+  {
+    "id": "ud-las-palmas",
+    "name": "UD Las Palmas",
+    "espnId": "98",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q11979",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/98.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ud-tegueste",
+    "name": "UD Tegueste",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q7864301"
+  },
+  {
+    "id": "uda-gramenet",
+    "name": "UDA Gramenet",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2220788"
+  },
+  {
+    "id": "udinese-calcio",
+    "name": "Udinese Calcio",
+    "espnId": "118",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2798",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/118.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ue-figueres",
+    "name": "UE Figueres",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q742953"
+  },
+  {
+    "id": "ue-lleida",
+    "name": "Unió Esportiva Lleida",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q837218"
+  },
+  {
+    "id": "ue-tarrega",
+    "name": "UE Tàrrega",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q7864446"
+  },
+  {
+    "id": "ufb-jabac-i-terrassa",
+    "name": "UFB Jàbac i Terrassa",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q112840839"
+  },
+  {
+    "id": "united-football-club",
+    "name": "United Football Club",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q125216774"
+  },
+  {
+    "id": "urawa-red-diamonds",
+    "name": "Urawa Red Diamonds",
+    "espnId": "3385",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q218883",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3385.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "us-boulogne",
+    "name": "US Boulogne",
+    "espnId": "7869",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q309400",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7869.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "us-cremonese",
+    "name": "US Cremonese",
+    "espnId": "4050",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q759482",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/4050.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "us-lecce",
+    "name": "U.S. Lecce",
+    "espnId": "113",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q13391",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/113.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "us-livorno-1915",
+    "name": "U.S. Livorno 1915",
+    "espnId": "2926",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q6767",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/2926.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "us-sassuolo-calcio",
+    "name": "US Sassuolo Calcio",
+    "espnId": "3997",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8603",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3997.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "usl-dunkerque",
+    "name": "USL Dunkerque",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1815297"
+  },
+  {
+    "id": "v-varen-nagasaki",
+    "name": "V-Varen Nagasaki",
+    "espnId": "19001",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q3029309",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/19001.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "valencia-cf",
+    "name": "Valencia CF",
+    "espnId": "94",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q10333",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/94.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "valencia-cf-mestalla",
+    "name": "Valencia CF Mestalla",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q918044"
+  },
+  {
+    "id": "valerenga-fotball",
+    "name": "Vålerenga Fotball",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q212819"
+  },
+  {
+    "id": "valur",
+    "name": "Valur",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q597715"
+  },
+  {
+    "id": "vancouver-whitecaps-fc",
+    "name": "Vancouver Whitecaps FC",
+    "espnId": "9727",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q196107",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/9727.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "varese-calcio",
+    "name": "A.S. Varese 1910",
+    "espnId": "9346",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8633",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "vegalta-sendai",
+    "name": "Vegalta Sendai",
+    "espnId": "6918",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1044651",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/6918.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "vejle-boldklub",
+    "name": "Vejle BK",
+    "espnId": "12498",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q737936",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/12498.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "velez-cf",
+    "name": "Vélez CF",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q7944514"
+  },
+  {
+    "id": "venezia-f-c",
+    "name": "Venezia F.C.",
+    "espnId": "17530",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q501245",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/17530.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "ventforet-kofu",
+    "name": "Ventforet Kofu",
+    "espnId": "7103",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1061696",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7103.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "vfb-stuttgart",
+    "name": "VfB Stuttgart",
+    "espnId": "134",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q4512",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/134.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "vfl-bochum",
+    "name": "VfL Bochum",
+    "espnId": "121",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q105861",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/121.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "vfl-wolfsburg",
+    "name": "VfL Wolfsburg",
+    "espnId": "138",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q101859",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/138.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "viareggio-calcio",
+    "name": "Viareggio Calcio",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1380971"
+  },
+  {
+    "id": "victoria-bammental",
+    "name": "Victoria Bammental",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1279534"
+  },
+  {
+    "id": "villarreal-cf",
+    "name": "Villarreal CF",
+    "espnId": "102",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q12297",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/102.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "vissel-kobe",
+    "name": "Vissel Kobe",
+    "espnId": "7477",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q844271",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7477.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "vitoria-s-c",
+    "name": "Vitória SC",
+    "espnId": "5309",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q223450",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/5309.png",
+    "espnMatch": "wikidata"
+  },
+  {
+    "id": "vv-bedum",
+    "name": "VV Bedum",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1837832"
+  },
+  {
+    "id": "vvv-venlo",
+    "name": "VVV-Venlo",
+    "espnId": "3731",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q24689",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/3731.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "warriors-fc",
+    "name": "Warriors FC",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q633185"
+  },
+  {
+    "id": "watford-f-c",
+    "name": "Watford FC",
+    "espnId": "395",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q2714",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/395.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "west-bromwich-albion-f-c",
+    "name": "West Bromwich Albion FC",
+    "espnId": "383",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18744",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/383.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "west-ham-united-f-c",
+    "name": "West Ham United FC",
+    "espnId": "371",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18747",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/371.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "wigan-athletic-f-c",
+    "name": "Wigan Athletic FC",
+    "espnId": "350",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q18750",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/350.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "wolverhampton-wanderers-f-c",
+    "name": "Wolverhampton Wanderers FC",
+    "espnId": "380",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q19500",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/380.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "wydad-athletic-club",
+    "name": "Wydad Casablanca",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1139095"
+  },
+  {
+    "id": "xerez-c-d",
+    "name": "Xerez CD",
+    "espnId": "3835",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q12308",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "yokohama-f-marinos",
+    "name": "Yokohama F. Marinos",
+    "espnId": "7116",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q854932",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7116.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "yokohama-fc",
+    "name": "Yokohama FC",
+    "espnId": "7145",
+    "hasCrest": true,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1062259",
+    "logoSource": "https://a.espncdn.com/i/teamlogos/soccer/500/7145.png",
+    "espnMatch": "espn-standings"
+  },
+  {
+    "id": "yokohama-flugels",
+    "name": "Yokohama Flügels",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q1368488"
+  },
+  {
+    "id": "young-survivors",
+    "name": "Young Survivors",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q123344481"
+  },
+  {
+    "id": "yscc-yokohama",
+    "name": "YSCC Yokohama",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8054646"
+  },
+  {
+    "id": "zaglebie-lubin",
+    "name": "Zagłębie Lubin",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q140497"
+  },
+  {
+    "id": "znicz-pruszkow",
+    "name": "Znicz Pruszków",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q217977"
+  },
+  {
+    "id": "zweigen-kanazawa",
+    "name": "Zweigen Kanazawa",
+    "hasCrest": false,
+    "wikidataUrl": "https://www.wikidata.org/wiki/Q8075651"
+  }
+]

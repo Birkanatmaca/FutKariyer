@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   createAuthService,
   authRepository,
@@ -9,19 +9,79 @@ import {
   createAdminService,
   adminRepository,
   AdminPanel,
+  ClubOverviewPanel,
 } from '../features/admin';
+import {
+  ContentPanel,
+  createContentService,
+  contentRepository,
+} from '../features/content';
+import {
+  LeaguesPanel,
+  createLeagueService,
+  leagueRepository,
+} from '../features/leagues';
+import {
+  PaymentsPanel,
+  createPaymentService,
+  paymentsRepository,
+} from '../features/payments';
+import {
+  GiftsPanel,
+  createGiftService,
+  giftsRepository,
+} from '../features/gifts';
+import {
+  AnnouncementsPanel,
+  createAnnouncementService,
+  announcementsRepository,
+} from '../features/announcements';
+import {
+  ApplicationsPanel,
+  createApplicationService,
+  applicationsRepository,
+} from '../features/applications';
+import { AdminLayout } from './AdminLayout';
 import { Brand } from '../shared/ui/Brand';
 import { Button } from '../shared/ui/Button';
 import { copy } from '../shared/lib/copy';
 import { useAdminRoute } from './useAdminRoute';
 const authService = createAuthService(authRepository);
 const adminService = createAdminService(adminRepository);
+const contentService = createContentService(contentRepository);
+const leagueService = createLeagueService(leagueRepository);
+const paymentService = createPaymentService(paymentsRepository);
+const giftService = createGiftService(giftsRepository);
+const announcementService = createAnnouncementService(announcementsRepository);
+const applicationService = createApplicationService(applicationsRepository);
 
 export function App() {
   const auth = useAdminAuth(authService);
-  const { route, navigate } = useAdminRoute();
+  const { route, clubId, navigate, openClubOverview } = useAdminRoute();
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
+  const [pendingApplications, setPendingApplications] = useState(0);
+  const userId = auth.user?.id;
+  useEffect(() => {
+    if (!userId) {
+      setPendingApplications(0);
+      return;
+    }
+    let current = true;
+    applicationService
+      .countPending()
+      .then(count => {
+        if (current) setPendingApplications(count);
+      })
+      .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+  }, [userId]);
+  const updatePendingApplications = useCallback(
+    (count: number) => setPendingApplications(count),
+    [],
+  );
   useEffect(() => {
     if (auth.user && route === 'login') {
       navigate('users', true);
@@ -78,16 +138,65 @@ export function App() {
       />
     );
   }
+  const section =
+    route === 'club-overview' ||
+    route === 'clubs' ||
+    route === 'applications' ||
+    route === 'ads' ||
+    route === 'news' ||
+    route === 'leagues' ||
+    route === 'payments' ||
+    route === 'gifts' ||
+    route === 'announcements'
+      ? route === 'club-overview'
+        ? 'clubs'
+        : route
+      : 'users';
   return (
-    <AdminPanel
-      key={auth.user.id}
-      service={adminService}
-      section={route === 'clubs' ? 'clubs' : 'users'}
+    <AdminLayout
+      section={section}
       onSection={navigate}
       user={auth.user}
       onLogout={logout}
       logoutBusy={logoutBusy}
       logoutError={logoutError}
-    />
+      badges={{ applications: pendingApplications }}
+    >
+      {route === 'club-overview' && clubId ? (
+        <ClubOverviewPanel
+          key={clubId}
+          service={adminService}
+          id={clubId}
+          onBack={() => navigate('clubs')}
+        />
+      ) : section === 'ads' || section === 'news' ? (
+        <ContentPanel
+          key={section}
+          section={section}
+          service={contentService}
+        />
+      ) : section === 'applications' ? (
+        <ApplicationsPanel
+          service={applicationService}
+          onPendingCount={updatePendingApplications}
+        />
+      ) : section === 'leagues' ? (
+        <LeaguesPanel service={leagueService} />
+      ) : section === 'payments' ? (
+        <PaymentsPanel service={paymentService} />
+      ) : section === 'gifts' ? (
+        <GiftsPanel service={giftService} />
+      ) : section === 'announcements' ? (
+        <AnnouncementsPanel service={announcementService} />
+      ) : (
+        <AdminPanel
+          key={auth.user.id}
+          service={adminService}
+          section={section}
+          logoutBusy={logoutBusy}
+          onOpenClub={openClubOverview}
+        />
+      )}
+    </AdminLayout>
   );
 }

@@ -21,6 +21,8 @@ type Profile struct {
 	CurrentClub     string `json:"currentClub"`
 	Availability    string `json:"availability"`
 	Discoverable    bool   `json:"discoverable"`
+	FootballType    string `json:"footballType"`
+	LicenseStatus   string `json:"licenseStatus"`
 	UpdatedAt       string `json:"updatedAt"`
 }
 
@@ -31,6 +33,8 @@ type SaveInput struct {
 	CurrentClub     string `json:"currentClub"`
 	Availability    string `json:"availability"`
 	Discoverable    bool   `json:"discoverable"`
+	FootballType    string `json:"footballType"`
+	LicenseStatus   string `json:"licenseStatus"`
 }
 
 type Service struct {
@@ -40,7 +44,8 @@ type Service struct {
 
 func New(repo domain.Repository) *Service { return &Service{repo: repo, now: time.Now} }
 
-func public(profile domain.Profile) Profile {
+// Public exposes the canonical football profile without the owning account's private data.
+func Public(profile domain.Profile) Profile {
 	return Profile{
 		Position:        profile.Position,
 		DominantFoot:    profile.DominantFoot,
@@ -48,6 +53,8 @@ func public(profile domain.Profile) Profile {
 		CurrentClub:     profile.CurrentClub,
 		Availability:    profile.Availability,
 		Discoverable:    profile.Discoverable,
+		FootballType:    profile.FootballType,
+		LicenseStatus:   profile.LicenseStatus,
 		UpdatedAt:       profile.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 }
@@ -55,12 +62,12 @@ func public(profile domain.Profile) Profile {
 func (s *Service) Get(ctx context.Context, userID string) (Profile, error) {
 	profile, err := s.repo.ProfileByUserID(ctx, userID)
 	if errors.Is(err, domain.ErrNotFound) {
-		return Profile{Availability: "not_available"}, nil
+		return Profile{Availability: "not_available", FootballType: "unknown", LicenseStatus: "unknown"}, nil
 	}
 	if err != nil {
 		return Profile{}, err
 	}
-	return public(profile), nil
+	return Public(profile), nil
 }
 
 func (s *Service) Save(ctx context.Context, userID string, in SaveInput) (Profile, error) {
@@ -83,6 +90,12 @@ func (s *Service) Save(ctx context.Context, userID string, in SaveInput) (Profil
 	if in.Availability != "seeking_team" && in.Availability != "open_to_offers" && in.Availability != "not_available" {
 		fields["availability"] = "Uygunluk seçeneklerinden birini seç."
 	}
+	if in.FootballType != "amateur" && in.FootballType != "professional" && in.FootballType != "halisaha" {
+		fields["footballType"] = "Futbol türünü seç."
+	}
+	if in.LicenseStatus != "licensed" && in.LicenseStatus != "unlicensed" {
+		fields["licenseStatus"] = "Lisans durumunu seç."
+	}
 	if len(fields) > 0 {
 		return Profile{}, fields
 	}
@@ -94,10 +107,12 @@ func (s *Service) Save(ctx context.Context, userID string, in SaveInput) (Profil
 		CurrentClub:     in.CurrentClub,
 		Availability:    in.Availability,
 		Discoverable:    in.Discoverable,
+		FootballType:    in.FootballType,
+		LicenseStatus:   in.LicenseStatus,
 		UpdatedAt:       s.now().UTC(),
 	}
 	if err := s.repo.SaveProfile(ctx, profile); err != nil {
 		return Profile{}, err
 	}
-	return public(profile), nil
+	return Public(profile), nil
 }

@@ -37,3 +37,24 @@ test('valid persisted credentials can restore an existing session', async () => 
   } as Keychain.UserCredentials);
   await expect(sessionStorage.get()).resolves.toEqual(session);
 });
+test('the session kind is kept and unknown kinds are discarded', async () => {
+  const session = {
+    token: 'x'.repeat(43),
+    expiresAt: '2030-01-01T00:00:00Z',
+    kind: 'admin',
+  };
+  const stored = (value: unknown) =>
+    ({
+      username: 'session',
+      password: JSON.stringify(value),
+      service: 'com.futcareer.session',
+      storage: Keychain.STORAGE_TYPE.AES_GCM_NO_AUTH,
+    } as Keychain.UserCredentials);
+  jest.mocked(Keychain.getGenericPassword).mockResolvedValue(stored(session));
+  await expect(sessionStorage.get()).resolves.toEqual(session);
+  jest
+    .mocked(Keychain.getGenericPassword)
+    .mockResolvedValue(stored({ ...session, kind: 'root' }));
+  await expect(sessionStorage.get()).resolves.toBeNull();
+  expect(Keychain.resetGenericPassword).toHaveBeenCalled();
+});

@@ -7,6 +7,8 @@ const account = {
   email: 'deniz@example.com',
   password: 'strong-password',
   role: 'player' as const,
+  footballType: 'amateur' as const,
+  licenseStatus: 'licensed' as const,
 };
 test('valid account passes; email is trimmed for validation', () => {
   expect(

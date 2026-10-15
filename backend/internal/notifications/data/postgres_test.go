@@ -1,0 +1,65 @@
+package data_test
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"testing"
+
+	auth "futcareer/backend/internal/auth/application"
+	"futcareer/backend/internal/notifications/application"
+	"futcareer/backend/internal/notifications/data"
+	"futcareer/backend/internal/testsupport/testpostgres"
+)
+
+func account(t *testing.T, db *sql.DB, n int, role string) string {
+	t.Helper()
+	id := fmt.Sprintf("%032x", n)
+	_, err := db.Exec(`INSERT INTO users(id,full_name,email,password_hash,role,city,created_at,adult_confirmed,active) VALUES($1,'Note QA',$2,'hash',$3,'Ankara',now(),true,true)`, id, id+"@example.com", role)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return id
+}
+
+// Requires TEST_DATABASE_URL; skipped otherwise.
+func TestAnnouncementsFanOutOncePerRecipientByAudience(t *testing.T) {
+	db := testpostgres.New(t).DB
+	ctx := context.Background()
+	svc := application.NewAnnouncements(data.New(db))
+	player := account(t, db, 501, "player")
+	club := account(t, db, 502, "club")
+	account(t, db, 503, "coach")
+
+	all, err := svc.Create(ctx, application.AnnouncementInput{Title: "Yeni fırsat", Body: "Ankara'da yeni ilan", Audience: "all"})
+	if err != nil || all.Recipients != 3 {
+		t.Fatalf("all audience: %+v %v", all, err)
+	}
+	players, err := svc.Create(ctx, application.AnnouncementInput{Title: "Oyuncu fırsatı", Body: "Takım arıyoruz", Audience: "player"})
+	if err != nil || players.Recipients != 1 {
+		t.Fatalf("player audience: %+v %v", players, err)
+	}
+	one, err := svc.Create(ctx, application.AnnouncementInput{Title: "Kişisel", Body: "Sana özel", Audience: "account", Email: player + "@example.com"})
+	if err != nil || one.Recipients != 1 {
+		t.Fatalf("account audience: %+v %v", one, err)
+	}
+	var count int
+	if err := db.QueryRow(`SELECT count(*) FROM notifications WHERE recipient_id=$1 AND kind='opportunity'`, player).Scan(&count); err != nil || count != 3 {
+		t.Fatalf("player should have 3 opportunities, got %d %v", count, err)
+	}
+	if err := db.QueryRow(`SELECT count(*) FROM notifications WHERE recipient_id=$1 AND kind='opportunity'`, club).Scan(&count); err != nil || count != 1 {
+		t.Fatalf("club should get only the all-audience announcement, got %d", count)
+	}
+
+	list, err := svc.List(ctx)
+	if err != nil || len(list) != 3 {
+		t.Fatalf("list: %d %v", len(list), err)
+	}
+
+	_, err = svc.Create(ctx, application.AnnouncementInput{Title: "Kişisel", Body: "Sana özel", Audience: "account", Email: "nobody@example.com"})
+	var fields auth.ValidationError
+	if !errors.As(err, &fields) {
+		t.Fatalf("unknown account accepted: %v", err)
+	}
+}

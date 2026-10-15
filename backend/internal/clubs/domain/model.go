@@ -2,9 +2,16 @@ package domain
 
 import "time"
 
-// The account is the club identity; its name and login credentials live in users.
+// A club account is the team's identity; login credentials are never public.
 type Club struct {
-	UserID    string
-	District  string
-	UpdatedAt time.Time
+	UserID                string
+	FootballType          string
+	District              string
+	Description           string
+	VenueName             string
+	VenueAddress          string
+	TrainingGroundName    string
+	TrainingGroundAddress string
+	TrainingSchedule      string
+	UpdatedAt             time.Time
 }

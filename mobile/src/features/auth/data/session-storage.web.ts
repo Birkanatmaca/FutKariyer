@@ -7,7 +7,11 @@ export const sessionStorage: SessionStorage = {
     return current;
   },
   async save(value) {
-    current = { token: value.token, expiresAt: value.expiresAt };
+    current = {
+      token: value.token,
+      expiresAt: value.expiresAt,
+      kind: value.kind,
+    };
   },
   async clear() {
     current = null;

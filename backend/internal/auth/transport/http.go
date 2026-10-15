@@ -26,6 +26,7 @@ func New(service *application.Service) http.Handler {
 	mux.HandleFunc("GET /health", func(w http.ResponseWriter, r *http.Request) { write(w, 200, map[string]string{"status": "ok"}) })
 	mux.HandleFunc("POST /v1/auth/register", h.register)
 	mux.HandleFunc("POST /v1/auth/login", h.login)
+	mux.HandleFunc("POST /v1/auth/applications", h.apply)
 	mux.HandleFunc("GET /v1/auth/me", h.me)
 	mux.HandleFunc("POST /v1/auth/logout", h.logout)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -86,6 +87,12 @@ func failure(w http.ResponseWriter, err error) {
 		writeError(w, 409, "email_exists", "Bu e-posta ile bir hesap var. Giriş yapabilirsin.", map[string]string{"email": "Bu e-posta zaten kullanımda."})
 	case errors.Is(err, domain.ErrUnauthorized):
 		writeError(w, 401, "unauthorized", "Giriş bilgilerin hatalı veya hesabının erişimi kapalı; oturumun da sona ermiş olabilir.", nil)
+	case errors.Is(err, domain.ErrPendingApproval):
+		writeError(w, 403, "pending_approval", "Başvurun yönetici onayı bekliyor. Onaylandığında bu bilgilerle giriş yapabilirsin.", nil)
+	case errors.Is(err, domain.ErrApplicationRejected):
+		writeError(w, 403, "application_rejected", "Başvurun onaylanmadı. Ayrıntı için Fut Career ekibiyle iletişime geç.", nil)
+	case errors.Is(err, domain.ErrUsernameExists):
+		writeError(w, 409, "username_exists", "Bu kullanıcı adı kullanımda.", map[string]string{"username": "Bu kullanıcı adı zaten kullanımda."})
 	case errors.Is(err, domain.ErrWrongPortal):
 		writeError(w, 403, "wrong_portal", "Yönetici hesabıyla webde /securityadmin adresinden giriş yap.", nil)
 	default:
@@ -149,4 +156,19 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) apply(w http.ResponseWriter, r *http.Request) {
+	if h.limited(w, r) {
+		return
+	}
+	var in application.ApplyInput
+	if !decode(w, r, &in) {
+		return
+	}
+	if err := h.service.Apply(r.Context(), in); err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 201, map[string]string{"status": "pending"})
 }

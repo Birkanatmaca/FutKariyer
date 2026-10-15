@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Floodlight } from '../../../shared/ui/Floodlight';
 import { ArrowLeft } from 'lucide-react-native';
 import { Brand } from '../../../shared/ui/Brand';
 import { PitchArt } from '../../../shared/ui/PitchArt';
@@ -30,6 +31,7 @@ export function AuthFrame({
 }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
+      <Floodlight height={520} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -65,16 +67,13 @@ export function AuthFrame({
             </View>
             <Text
               accessibilityRole="header"
+              accessibilityHint={description}
               style={[styles.title, compact && styles.compactTitle]}
             >
               {title}
             </Text>
-            <Text style={styles.description}>{description}</Text>
           </View>
           <View style={styles.form}>{children}</View>
-          <View style={styles.footerLine}>
-            <Text style={styles.footer}>{copy.tagline}</Text>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -144,24 +143,9 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   compactTitle: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
-  description: {
-    fontSize: 14,
-    lineHeight: 22,
-    color: colors.secondary,
-    marginTop: space.lg,
-    maxWidth: 310,
-  },
   form: {
     paddingTop: space.xl,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-  },
-  footerLine: {
-    alignItems: 'center',
-    marginTop: space.xxl,
-  },
-  footer: {
-    color: colors.muted,
-    fontSize: 12,
   },
 });

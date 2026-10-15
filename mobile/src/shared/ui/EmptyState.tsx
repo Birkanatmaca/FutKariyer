@@ -9,51 +9,63 @@ export function EmptyState({
 }: {
   icon: LucideIcon;
   title: string;
-  body: string;
+  // Kept for screen readers; the card itself shows only the icon and title.
+  body?: string;
 }) {
   return (
     <View style={styles.card}>
-      <View style={styles.icon}>
-        <Icon size={27} color={colors.brand} />
+      <View style={styles.halo}>
+        <View style={styles.icon}>
+          <Icon size={28} color={colors.brand} strokeWidth={2} />
+        </View>
       </View>
-      <Text accessibilityRole="header" style={styles.title}>
+      <Text
+        accessibilityRole="header"
+        accessibilityHint={body}
+        style={styles.title}
+      >
         {title}
       </Text>
-      <Text style={styles.body}>{body}</Text>
     </View>
   );
 }
 const styles = StyleSheet.create({
   card: {
-    paddingVertical: space.xxxl,
+    paddingVertical: space.xxl,
     paddingHorizontal: space.xl,
-    gap: space.md,
+    gap: space.lg,
     alignItems: 'center',
     backgroundColor: colors.surface,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
+  },
+  // Two rings around the icon, like a centre circle on the pitch.
+  halo: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    borderWidth: 1,
+    borderColor: colors.pitchLine,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   icon: {
-    width: 56,
-    height: 56,
-    borderRadius: radius.pill,
-    backgroundColor: colors.raised,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.brandWash,
+    borderWidth: 1,
+    borderColor: colors.brandSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    fontSize: 18,
-    lineHeight: 26,
+    fontSize: 16,
+    lineHeight: 22,
     fontWeight: '700',
-    color: colors.text,
-    textAlign: 'center',
-    maxWidth: 320,
-  },
-  body: {
-    fontSize: 14,
-    lineHeight: 23,
     color: colors.secondary,
     textAlign: 'center',
+    maxWidth: 300,
   },
 });

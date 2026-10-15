@@ -16,6 +16,8 @@ type Profile struct {
 	CurrentClub     string
 	Availability    string
 	Discoverable    bool
+	FootballType    string
+	LicenseStatus   string
 	UpdatedAt       time.Time
 }
 

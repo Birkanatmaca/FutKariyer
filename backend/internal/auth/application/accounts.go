@@ -34,10 +34,10 @@ func ValidateAccount(in AccountInput) (AccountInput, ValidationError) {
 	if (in.Role == "player" || in.Role == "coach" || in.Email != "") && !validEmail(in.Email) {
 		fields["email"] = "Geçerli bir e-posta adresi gir."
 	}
-	if (in.Role == "club" || in.Role == "admin") && !usernamePattern.MatchString(in.Username) {
+	if (in.Role == "club" || in.Role == "admin" || in.Role == "organizer") && !usernamePattern.MatchString(in.Username) {
 		fields["username"] = "3–32 karakter; küçük Latin harfi, rakam, nokta, alt çizgi veya kısa çizgi kullan."
 	}
-	if in.Role != "player" && in.Role != "coach" && in.Role != "club" && in.Role != "admin" {
+	if in.Role != "player" && in.Role != "coach" && in.Role != "club" && in.Role != "admin" && in.Role != "organizer" {
 		fields["role"] = "Geçerli bir hesap türü seç."
 	}
 	if in.Role == "player" || in.Role == "coach" {

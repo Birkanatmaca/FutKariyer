@@ -22,7 +22,8 @@ const proxy = {
 };
 
 export default defineConfig(({ mode }) => ({
-  define: { __DEV__: mode !== 'production' },
+  // react-native's Animated reads `global`, which browsers do not define.
+  define: { __DEV__: mode !== 'production', global: 'globalThis' },
   resolve: {
     alias: [
       { find: /^react-native$/, replacement: 'react-native-web' },
@@ -41,7 +42,12 @@ export default defineConfig(({ mode }) => ({
   optimizeDeps: {
     rolldownOptions: {
       resolve: { extensions },
-      transform: { define: { __DEV__: JSON.stringify(mode !== 'production') } },
+      transform: {
+        define: {
+          __DEV__: JSON.stringify(mode !== 'production'),
+          global: 'globalThis',
+        },
+      },
     },
   },
   server: { proxy },

@@ -1,0 +1,35 @@
+# Fut Career on a single host: PostgreSQL (not published) and the API on ports 80 and 8092.
+# Secrets live in .env next to this file (see .env.example); never commit .env.
+name: futcareer
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: futcareer
+      POSTGRES_DB: futcareer
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U futcareer -d futcareer"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://futcareer:${POSTGRES_PASSWORD}@db:5432/futcareer?sslmode=disable
+      ADMIN_ORIGIN: ${ADMIN_ORIGIN:?set ADMIN_ORIGIN in .env}
+      ADMIN_FRONTEND_DIR: /app/admin-web
+      ADMIN_ALLOW_INSECURE_HTTP: ${ADMIN_ALLOW_INSECURE_HTTP:-false}
+      TZ: Europe/Istanbul
+    ports:
+      - "80:8080"
+      - "8092:8080"
+volumes:
+  db-data:

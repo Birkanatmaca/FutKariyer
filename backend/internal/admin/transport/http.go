@@ -24,9 +24,15 @@ type Handler struct {
 	limiter *ratelimit.Limiter
 }
 
-func New(authService *auth.Service, service *application.Service, browser BrowserConfig) http.Handler {
+func New(authService *auth.Service, service *application.Service, browser BrowserConfig, features http.Handler) http.Handler {
 	h := &Handler{auth: authService, service: service, browser: browser, limiter: ratelimit.New(20, time.Minute)}
 	mux := http.NewServeMux()
+	if features != nil {
+		// Every other admin path (content, leagues, gifts, applications,
+		// announcements, payments, club overviews) belongs to a feature handler;
+		// the account routes below are more specific and take precedence.
+		mux.Handle("/v1/admin/", features)
+	}
 	mux.HandleFunc("POST /v1/admin/auth/logout", h.logout)
 	for _, kind := range []string{"users", "clubs"} {
 		clubOnly := kind == "clubs"
@@ -47,7 +53,14 @@ func New(authService *auth.Service, service *application.Service, browser Browse
 				writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
 			}
 		}()
-		if r.Method != "GET" && r.Method != "HEAD" && (h.browser.origin == "" || r.Header.Get("Origin") != h.browser.origin) {
+		// The mobile app authenticates with a bearer token. Browsers never attach
+		// it on their own, so the Origin (CSRF) check only applies to cookie sessions.
+		token, bearer := bearerToken(r)
+		if r.Method == "POST" && r.URL.Path == "/v1/admin/auth/token" {
+			h.tokenLogin(w, r)
+			return
+		}
+		if !bearer && r.Method != "GET" && r.Method != "HEAD" && (h.browser.origin == "" || r.Header.Get("Origin") != h.browser.origin) {
 			writeError(w, 403, "invalid_origin", "Bu işlem yönetici panelinden yapılmalı.", nil)
 			return
 		}
@@ -55,9 +68,12 @@ func New(authService *auth.Service, service *application.Service, browser Browse
 			h.login(w, r)
 			return
 		}
-		user, err := h.auth.AdminMe(r.Context(), cookieToken(r))
+		if !bearer {
+			token = cookieToken(r)
+		}
+		user, err := h.auth.AdminMe(r.Context(), token)
 		if err != nil {
-			if errors.Is(err, authdomain.ErrUnauthorized) {
+			if errors.Is(err, authdomain.ErrUnauthorized) && !bearer {
 				h.clearCookie(w)
 			}
 			failure(w, err)
