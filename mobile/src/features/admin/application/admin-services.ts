@@ -6,6 +6,7 @@ import type {
   AnnouncementDraft,
   ApplicationDecision,
   ApplicationStatus,
+  CatalogUpdate,
   ContentForm,
   ContentSection,
   GiftDraft,
@@ -13,12 +14,15 @@ import type {
   MatchForm,
   PaymentFilter,
   PickedImage,
+  ReportAction,
+  ReportQueue,
 } from '../domain/models';
 import {
   limits,
   normalizeAccountForm,
   normalizeAnnouncementDraft,
   normalizeGiftDraft,
+  normalizeStoreProductIds,
 } from './validation';
 
 export function createAdminServices(
@@ -33,6 +37,7 @@ export function createAdminServices(
     gifts,
     announcements,
     payments,
+    reports,
   } = repositories;
   return {
     accounts: {
@@ -125,13 +130,25 @@ export function createAdminServices(
     },
     payments: {
       packages: () => payments.packages(),
-      updatePackage: (id: string, amountMinor: number, active: boolean) =>
-        payments.updatePackage(id, amountMinor, active),
+      updatePackage: (id: string, update: CatalogUpdate) =>
+        payments.updatePackage(id, {
+          ...update,
+          ...normalizeStoreProductIds(update),
+        }),
       proPlan: () => payments.proPlan(),
-      updateProPlan: (id: string, amountMinor: number, active: boolean) =>
-        payments.updateProPlan(id, amountMinor, active),
+      updateProPlan: (id: string, update: CatalogUpdate) =>
+        payments.updateProPlan(id, {
+          ...update,
+          ...normalizeStoreProductIds(update),
+        }),
       list: (status: PaymentFilter, page: number, search: string) =>
         payments.list(status, page, search.trim()),
+    },
+    reports: {
+      list: (queue: ReportQueue, page: number) => reports.list(queue, page),
+      countOpen: async () => (await reports.list('open', 1)).total,
+      resolve: (id: string, action: ReportAction) =>
+        reports.resolve(id, action),
     },
   };
 }

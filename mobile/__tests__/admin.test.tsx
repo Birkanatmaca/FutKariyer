@@ -17,12 +17,21 @@ import {
 } from '../src/features/admin/application/admin-services';
 import {
   parsePrice,
+  reportActions,
+  toCatalogUpdate,
   toMatchForm,
   validateGiftDraft,
+  validateStoreProductIds,
 } from '../src/features/admin/application/validation';
-import type { AdminGateway } from '../src/features/admin/domain/models';
+import type {
+  AdminGateway,
+  ContentReport,
+} from '../src/features/admin/domain/models';
 import { AccountsScreen } from '../src/features/admin/ui/accounts/AccountsScreen';
 import { AccountEditorScreen } from '../src/features/admin/ui/accounts/AccountEditorScreen';
+import { ProPlanCard } from '../src/features/admin/ui/payments/ProPlanCard';
+import { ReportsScreen } from '../src/features/admin/ui/reports/ReportsScreen';
+import { confirm } from '../src/features/admin/ui/parts/confirm';
 import { ApiError } from '../src/shared/api/client';
 import { copy } from '../src/shared/lib/copy';
 
@@ -30,6 +39,9 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
 }));
 jest.mock('../src/shared/ui/Floodlight', () => ({ Floodlight: () => null }));
+jest.mock('../src/features/admin/ui/parts/confirm', () => ({
+  confirm: jest.fn(),
+}));
 jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(),
 }));
@@ -40,6 +52,7 @@ jest.mock('lucide-react-native', () => ({
   CircleCheck: () => null,
   Eye: () => null,
   EyeOff: () => null,
+  Flag: () => null,
   ImageOff: () => null,
   KeyRound: () => null,
   Plus: () => null,
@@ -509,10 +522,92 @@ describe('admin payload validation', () => {
             currency: 'USD',
             active: true,
             sortOrder: 1,
+            appleProductId: '',
+            googleProductId: '',
           },
         ],
       }).payments.packages(),
     ).rejects.toBeInstanceOf(ApiError);
+  });
+  const paymentPackage = {
+    id: '4'.repeat(32),
+    credits: 2,
+    amountMinor: 10000,
+    currency: 'TRY',
+    active: true,
+    sortOrder: 1,
+    appleProductId: 'rights.2',
+    googleProductId: '',
+  };
+  test('packages carry both store product ids', async () => {
+    await expect(
+      repositories({ items: [paymentPackage] }).payments.packages(),
+    ).resolves.toEqual([paymentPackage]);
+    const withoutGoogle: Record<string, unknown> = { ...paymentPackage };
+    delete withoutGoogle.googleProductId;
+    await expect(
+      repositories({ items: [withoutGoogle] }).payments.packages(),
+    ).rejects.toBeInstanceOf(ApiError);
+    await expect(
+      repositories({
+        items: [{ ...paymentPackage, appleProductId: null }],
+      }).payments.packages(),
+    ).rejects.toBeInstanceOf(ApiError);
+  });
+  test('package and Pro plan saves send both store ids together', async () => {
+    const plan = {
+      id: '5'.repeat(32),
+      days: 30,
+      bonusCredits: 3,
+      amountMinor: 4900,
+      currency: 'TRY',
+      active: true,
+      appleProductId: 'pro.30',
+      googleProductId: 'pro.30',
+    };
+    const gateway = fakeGateway({ package: paymentPackage, plan });
+    const services = createAdminServices(
+      createAdminRepositories(gateway),
+      async () => null,
+    );
+    await services.payments.updatePackage(paymentPackage.id, {
+      amountMinor: 12000,
+      active: false,
+      appleProductId: ' rights.2 ',
+      googleProductId: '',
+    });
+    expect(gateway.request).toHaveBeenLastCalledWith(
+      '/v1/admin/payments/packages/' + paymentPackage.id,
+      {
+        method: 'PUT',
+        body: {
+          amountMinor: 12000,
+          active: false,
+          appleProductId: 'rights.2',
+          googleProductId: '',
+        },
+      },
+    );
+    await expect(
+      services.payments.updateProPlan(plan.id, {
+        amountMinor: 4900,
+        active: true,
+        appleProductId: 'pro.30',
+        googleProductId: 'pro.30',
+      }),
+    ).resolves.toEqual(plan);
+    expect(gateway.request).toHaveBeenLastCalledWith(
+      '/v1/admin/payments/pro-plan/' + plan.id,
+      {
+        method: 'PUT',
+        body: {
+          amountMinor: 4900,
+          active: true,
+          appleProductId: 'pro.30',
+          googleProductId: 'pro.30',
+        },
+      },
+    );
   });
 });
 
@@ -579,6 +674,58 @@ describe('admin form rules', () => {
     expect(parsePrice('149,90')).toBe(14990);
     expect(parsePrice('0,50')).toBeNull();
     expect(parsePrice('abc')).toBeNull();
+  });
+  test('store product ids follow the App Store and Google Play rules', () => {
+    const ids = { appleProductId: '', googleProductId: '' };
+    expect(validateStoreProductIds(ids)).toEqual({});
+    expect(
+      validateStoreProductIds({
+        appleProductId: ' com.FutCareer.Pro_30 ',
+        googleProductId: 'pro.30_days',
+      }),
+    ).toEqual({});
+    expect(
+      Object.keys(
+        validateStoreProductIds({
+          appleProductId: 'pro-30',
+          googleProductId: 'Pro.30',
+        }),
+      ),
+    ).toEqual(['appleProductId', 'googleProductId']);
+    expect(
+      Object.keys(validateStoreProductIds({ ...ids, googleProductId: '.pro' })),
+    ).toEqual(['googleProductId']);
+    expect(
+      Object.keys(
+        validateStoreProductIds({ ...ids, appleProductId: 'a'.repeat(101) }),
+      ),
+    ).toEqual(['appleProductId']);
+  });
+  test('catalog updates always carry the amount and both trimmed store ids', () => {
+    expect(
+      toCatalogUpdate(
+        { price: '49,90', appleProductId: ' pro.30 ', googleProductId: '' },
+        true,
+      ),
+    ).toEqual({
+      update: {
+        amountMinor: 4990,
+        active: true,
+        appleProductId: 'pro.30',
+        googleProductId: '',
+      },
+    });
+    expect(
+      toCatalogUpdate(
+        { price: '0', appleProductId: '', googleProductId: 'Bad' },
+        false,
+      ),
+    ).toEqual({
+      fields: {
+        amountMinor: copy.admin.payments.priceError,
+        googleProductId: copy.admin.payments.googleProductError,
+      },
+    });
   });
 });
 
@@ -754,5 +901,271 @@ describe('admin screens', () => {
     );
     expect(alerts.length).toBeGreaterThan(0);
     expect(onDone).not.toHaveBeenCalled();
+  });
+
+  test('Pro plan card edits store ids and always sends both', async () => {
+    const text = copy.admin.payments;
+    const plan = {
+      id: '5'.repeat(32),
+      days: 30,
+      bonusCredits: 3,
+      amountMinor: 4900,
+      currency: 'TRY',
+      active: true,
+      appleProductId: 'pro.30',
+      googleProductId: '',
+    };
+    const base = fakeServices({});
+    const updateProPlan = jest.fn(
+      async (_id: string, update: Record<string, unknown>) => ({
+        ...plan,
+        ...update,
+      }),
+    );
+    const services = {
+      ...base,
+      payments: { ...base.payments, updateProPlan },
+    } as unknown as AdminServices;
+    const onSaved = jest.fn();
+    let root!: ReactTestRenderer;
+    await act(async () => {
+      root = create(
+        <ProPlanCard plan={plan} services={services} onSaved={onSaved} />,
+      );
+    });
+    mounted.push(root);
+    expect(input(root, text.appleProductId).props.value).toBe('pro.30');
+    expect(texts(root)).toContain(text.priceHint);
+    const save = () =>
+      pressable(
+        root,
+        text.proPlanTitle(30, 3) + ', ' + text.saveProPlan,
+      ).props.onPress();
+    await act(async () =>
+      input(root, text.googleProductId).props.onChangeText('Pro.30'),
+    );
+    await act(async () => save());
+    expect(updateProPlan).not.toHaveBeenCalled();
+    expect(texts(root)).toContain(text.googleProductError);
+    await act(async () =>
+      input(root, text.googleProductId).props.onChangeText(' pro.30_days '),
+    );
+    await act(async () => save());
+    expect(updateProPlan).toHaveBeenCalledWith(plan.id, {
+      amountMinor: 4900,
+      active: true,
+      appleProductId: 'pro.30',
+      googleProductId: 'pro.30_days',
+    });
+    expect(onSaved).toHaveBeenCalledWith(
+      expect.objectContaining({ googleProductId: 'pro.30_days' }),
+    );
+    expect(texts(root)).toContain(text.proSaved);
+  });
+});
+
+const reportId = '7'.repeat(32);
+const openReport: ContentReport = {
+  id: reportId,
+  targetKind: 'post',
+  targetId: '8'.repeat(32),
+  targetUserId: '9'.repeat(32),
+  targetName: 'Arda Kaya',
+  targetRole: 'player',
+  excerpt: 'Bildirilen gönderi metni',
+  reason: 'spam',
+  note: '',
+  reporterName: 'Deniz Yılmaz',
+  status: 'open',
+  createdAt: '2026-10-14T10:00:00Z',
+  targetReports: 2,
+};
+
+describe('admin content reports', () => {
+  function gatewayWith(body: unknown) {
+    const request = jest.fn().mockResolvedValue(body);
+    return {
+      request,
+      repositories: createAdminRepositories({
+        request,
+        imageSource: () => null,
+      } as AdminGateway),
+    };
+  }
+  const page = { page: 1, pageSize: 20, total: 1, totalPages: 1 };
+
+  test('report pages are validated against the requested queue and page', async () => {
+    const valid = gatewayWith({ ...page, items: [openReport] });
+    await expect(
+      valid.repositories.reports.list('open', 1),
+    ).resolves.toMatchObject({ total: 1, items: [{ id: reportId }] });
+    expect(valid.request).toHaveBeenCalledWith(
+      '/v1/admin/reports?status=open&page=1&pageSize=20',
+    );
+    const resolved = {
+      ...openReport,
+      status: 'dismissed',
+      resolvedAt: '2026-10-15T10:00:00Z',
+      targetReports: 0,
+    };
+    await expect(
+      gatewayWith({ ...page, items: [resolved] }).repositories.reports.list(
+        'resolved',
+        1,
+      ),
+    ).resolves.toMatchObject({ total: 1 });
+    const invalid: unknown[] = [
+      { ...page, items: [{ ...openReport, reason: 'rude' }] },
+      { ...page, items: [{ ...openReport, targetKind: 'club' }] },
+      { ...page, items: [{ ...openReport, targetUserId: '../x' }] },
+      { ...page, items: [{ ...openReport, targetReports: -1 }] },
+      { ...page, items: [{ ...openReport, resolvedAt: 'soon' }] },
+      { ...page, items: [resolved] },
+      { ...page, page: 2, items: [openReport] },
+      { ...page, pageSize: 50, items: [openReport] },
+      { items: [openReport] },
+    ];
+    for (const body of invalid) {
+      await expect(
+        gatewayWith(body).repositories.reports.list('open', 1),
+      ).rejects.toBeInstanceOf(ApiError);
+    }
+    // A report without a target account is still a valid report.
+    const orphan: Partial<typeof openReport> = { ...openReport };
+    delete orphan.targetUserId;
+    await expect(
+      gatewayWith({
+        ...page,
+        items: [{ ...orphan, targetName: '', targetRole: '' }],
+      }).repositories.reports.list('open', 1),
+    ).resolves.toMatchObject({ total: 1 });
+  });
+
+  test('resolving posts the action and checks the returned report', async () => {
+    const removed = {
+      ...openReport,
+      status: 'removed',
+      resolvedAt: '2026-10-15T10:00:00Z',
+      targetReports: 0,
+    };
+    const ok = gatewayWith({ report: removed });
+    await expect(
+      ok.repositories.reports.resolve(reportId, 'remove'),
+    ).resolves.toMatchObject({ status: 'removed' });
+    expect(ok.request).toHaveBeenCalledWith(
+      '/v1/admin/reports/' + reportId + '/resolve',
+      { method: 'POST', body: { action: 'remove' } },
+    );
+    await expect(
+      gatewayWith({ report: removed }).repositories.reports.resolve(
+        reportId,
+        'suspend',
+      ),
+    ).rejects.toBeInstanceOf(ApiError);
+    await expect(
+      gatewayWith({
+        report: { ...removed, id: '6'.repeat(32) },
+      }).repositories.reports.resolve(reportId, 'remove'),
+    ).rejects.toBeInstanceOf(ApiError);
+    const unsafe = gatewayWith({ report: removed });
+    await expect(
+      unsafe.repositories.reports.resolve('../users', 'remove'),
+    ).rejects.toBeInstanceOf(ApiError);
+    expect(unsafe.request).not.toHaveBeenCalled();
+  });
+
+  test('profiles cannot be removed and orphaned targets cannot be suspended', () => {
+    expect(reportActions(openReport)).toEqual(['dismiss', 'remove', 'suspend']);
+    expect(reportActions({ ...openReport, targetKind: 'user' })).toEqual([
+      'dismiss',
+      'suspend',
+    ]);
+    expect(reportActions({ ...openReport, targetUserId: undefined })).toEqual([
+      'dismiss',
+      'remove',
+    ]);
+    expect(reportActions({ ...openReport, status: 'dismissed' })).toEqual([]);
+  });
+
+  describe('review screen', () => {
+    const text = copy.admin.reports;
+    const mounted: ReactTestRenderer[] = [];
+    afterEach(() => {
+      act(() => mounted.splice(0).forEach(root => root.unmount()));
+      (confirm as jest.Mock).mockReset();
+    });
+    async function renderScreen(resolve: jest.Mock) {
+      const base = createAdminServices(
+        createAdminRepositories({
+          request: jest.fn(),
+          imageSource: () => null,
+        } as AdminGateway),
+        async () => null,
+      );
+      const list = jest
+        .fn()
+        .mockResolvedValueOnce({ ...page, items: [openReport] })
+        .mockResolvedValue({ ...page, total: 0, items: [] });
+      const services = {
+        ...base,
+        reports: { ...base.reports, list, resolve },
+      } as unknown as AdminServices;
+      let root!: ReactTestRenderer;
+      await act(async () => {
+        root = create(<ReportsScreen services={services} onBack={jest.fn()} />);
+      });
+      mounted.push(root);
+      return { root, list };
+    }
+
+    test('shows the report and suspends only after confirmation', async () => {
+      const resolve = jest.fn().mockResolvedValue({
+        ...openReport,
+        status: 'suspended',
+      });
+      const { root, list } = await renderScreen(resolve);
+      expect(list).toHaveBeenCalledWith('open', 1);
+      expect(texts(root)).toEqual(
+        expect.arrayContaining([
+          'Arda Kaya',
+          copy.admin.roles.player,
+          openReport.excerpt,
+          text.reasons.spam,
+          'Deniz Yılmaz',
+          text.openCount(2),
+        ]),
+      );
+      const suspend = () =>
+        pressable(root, 'Arda Kaya, ' + text.suspend).props.onPress();
+      (confirm as jest.Mock).mockResolvedValueOnce(false);
+      await act(async () => suspend());
+      expect(confirm).toHaveBeenCalledWith(
+        text.suspendTitle,
+        text.suspendBody('Arda Kaya'),
+        text.suspend,
+      );
+      expect(resolve).not.toHaveBeenCalled();
+      (confirm as jest.Mock).mockResolvedValueOnce(true);
+      await act(async () => suspend());
+      expect(resolve).toHaveBeenCalledWith(reportId, 'suspend');
+      // The queue reloads: every open report about the target is closed.
+      expect(list).toHaveBeenCalledTimes(2);
+      expect(texts(root)).toContain(text.suspended('Arda Kaya'));
+      expect(texts(root)).toContain(text.empty.open);
+    });
+
+    test('dismiss needs no confirmation and a conflict reloads the queue', async () => {
+      const resolve = jest
+        .fn()
+        .mockRejectedValue(new ApiError('Zaten', 409, {}, 'already_resolved'));
+      const { root, list } = await renderScreen(resolve);
+      await act(async () =>
+        pressable(root, 'Arda Kaya, ' + text.dismiss).props.onPress(),
+      );
+      expect(confirm).not.toHaveBeenCalled();
+      expect(resolve).toHaveBeenCalledWith(reportId, 'dismiss');
+      expect(texts(root)).toContain(text.alreadyResolved);
+      expect(list).toHaveBeenCalledTimes(2);
+    });
   });
 });

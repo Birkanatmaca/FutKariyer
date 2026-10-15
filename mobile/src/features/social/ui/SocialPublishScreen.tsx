@@ -24,7 +24,7 @@ import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import { maxPostLength, type SelectedMedia } from '../domain/models';
 import type { SocialService } from '../application/social-service';
-import { VideoPlayer } from './VideoPlayer';
+import { VideoPlayer } from '../../../shared/ui/VideoPlayer';
 
 export function SocialPublishScreen({
   token,

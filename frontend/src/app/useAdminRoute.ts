@@ -3,6 +3,7 @@ export type PanelSection =
   | 'users'
   | 'clubs'
   | 'applications'
+  | 'reports'
   | 'ads'
   | 'news'
   | 'leagues'
@@ -24,6 +25,7 @@ function currentRoute(): Route {
     return 'clubs';
   }
   if (path === '/securityadmin/applications') return 'applications';
+  if (path === '/securityadmin/reports') return 'reports';
   if (path === '/securityadmin/ads') return 'ads';
   if (path === '/securityadmin/news') return 'news';
   if (path === '/securityadmin/leagues') return 'leagues';

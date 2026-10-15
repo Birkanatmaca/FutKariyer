@@ -1,6 +1,6 @@
 import { launchImageLibrary } from 'react-native-image-picker';
-import { copy } from '../../../shared/lib/copy';
-import type { MediaKind, SelectedMedia } from '../domain/models';
+import { copy } from './copy';
+import type { MediaKind, SelectedMedia } from '../domain/media';
 
 export async function pickMedia(
   kind: MediaKind,
@@ -16,7 +16,7 @@ export async function pickMedia(
   if (response.didCancel) return null;
   const asset = response.assets?.[0];
   if (response.errorCode || !asset?.uri)
-    throw new Error(copy.social.pickingFailed);
+    throw new Error(copy.media.pickingFailed);
   return {
     kind,
     uri: asset.uri,

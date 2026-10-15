@@ -1,5 +1,5 @@
-import { copy } from '../../../shared/lib/copy';
-import type { MediaKind, SelectedMedia } from '../domain/models';
+import { copy } from './copy';
+import type { MediaKind, SelectedMedia } from '../domain/media';
 
 const files = new WeakMap<SelectedMedia, File>();
 export function pickMedia(kind: MediaKind): Promise<SelectedMedia | null> {
@@ -43,13 +43,13 @@ export function pickMedia(kind: MediaKind): Promise<SelectedMedia | null> {
       input.click();
     } catch {
       cleanup();
-      reject(new Error(copy.social.pickingFailed));
+      reject(new Error(copy.media.pickingFailed));
     }
   });
 }
 export function appendMedia(form: FormData, media: SelectedMedia) {
   const file = files.get(media);
-  if (!file) throw new Error(copy.social.pickingFailed);
+  if (!file) throw new Error(copy.media.pickingFailed);
   form.append('media', file, media.name);
 }
 export function releaseMedia(media: SelectedMedia) {

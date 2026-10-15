@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
-  Linking,
   Pressable,
   StyleSheet,
   Text,
@@ -17,35 +16,47 @@ import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
 import { colors, radius, space } from '../../../styles/tokens';
 import { createPaymentsService } from '../application/payment-service';
 import { paymentsRepository } from '../data/http-payments-repository';
+import type { StoreCheckout } from '../application/store-checkout';
+import { productIdFor, storeAvailable } from '../domain/store';
 
 const service = createPaymentsService(paymentsRepository);
 
 export function TeamRightsScreen({
   token,
+  checkout,
   onBack,
 }: {
   token: string;
+  checkout: StoreCheckout;
   onBack(): void;
 }) {
-  const load = useCallback(() => service.packages(token), [token]);
+  const load = useCallback(async () => {
+    const catalog = await service.packages(token);
+    const available = storeAvailable(checkout.store, catalog.stores);
+    const ids = catalog.items
+      .map(item => productIdFor(checkout.store, item))
+      .filter(Boolean);
+    // Prices come from the store; a product the store does not know stays unbuyable.
+    const prices = available
+      ? await checkout.prices(ids).catch(() => ({}))
+      : {};
+    return { ...catalog, available, prices: prices as Record<string, string> };
+  }, [checkout, token]);
   const state = useFocusedResource(load);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const formatPrice = (amountMinor: number, currency: string) =>
-    new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency,
-    }).format(amountMinor / 100);
   async function purchase(packageId: string) {
-    if (busy || !state.data?.checkoutEnabled) return;
+    if (busy || !state.data?.available) return;
     setBusy(packageId);
     setError('');
     setNotice('');
     try {
-      const order = await service.createOrder(token, packageId);
-      await Linking.openURL(order.checkoutUrl);
-      setNotice(copy.payments.checkoutStarted);
+      const outcome = await checkout.buy(token, 'team_rights', packageId);
+      if (outcome === 'paid') setNotice(copy.payments.purchased);
+      else if (outcome === 'pending') setNotice(copy.payments.pending);
+      else if (outcome === 'failed' || outcome === 'refunded')
+        setError(copy.payments.failed);
     } catch (failure) {
       setError(
         failure instanceof Error ? failure.message : copy.form.unexpected,
@@ -88,38 +99,41 @@ export function TeamRightsScreen({
           <Button label={copy.form.retry} onPress={state.retry} />
         </>
       ) : state.data?.items.length ? (
-        state.data.items.map(item => (
-          <View key={item.id} style={styles.packageCard}>
-            <View style={styles.packageIcon}>
-              <ShoppingBag size={22} color={colors.brand} />
+        state.data.items.map(item => {
+          const price =
+            state.data?.prices[productIdFor(checkout.store, item)] ?? '';
+          return (
+            <View key={item.id} style={styles.packageCard}>
+              <View style={styles.packageIcon}>
+                <ShoppingBag size={22} color={colors.brand} />
+              </View>
+              <View style={styles.packageDetails}>
+                <Text style={styles.packageTitle}>
+                  {copy.payments.rights(item.credits)}
+                </Text>
+                {price ? <Text style={styles.price}>{price}</Text> : null}
+              </View>
+              <Button
+                label={price ? copy.payments.buyNow : copy.payments.purchase}
+                accessibilityLabel={
+                  copy.payments.rights(item.credits) +
+                  ', ' +
+                  (price || copy.payments.purchase)
+                }
+                loading={busy === item.id}
+                disabled={!price || !!busy}
+                onPress={() => purchase(item.id)}
+              />
             </View>
-            <View style={styles.packageDetails}>
-              <Text style={styles.packageTitle}>
-                {copy.payments.rights(item.credits)}
-              </Text>
-              <Text style={styles.price}>
-                {formatPrice(item.amountMinor, item.currency)}
-              </Text>
-            </View>
-            <Button
-              label={
-                state.data?.checkoutEnabled
-                  ? copy.payments.buyNow
-                  : copy.payments.purchase
-              }
-              loading={busy === item.id}
-              disabled={!state.data?.checkoutEnabled || !!busy}
-              onPress={() => purchase(item.id)}
-            />
-          </View>
-        ))
+          );
+        })
       ) : (
         <View style={styles.empty}>
           <Text style={styles.packageTitle}>{copy.payments.empty}</Text>
           <Text style={styles.helper}>{copy.payments.emptyBody}</Text>
         </View>
       )}
-      {!state.loading && !state.error && !state.data?.checkoutEnabled ? (
+      {!state.loading && !state.error && !state.data?.available ? (
         <ErrorBanner message={copy.payments.unavailable} />
       ) : null}
     </Screen>

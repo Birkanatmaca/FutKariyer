@@ -1,6 +1,9 @@
-export type TeamRequestPackage = {
+import type { StoreAvailability, StoreProductIds } from './store';
+
+export type TeamRequestPackage = StoreProductIds & {
   id: string;
   credits: 2 | 5 | 10;
+  // Reporting value set by the admin; the store's own price is shown.
   amountMinor: number;
   currency: 'TRY';
   active: boolean;
@@ -8,16 +11,8 @@ export type TeamRequestPackage = {
 };
 export type PaymentCatalog = {
   items: TeamRequestPackage[];
-  checkoutEnabled: boolean;
-};
-export type CheckoutOrder = {
-  orderId: string;
-  status: 'pending';
-  provider: string;
-  providerPaymentId: string;
-  checkoutUrl: string;
+  stores: StoreAvailability;
 };
 export interface PaymentsRepository {
   packages(token: string): Promise<PaymentCatalog>;
-  createOrder(token: string, packageId: string): Promise<CheckoutOrder>;
 }

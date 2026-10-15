@@ -1,14 +1,31 @@
 import { ApiError, request } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
 import type {
-  CheckoutOrder,
   PaymentCatalog,
   PaymentsRepository,
   TeamRequestPackage,
 } from '../domain/models';
+import type { StoreAvailability, StoreProductIds } from '../domain/store';
 
 const validId = (value: unknown) =>
   typeof value === 'string' && /^[a-f0-9]{32}$/.test(value);
+const productId = (value: unknown) =>
+  typeof value === 'string' && /^[A-Za-z0-9._]{0,100}$/.test(value);
+
+export function validStoreProductIds(value: unknown): value is StoreProductIds {
+  const ids = value as StoreProductIds;
+  return (
+    !!ids && productId(ids.appleProductId) && productId(ids.googleProductId)
+  );
+}
+export function validStores(value: unknown): value is StoreAvailability {
+  const stores = value as StoreAvailability;
+  return (
+    !!stores &&
+    typeof stores.appStore === 'boolean' &&
+    typeof stores.googlePlay === 'boolean'
+  );
+}
 function validPackage(value: unknown): value is TeamRequestPackage {
   const item = value as TeamRequestPackage;
   return (
@@ -19,12 +36,13 @@ function validPackage(value: unknown): value is TeamRequestPackage {
     item.amountMinor > 0 &&
     item.currency === 'TRY' &&
     typeof item.active === 'boolean' &&
-    Number.isInteger(item.sortOrder)
+    Number.isInteger(item.sortOrder) &&
+    validStoreProductIds(item)
   );
 }
 export const paymentsRepository: PaymentsRepository = {
   async packages(token) {
-    const result = await request<{ items: unknown; checkoutEnabled: unknown }>(
+    const result = await request<{ items: unknown; stores: unknown }>(
       '/v1/payments/packages',
       { token },
     );
@@ -32,29 +50,10 @@ export const paymentsRepository: PaymentsRepository = {
       !result ||
       !Array.isArray(result.items) ||
       !result.items.every(validPackage) ||
-      typeof result.checkoutEnabled !== 'boolean'
+      !validStores(result.stores)
     ) {
       throw new ApiError(copy.form.unexpected);
     }
-    return result as PaymentCatalog;
-  },
-  async createOrder(token, packageId) {
-    const result = await request<CheckoutOrder>(
-      '/v1/me/team-request-payments',
-      { method: 'POST', token, body: { packageId } },
-    );
-    if (
-      !result ||
-      typeof result.orderId !== 'string' ||
-      !/^[a-f0-9]{32}$/.test(result.orderId) ||
-      result.status !== 'pending' ||
-      typeof result.provider !== 'string' ||
-      typeof result.providerPaymentId !== 'string' ||
-      typeof result.checkoutUrl !== 'string' ||
-      !result.checkoutUrl.startsWith('https://')
-    ) {
-      throw new ApiError(copy.form.unexpected);
-    }
-    return result;
+    return { items: result.items, stores: result.stores } as PaymentCatalog;
   },
 };

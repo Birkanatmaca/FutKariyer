@@ -50,6 +50,8 @@ type Repository interface {
 	CreateSession(context.Context, Session) error
 	SessionByHash(context.Context, string) (Session, error)
 	DeleteSession(context.Context, string) error
+	// DeleteUser removes a mobile account; related records cascade or are detached.
+	DeleteUser(context.Context, string) error
 }
 
 // Application is a club or organizer sign-up waiting for administrator review.

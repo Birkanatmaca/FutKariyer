@@ -385,16 +385,22 @@ export interface AnnouncementsRepository {
 // Payments
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
 export type PaymentFilter = PaymentStatus | 'all';
-export type PaymentPackage = {
+// App Store / Google Play product ids; '' means not sold in that store.
+export type StoreProductIds = {
+  appleProductId: string;
+  googleProductId: string;
+};
+export type PaymentPackage = StoreProductIds & {
   id: string;
   credits: 2 | 5 | 10;
+  // Reporting value; the store charges its own price.
   amountMinor: number;
   currency: string;
   active: boolean;
   sortOrder: number;
 };
 export type PaymentProduct = 'team_rights' | 'pro';
-export type ProPlan = {
+export type ProPlan = StoreProductIds & {
   id: string;
   days: number;
   bonusCredits: number;
@@ -420,6 +426,11 @@ export type Payment = {
   updatedAt: string;
   confirmedAt?: string;
 };
+// Admin edit of a package or the Pro plan; both store ids are always sent.
+export type CatalogUpdate = StoreProductIds & {
+  amountMinor: number;
+  active: boolean;
+};
 export type PaymentSummary = {
   total: number;
   pending: number;
@@ -432,22 +443,51 @@ export type PaymentSummary = {
 export type PaymentPage = Page<Payment> & { summary: PaymentSummary };
 export interface PaymentsRepository {
   packages(): Promise<PaymentPackage[]>;
-  updatePackage(
-    id: string,
-    amountMinor: number,
-    active: boolean,
-  ): Promise<PaymentPackage>;
+  updatePackage(id: string, update: CatalogUpdate): Promise<PaymentPackage>;
   proPlan(): Promise<ProPlan>;
-  updateProPlan(
-    id: string,
-    amountMinor: number,
-    active: boolean,
-  ): Promise<ProPlan>;
+  updateProPlan(id: string, update: CatalogUpdate): Promise<ProPlan>;
   list(
     status: PaymentFilter,
     page: number,
     search: string,
   ): Promise<PaymentPage>;
+}
+
+// Content reports (moderation review queue). Open reports come oldest first,
+// resolved ones newest first. Resolving one closes every open report about
+// the same target on the server.
+export type ReportQueue = 'open' | 'resolved';
+export type ReportTargetKind = 'post' | 'reply' | 'user';
+export type ReportReason =
+  | 'spam'
+  | 'harassment'
+  | 'inappropriate'
+  | 'impersonation'
+  | 'other';
+export type ReportStatus = 'open' | 'dismissed' | 'removed' | 'suspended';
+export type ReportAction = 'dismiss' | 'remove' | 'suspend';
+export type ContentReport = {
+  id: string;
+  targetKind: ReportTargetKind;
+  targetId: string;
+  // Absent when the target account no longer exists.
+  targetUserId?: string;
+  targetName: string;
+  // '' when the target account no longer exists.
+  targetRole: string;
+  excerpt: string;
+  reason: ReportReason;
+  note: string;
+  reporterName: string;
+  status: ReportStatus;
+  createdAt: string;
+  resolvedAt?: string;
+  // Open reports about the same target.
+  targetReports: number;
+};
+export interface ReportsRepository {
+  list(queue: ReportQueue, page: number): Promise<Page<ContentReport>>;
+  resolve(id: string, action: ReportAction): Promise<ContentReport>;
 }
 
 export type AdminRepositories = {
@@ -458,4 +498,5 @@ export type AdminRepositories = {
   gifts: GiftsRepository;
   announcements: AnnouncementsRepository;
   payments: PaymentsRepository;
+  reports: ReportsRepository;
 };

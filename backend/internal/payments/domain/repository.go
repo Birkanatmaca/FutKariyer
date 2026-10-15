@@ -12,6 +12,7 @@ var (
 	ErrPackageUnavailable  = errors.New("payment package unavailable")
 	ErrProviderUnavailable = errors.New("payment checkout provider unavailable")
 	ErrInvalidEvent        = errors.New("invalid payment event")
+	ErrDuplicateProduct    = errors.New("store product id already used")
 )
 
 type Package struct {
@@ -21,9 +22,10 @@ type Package struct {
 	Currency    string `json:"currency"`
 	Active      bool   `json:"active"`
 	SortOrder   int    `json:"sortOrder"`
+	StoreProducts
 }
 
-// Products sold through the provider-independent checkout.
+// Products sold through the provider-independent checkout and the app stores.
 const (
 	ProductTeamRights = "team_rights"
 	ProductPro        = "pro"
@@ -37,6 +39,7 @@ type ProPlan struct {
 	AmountMinor  int64  `json:"amountMinor"`
 	Currency     string `json:"currency"`
 	Active       bool   `json:"active"`
+	StoreProducts
 }
 
 type Payment struct {
@@ -112,13 +115,19 @@ type Page struct {
 
 type Repository interface {
 	ListPackages(context.Context, bool) ([]Package, error)
-	UpdatePackage(context.Context, string, int64, bool) (Package, error)
+	UpdatePackage(context.Context, string, int64, bool, *StoreProducts) (Package, error)
 	ListPayments(context.Context, Query) (Page, error)
 	CreateOrder(context.Context, string, string, string) (Order, error)
 	ProPlan(context.Context) (ProPlan, error)
-	UpdateProPlan(context.Context, string, int64, bool) (ProPlan, error)
+	UpdateProPlan(context.Context, string, int64, bool, *StoreProducts) (ProPlan, error)
 	CreateProOrder(context.Context, string, string, string) (Order, error)
 	SetCheckout(context.Context, string, string, string) error
 	MarkOrderFailed(context.Context, string) error
 	ApplyEvent(context.Context, ProviderEvent) error
+	// Store purchases.
+	SetOrderProvider(ctx context.Context, orderID, provider string) error
+	StoreOrder(ctx context.Context, orderID string) (StoreOrderInfo, error)
+	OrderByProviderPayment(ctx context.Context, provider, paymentID string) (string, error)
+	SyncCursor(ctx context.Context, name string) (time.Time, bool, error)
+	SetSyncCursor(ctx context.Context, name string, position time.Time) error
 }

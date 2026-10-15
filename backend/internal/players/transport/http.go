@@ -18,11 +18,16 @@ type Handler struct {
 	players *playerapplication.Service
 }
 
-func New(auth *authapplication.Service, players *playerapplication.Service) http.Handler {
+// New serves the player's own profile and, when a media service is given, the
+// profile gallery.
+func New(auth *authapplication.Service, players *playerapplication.Service, gallery ...*playerapplication.MediaService) http.Handler {
 	h := &Handler{auth: auth, players: players}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/players/me/profile", h.get)
 	mux.HandleFunc("PUT /v1/players/me/profile", h.save)
+	if len(gallery) > 0 && gallery[0] != nil {
+		registerMedia(mux, auth, gallery[0])
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")

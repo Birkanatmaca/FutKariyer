@@ -96,6 +96,20 @@ func (r *Postgres) DeleteSession(ctx context.Context, hash string) error {
 	return err
 }
 
+func (r *Postgres) DeleteUser(ctx context.Context, id string) error {
+	result, err := r.db.ExecContext(ctx, "DELETE FROM users WHERE id=$1 AND role<>'admin'", id)
+	if err != nil {
+		return err
+	}
+	if count, err := result.RowsAffected(); err != nil || count != 1 {
+		if err == nil {
+			err = domain.ErrNotFound
+		}
+		return err
+	}
+	return nil
+}
+
 func (r *Postgres) DeleteExpiredSessions(ctx context.Context) error {
 	_, err := r.db.ExecContext(ctx, "DELETE FROM sessions WHERE expires_at <= CURRENT_TIMESTAMP")
 	return err

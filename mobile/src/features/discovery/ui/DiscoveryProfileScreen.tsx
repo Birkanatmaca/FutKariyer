@@ -7,7 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, Ellipsis } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
@@ -16,7 +16,12 @@ import { colors, radius, space } from '../../../styles/tokens';
 import type { DiscoveryKind, DiscoveryProfile } from '../domain/models';
 import type { DiscoveryService } from '../application/discovery-service';
 import { DiscoveryProfileCard } from './DiscoveryProfileCard';
-import { PlayerProfileContent } from '../../players';
+import { PlayerProfileContent, playerMediaService } from '../../players';
+import {
+  ModerationSheet,
+  moderationService,
+  type ModerationTarget,
+} from '../../moderation';
 export function DiscoveryProfileScreen({
   service,
   token,
@@ -40,7 +45,8 @@ export function DiscoveryProfileScreen({
   const [loadedRevision, setLoadedRevision] = useState(-1);
   const operation = useRef(0);
   const [followingBusy, setFollowingBusy] = useState(false),
-    [followError, setFollowError] = useState<string | null>(null);
+    [followError, setFollowError] = useState<string | null>(null),
+    [moderating, setModerating] = useState<ModerationTarget | null>(null);
   useFocusEffect(
     useCallback(() => {
       let current = true;
@@ -111,6 +117,23 @@ export function DiscoveryProfileScreen({
         <Text accessibilityRole="header" style={styles.title}>
           {copy.discover.profileTitle}
         </Text>
+        {token && profile ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={copy.moderation.more(profile.fullName)}
+            onPress={() =>
+              setModerating({
+                kind: 'user',
+                id: profile.id,
+                userId: profile.id,
+                name: profile.fullName,
+              })
+            }
+            style={styles.back}
+          >
+            <Ellipsis color={colors.text} size={20} />
+          </Pressable>
+        ) : null}
       </View>
       {loading || loadedRevision !== revision ? (
         <ActivityIndicator color={colors.brand} />
@@ -142,6 +165,15 @@ export function DiscoveryProfileScreen({
                 fullName={profile.fullName}
                 profile={profile.playerProfile}
                 isPro={profile.isPro}
+                gallery={
+                  token
+                    ? {
+                        token,
+                        ownerId: profile.id,
+                        service: playerMediaService,
+                      }
+                    : undefined
+                }
               />
             ) : (
               <DiscoveryProfileCard profile={profile} />
@@ -153,6 +185,20 @@ export function DiscoveryProfileScreen({
           </>
         )
       )}
+      {token ? (
+        <ModerationSheet
+          target={moderating}
+          token={token}
+          service={moderationService}
+          onClose={() => {
+            const blocked = moderating && !profile;
+            setModerating(null);
+            if (blocked) onBack();
+          }}
+          // A blocked profile is no longer reachable; leave it when the sheet closes.
+          onBlocked={() => setProfile(null)}
+        />
+      ) : null}
     </Screen>
   );
 }

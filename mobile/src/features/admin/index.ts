@@ -14,6 +14,7 @@ export { MatchEditorScreen } from './ui/leagues/MatchEditorScreen';
 export { GiftsScreen as AdminGiftsScreen } from './ui/campaigns/GiftsScreen';
 export { AnnouncementsScreen } from './ui/campaigns/AnnouncementsScreen';
 export { PaymentsScreen as AdminPaymentsScreen } from './ui/payments/PaymentsScreen';
+export { ReportsScreen } from './ui/reports/ReportsScreen';
 export {
   createAdminServices,
   type AdminServices,

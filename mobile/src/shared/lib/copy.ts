@@ -2,6 +2,90 @@ export const copy = {
   brand: 'FUT CAREER',
   tagline: 'Futbolun için yeni bağlantılar.',
   authEyebrow: 'FUTBOL AĞIN',
+  authStep: (step: number, total: number) =>
+    'KAYIT · ADIM ' + step + ' / ' + total,
+  media: {
+    pickingFailed:
+      'Galeri açılamadı. Fotoğraf erişimini kontrol edip tekrar dene.',
+  },
+  moderation: {
+    more: (name: string) => name + ' için seçenekler',
+    report: {
+      post: 'Gönderiyi bildir',
+      reply: 'Yanıtı bildir',
+      user: 'Profili bildir',
+    },
+    block: (name: string) => name + ' adlı hesabı engelle',
+    cancel: 'Vazgeç',
+    reasons: {
+      spam: 'Spam veya yanıltıcı',
+      harassment: 'Taciz veya zorbalık',
+      inappropriate: 'Uygunsuz içerik',
+      impersonation: 'Başkasını taklit ediyor',
+      other: 'Diğer',
+    },
+    note: 'Açıklama (isteğe bağlı)',
+    notePlaceholder: 'Yöneticinin bilmesi gereken bir şey var mı?',
+    send: 'Bildirimi gönder',
+    reported: 'Bildirimin alındı',
+    reportedBody:
+      'Yönetici ekibi içeriği inceleyecek. Kurallara aykırı içerik kaldırılır.',
+    blockTitle: (name: string) => name + ' engellensin mi?',
+    blockBody:
+      'Birbirinizin gönderilerini, yanıtlarını ve profilini görmezsiniz. Aranızdaki takipler ve tanışma istekleri kaldırılır. Engeli ayarlardan kaldırabilirsin.',
+    blockConfirm: 'Engelle',
+    blocked: (name: string) => name + ' engellendi',
+    blockedBody: 'Bu hesabın içerikleri artık sana gösterilmeyecek.',
+    done: 'Tamam',
+    blockedEyebrow: 'GİZLİLİK',
+    blockedTitle: 'Engellenen hesaplar',
+    blockedHint:
+      'Engellediğin hesaplarla birbirinizin içeriklerini ve profilini görmezsiniz.',
+    unblock: 'Engeli kaldır',
+    unblockNamed: (name: string) => name + ' engelini kaldır',
+    noBlocked: 'Engellenen hesap yok',
+  },
+  account: {
+    delete: 'Hesabımı sil',
+    deleteTitle: 'Hesabın kalıcı olarak silinsin mi?',
+    deleteBody:
+      'Profilin, gönderilerin, takiplerin, isteklerin ve başvuru geçmişin silinir. Kalan başvuru hakların ve Pro süren geri verilmez. Bu işlem geri alınamaz.',
+    deleteConfirm: 'Hesabımı kalıcı olarak sil',
+    passwordRequired: 'Devam etmek için şifreni gir.',
+    deleted: 'Hesabın silindi.',
+  },
+  onboarding: {
+    label: 'Fut Career tanıtımı',
+    open: 'Fut Career tanıtımını aç',
+    skip: 'Geç',
+    close: 'Tanıtımı kapat',
+    next: 'İleri',
+    previous: 'Önceki',
+    signUp: 'Kayıt ol',
+    backToSignUp: 'Kayda dön',
+    question: 'Zaten hesabın var mı?',
+    signIn: 'Giriş yap',
+    step: (page: number, total: number) =>
+      String(page).padStart(2, '0') + ' / ' + String(total).padStart(2, '0'),
+    slides: {
+      profile: {
+        title: 'Futbol profilini\noluştur.',
+        body: 'Mevkini, deneyimini ve uygunluk durumunu tek profilde göster.',
+      },
+      discover: {
+        title: 'Keşfet ve\nkeşfedil.',
+        body: 'Kulüpler ve antrenörler oyuncu arar; sen de sana uygun takımları bul.',
+      },
+      connect: {
+        title: 'Doğru bağlantıyı\nkur.',
+        body: 'Tanışma isteği gönder. İletişim bilgileri yalnızca istek kabul edilince açılır.',
+      },
+      play: {
+        title: 'Oyunun içinde\nkal.',
+        body: 'Ligleri takip et, sosyal akışta paylaş, futbol oyunlarında kendini dene.',
+      },
+    },
+  },
   signIn: {
     title: 'Yeteneğinle\nöne çık.',
     description:
@@ -11,6 +95,7 @@ export const copy = {
     button: 'Giriş yap',
     question: 'Henüz hesabın yok mu?',
     link: 'Hesap oluştur',
+    or: 'veya',
     loginHelp: 'E-posta adresin veya kullanıcı adınla giriş yapabilirsin.',
   },
   accountType: {
@@ -557,11 +642,13 @@ export const copy = {
     included: 'Başlangıçta 3 ücretsiz hakkın var.',
     rights: (count: number) => count + ' başvuru hakkı',
     unavailable:
-      'Güvenli satın alma bağlantısı henüz yapılandırılmadı. Paketleri inceleyebilirsin; ödeme bağlantısı hazır olduğunda satın alma açılır.',
+      'Bu cihazda mağaza üzerinden satın alma şu anda kullanılamıyor. Paketleri inceleyebilirsin.',
     buyNow: 'Satın al',
-    purchase: 'Satın alma yakında',
-    checkoutStarted:
-      'Güvenli ödeme sayfası açıldı. Haklar ödeme onaylanınca eklenir.',
+    purchase: 'Satışta değil',
+    purchased: 'Satın alma tamamlandı. Hakların hesabına eklendi.',
+    pending: 'Ödeme onay bekliyor. Onaylanınca hakların eklenecek.',
+    failed:
+      'Satın alma tamamlanamadı. Ödeme alınmadıysa hesabından bir şey düşmez.',
     back: 'Diğer menüsüne dön',
     loading: 'Paketler yükleniyor',
     empty: 'Satışta paket yok',
@@ -586,14 +673,16 @@ export const copy = {
     expired: (date: string) => 'Pro süren ' + date + ' tarihinde bitti',
     renew: 'Süreyi uzat',
     buy: 'Pro satın al',
-    purchaseSoon: 'Satın alma yakında',
+    purchaseSoon: 'Satışta değil',
     offSale: 'Pro şu anda satışta değil.',
     unavailable:
-      'Güvenli satın alma bağlantısı henüz yapılandırılmadı. Ödeme bağlantısı hazır olduğunda satın alma açılır.',
-    checkoutStarted:
-      'Güvenli ödeme sayfası açıldı. Pro, ödeme onaylanınca açılır.',
+      'Bu cihazda mağaza üzerinden satın alma şu anda kullanılamıyor.',
+    purchased: 'Pro üyeliğin açıldı.',
+    pending: 'Ödeme onay bekliyor. Onaylanınca Pro açılır.',
+    failed:
+      'Satın alma tamamlanamadı. Ödeme alınmadıysa hesabından bir şey düşmez.',
     renewalNote: (days: number) =>
-      'Her satın alma süreni ' + days + ' gün uzatır.',
+      'Otomatik yenilenmez. Her satın alma süreni ' + days + ' gün uzatır.',
     privateTitle: 'Gizli gezinme',
     privateBody:
       "Açıkken baktığın profiller seni Pro olmayan sahiplerine 'Gizli Pro üye' olarak gösterir.",
@@ -648,11 +737,8 @@ export const copy = {
     followers: 'Takipçiler',
     following: 'Takip edilen',
     stats: 'SANA AİT İSTATİSTİKLER',
-    ads: 'Reklamlar',
-    sponsored: 'SPONSORLU',
-    noAds: 'Yeni reklamlar burada görünecek.',
-    previousAd: 'Önceki reklam',
-    nextAd: 'Sonraki reklam',
+    adImage: 'Reklam görseli',
+    adTag: 'REKLAM',
     adPage: (page: number, total: number) => page + ' / ' + total,
     greeting: 'TEKRAR HOŞ GELDİN',
     title: 'Bir sonraki adımın\nseninle başlar.',
@@ -851,6 +937,19 @@ export const copy = {
     noVideos: 'Henüz video yok',
     photosHint: 'Futbol fotoğrafları burada bir araya gelecek.',
     videosHint: 'Maç ve antrenman videoları burada bir araya gelecek.',
+    addPhoto: 'Fotoğraf ekle',
+    addVideo: 'Video ekle',
+    uploading: 'Yükleniyor',
+    galleryFull:
+      'Galeri sınırına ulaştın. Yeni eklemek için eskilerden birini sil.',
+    invalidPhoto: 'En fazla 4 MiB olan bir JPEG veya PNG fotoğraf seç.',
+    invalidVideo: 'En fazla 30 MiB olan bir MP4 video seç.',
+    openPhoto: 'Fotoğrafı aç',
+    openVideo: 'Videoyu oynat',
+    closeMedia: 'Kapat',
+    deleteMedia: 'Sil',
+    confirmDelete: 'Silmeyi onayla',
+    mediaFailed: 'Medya yüklenemedi.',
   },
   news: {
     eyebrow: 'FUTBOLDAN GÜNCEL',
@@ -1514,11 +1613,13 @@ export const copy = {
         announcementsHint: 'Fırsat duyurusu gönder.',
         payments: 'Ödemeler',
         paymentsHint: 'Hak paketleri ve ödeme geçmişi.',
+        reports: 'İçerik bildirimleri',
+        reportsHint: 'Bildirilen gönderi, yanıt ve profilleri incele.',
       },
     },
     more: {
       title: 'Diğer',
-      description: 'Ligler, kampanyalar, ödemeler ve oturumun.',
+      description: 'Bildirimler, ligler, kampanyalar, ödemeler ve oturumun.',
       account: 'Yönetici hesabı',
       logout: 'Çıkış yap',
       logoutHint: 'Bu cihazdaki yönetici oturumunu kapat.',
@@ -1751,6 +1852,12 @@ export const copy = {
       titleField: 'Başlık',
       image: 'Görsel',
       imageHint: 'JPEG veya PNG; en fazla 4 MiB ve 16 milyon piksel.',
+      adImageHint: (width: number, height: number) =>
+        'Reklam alanı ' +
+        width +
+        '×' +
+        height +
+        ' piksel; görsel bu orana kırpılır. JPEG veya PNG, en fazla 4 MiB.',
       chooseImage: 'Görsel seç',
       changeImage: 'Görseli değiştir',
       removeImage: 'Kapak görselini kaldır',
@@ -1984,8 +2091,18 @@ export const copy = {
       packageHint:
         'Yeni oyuncular 3 ücretsiz hakla başlar. Haklar yalnızca güvenilir ödeme onayından sonra hesaba eklenir.',
       rights: (count: number) => count + ' başvuru hakkı',
-      price: 'Paket fiyatı (TL)',
-      priceError: 'Paket fiyatı en az 1 TL olmalı.',
+      price: 'Raporlama tutarı (TL)',
+      priceError: 'Raporlama tutarı en az 1 TL olmalı.',
+      priceHint:
+        'Satış fiyatını mağaza belirler; bu tutar yalnızca raporlamada kullanılır.',
+      appleProductId: 'App Store ürün kimliği',
+      googleProductId: 'Google Play ürün kimliği',
+      appleProductHint: "Boş bırakırsan ürün App Store'da satılmaz.",
+      googleProductHint: "Boş bırakırsan ürün Google Play'de satılmaz.",
+      appleProductError:
+        'En fazla 100 karakter; harf, rakam, nokta ve alt çizgi kullan.',
+      googleProductError:
+        'Küçük harf veya rakamla başla; en fazla 100 karakter, küçük harf, rakam, nokta ve alt çizgi kullan.',
       onSale: 'Satışta',
       offSale: 'Satış dışı',
       statusLabel: 'Ödeme durumu',
@@ -2017,7 +2134,7 @@ export const copy = {
         'Her satın alma 30 gün Pro verir; sporculara her dönem +3 başvuru hakkı eklenir. Pro yalnızca imzalı ödeme onayıyla açılır.',
       proPlanTitle: (days: number, credits: number) =>
         days + ' gün · +' + credits + ' başvuru hakkı',
-      proPrice: 'Pro fiyatı (TL)',
+      proPrice: 'Pro raporlama tutarı (TL)',
       proOnSaleHint: 'Satış dışıyken Pro satın alınamaz.',
       saveProPlan: 'Planı kaydet',
       proSaved: 'Pro planı güncellendi.',
@@ -2025,6 +2142,61 @@ export const copy = {
       emptyTitle: 'Henüz ödeme kaydı yok',
       emptyBody: 'İlk sipariş oluşturulduğunda işlemler burada görünür.',
       noCardData: 'Kart bilgileri uygulamada tutulmaz.',
+    },
+    reports: {
+      eyebrow: 'MODERASYON',
+      title: 'İçerik bildirimleri',
+      description:
+        'Kullanıcıların bildirdiği gönderi, yanıt ve profilleri en eskiden başlayarak incele. Bir karar aynı içerikle ilgili tüm açık bildirimleri kapatır.',
+      tabs: { open: 'Açık', resolved: 'Sonuçlanan' },
+      kinds: { post: 'Gönderi', reply: 'Yanıt', user: 'Profil' },
+      reasons: {
+        spam: 'Spam veya yanıltıcı',
+        harassment: 'Taciz veya zorbalık',
+        inappropriate: 'Uygunsuz içerik',
+        impersonation: 'Başkasını taklit ediyor',
+        other: 'Diğer',
+      },
+      statuses: {
+        open: 'Açık',
+        dismissed: 'Yoksayıldı',
+        removed: 'İçerik kaldırıldı',
+        suspended: 'Hesap durduruldu',
+      },
+      unknownTarget: 'Silinmiş hesap',
+      openCount: (count: number) => count + ' açık bildirim',
+      excerpt: 'Bildirilen içerik',
+      noExcerpt: 'İçerik metni yok',
+      reason: 'Neden',
+      note: 'Açıklama',
+      reporter: 'Bildiren',
+      unknownReporter: 'Silinmiş hesap',
+      createdAt: 'Bildirim tarihi',
+      resolvedAt: 'Karar tarihi',
+      dismiss: 'Yoksay',
+      remove: 'İçeriği kaldır',
+      suspend: 'Hesabı durdur',
+      removeTitle: 'İçerik kaldırılsın mı?',
+      removeBody: (name: string) =>
+        name +
+        ' adlı hesabın içeriği kalıcı olarak silinecek. Bu işlem geri alınamaz.',
+      suspendTitle: 'Hesap durdurulsun mu?',
+      suspendBody: (name: string) =>
+        name +
+        ' adlı hesabın erişimi durdurulacak ve tüm oturumları kapanacak. Erişimi Hesaplar bölümünden yeniden açabilirsin.',
+      dismissed: 'Bildirim yoksayıldı.',
+      removed: 'İçerik kaldırıldı.',
+      suspended: (name: string) => name + ' adlı hesabın erişimi durduruldu.',
+      alreadyResolved: 'Bu bildirim zaten sonuçlandırılmış. Liste güncellendi.',
+      notFound: 'Bildirim veya içerik bulunamadı. Liste güncellendi.',
+      empty: {
+        open: 'Açık bildirim yok',
+        resolved: 'Sonuçlanan bildirim yok',
+      },
+      emptyHint: {
+        open: 'Kullanıcıların bildirdiği içerikler burada görünecek.',
+        resolved: 'Karara bağladığın bildirimler burada listelenir.',
+      },
     },
   },
 };

@@ -33,6 +33,7 @@ export function AdminLayout({
               'users',
               'clubs',
               'applications',
+              'reports',
               'ads',
               'news',
               'leagues',
@@ -75,13 +76,19 @@ export function AdminLayout({
                   ? '📣'
                   : value === 'applications'
                   ? '📝'
+                  : value === 'reports'
+                  ? '⚑'
                   : '▤'}
               </span>
               {copy.panel[value]}
               {!!badges[value] && (
                 <span
                   className="nav-badge"
-                  aria-label={copy.panel.pendingBadge(badges[value] ?? 0)}
+                  aria-label={
+                    value === 'reports'
+                      ? copy.panel.openReportsBadge(badges[value] ?? 0)
+                      : copy.panel.pendingBadge(badges[value] ?? 0)
+                  }
                 >
                   {badges[value]}
                 </span>

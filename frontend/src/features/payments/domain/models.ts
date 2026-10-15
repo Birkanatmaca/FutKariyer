@@ -1,18 +1,29 @@
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
-export type PaymentPackage = {
+// App Store / Google Play product ids; '' means not sold in that store.
+export type StoreProductIds = {
+  appleProductId: string;
+  googleProductId: string;
+};
+export type PaymentPackage = StoreProductIds & {
   id: string;
   credits: 2 | 5 | 10;
+  // Reporting value; the store charges its own price.
   amountMinor: number;
   currency: string;
   active: boolean;
   sortOrder: number;
 };
-export type ProPlan = {
+export type ProPlan = StoreProductIds & {
   id: string;
   days: number;
   bonusCredits: number;
   amountMinor: number;
   currency: string;
+  active: boolean;
+};
+// Admin edit of a package or the Pro plan; both store ids are always sent.
+export type CatalogUpdate = StoreProductIds & {
+  amountMinor: number;
   active: boolean;
 };
 export type PaymentProduct = 'team_rights' | 'pro';
@@ -52,17 +63,9 @@ export type PaymentPage = {
 };
 export interface PaymentsRepository {
   packages(): Promise<PaymentPackage[]>;
-  updatePackage(
-    id: string,
-    amountMinor: number,
-    active: boolean,
-  ): Promise<PaymentPackage>;
+  updatePackage(id: string, update: CatalogUpdate): Promise<PaymentPackage>;
   proPlan(): Promise<ProPlan>;
-  updateProPlan(
-    id: string,
-    amountMinor: number,
-    active: boolean,
-  ): Promise<ProPlan>;
+  updateProPlan(id: string, update: CatalogUpdate): Promise<ProPlan>;
   list(
     status: PaymentStatus | 'all',
     page: number,

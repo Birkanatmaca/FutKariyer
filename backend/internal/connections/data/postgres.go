@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"futcareer/backend/internal/connections/domain"
+	moderation "futcareer/backend/internal/moderation/data"
 	notificationsdata "futcareer/backend/internal/notifications/data"
 	notificationsdomain "futcareer/backend/internal/notifications/domain"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -67,6 +68,12 @@ func (r *Postgres) Send(ctx context.Context, id, senderID, recipientID, message 
 	}
 	if !reachable(sender, recipient) {
 		return domain.Connection{}, domain.ErrNotFound
+	}
+	if blocked, err := moderation.BlockedInTx(ctx, tx, senderID, recipientID); err != nil || blocked {
+		if err == nil {
+			err = domain.ErrNotFound
+		}
+		return domain.Connection{}, err
 	}
 	var recent int
 	if err = tx.QueryRowContext(ctx, `SELECT count(*) FROM connection_requests WHERE sender_id=$1 AND created_at > clock_timestamp() - interval '1 day'`, senderID).Scan(&recent); err != nil {

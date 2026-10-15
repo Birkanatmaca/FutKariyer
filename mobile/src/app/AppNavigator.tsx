@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import {
   DarkTheme,
   NavigationContainer,
+  createNavigationContainerRef,
   useFocusEffect,
   getFocusedRouteNameFromRoute,
 } from '@react-navigation/native';
@@ -13,15 +14,8 @@ import {
 } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import {
-  AccountScreen,
-  SignInScreen,
-  SignUpScreen,
-  AccountTypeScreen,
-  ApplicationScreen,
-  type ApplicationRole,
-  useAuth,
-} from '../features/auth';
+import { AccountScreen, useAuth } from '../features/auth';
+import { BlockedUsersScreen, moderationService } from '../features/moderation';
 import {
   DiscoverScreen,
   DiscoveryProfileScreen,
@@ -62,7 +56,11 @@ import {
   clubRepository,
   createClubService,
 } from '../features/clubs';
-import { TeamRightsScreen } from '../features/payments';
+import {
+  TeamRightsScreen,
+  storeCheckout,
+  useStoreRecovery,
+} from '../features/payments';
 import {
   PrivateBrowsingSetting,
   ProScreen,
@@ -95,6 +93,9 @@ import {
   createNotificationsService,
   notificationsRepository,
   NotificationsScreen,
+  pushMessaging,
+  pushRepository,
+  usePushRegistration,
 } from '../features/notifications';
 import {
   TeamApplicationsScreen,
@@ -118,6 +119,7 @@ import {
   PlayerOverviewScreen,
   createPlayerProfileService,
   playerProfileRepository,
+  playerMediaService,
 } from '../features/players';
 import { Medal } from 'lucide-react-native';
 import { Brand } from '../shared/ui/Brand';
@@ -126,20 +128,14 @@ import { EmptyState } from '../shared/ui/EmptyState';
 import { ErrorBanner } from '../shared/ui/ErrorBanner';
 import { Screen } from '../shared/ui/Screen';
 import { copy } from '../shared/lib/copy';
-import { useReducedMotion } from '../shared/lib/useReducedMotion';
 import { colors, space } from '../styles/tokens';
 import { HomeScreen } from './HomeScreen';
 import { LeaguesHomeScreen } from './LeaguesHomeScreen';
 import { FutTabBar } from './FutTabBar';
 import { MoreScreen } from './MoreScreen';
 import { AdminNavigator } from './AdminNavigator';
+import { AuthNavigator } from './AuthNavigator';
 
-type AuthRoutes = {
-  SignIn: undefined;
-  AccountType: undefined;
-  SignUp: undefined;
-  Application: { role: ApplicationRole };
-};
 type MainRoutes = {
   Home: undefined;
   Leagues: NavigatorScreenParams<LeaguesRoutes> | undefined;
@@ -159,6 +155,7 @@ type MoreRoutes = {
   MoreHome: undefined;
   Profile: NavigatorScreenParams<ProfileRoutes> | undefined;
   Account: undefined;
+  BlockedUsers: undefined;
   Discover: NavigatorScreenParams<DiscoveryRoutes> | undefined;
   Connections: undefined;
   TeamJoinRequests: undefined;
@@ -199,7 +196,6 @@ const NewsStack = createNativeStackNavigator<NewsRoutes>();
 const LeaguesStack = createNativeStackNavigator<LeaguesRoutes>();
 const footballService = createFootballService(footballRepository);
 const contentService = createContentService(contentRepository);
-const Stack = createNativeStackNavigator<AuthRoutes>();
 const Tabs = createBottomTabNavigator<MainRoutes>();
 const ProfileStack = createNativeStackNavigator<ProfileRoutes>();
 const DiscoveryStack = createNativeStackNavigator<DiscoveryRoutes>();
@@ -208,6 +204,11 @@ const discoveryService = createDiscoveryService(discoveryRepository);
 const playerProfileService = createPlayerProfileService(
   playerProfileRepository,
 );
+const navigationRef = createNavigationContainerRef<MainRoutes>();
+const openNotifications = () => {
+  if (navigationRef.isReady())
+    navigationRef.navigate('More', { screen: 'Notifications' });
+};
 const notificationsService = createNotificationsService(
   notificationsRepository,
 );
@@ -255,7 +256,9 @@ function renderTabBar(props: BottomTabBarProps) {
   return <FutTabBar {...props} />;
 }
 function MainTabs() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+  useStoreRecovery(storeCheckout, token);
+  usePushRegistration(pushMessaging, pushRepository, token, openNotifications);
   return (
     <Tabs.Navigator
       tabBar={renderTabBar}
@@ -447,6 +450,7 @@ function MoreNavigator() {
         {({ navigation }) => (
           <AccountScreen
             onBack={() => navigation.goBack()}
+            onBlockedUsers={() => navigation.navigate('BlockedUsers')}
             extra={
               token && member ? (
                 <PrivateBrowsingSetting
@@ -458,6 +462,17 @@ function MoreNavigator() {
             }
           />
         )}
+      </MoreStack.Screen>
+      <MoreStack.Screen name="BlockedUsers">
+        {({ navigation }) =>
+          token ? (
+            <BlockedUsersScreen
+              token={token}
+              service={moderationService}
+              onBack={() => navigation.goBack()}
+            />
+          ) : null
+        }
       </MoreStack.Screen>
       <MoreStack.Screen name="Visitors">
         {({ navigation }) =>
@@ -484,6 +499,7 @@ function MoreNavigator() {
             <ProScreen
               token={token}
               service={proService}
+              checkout={storeCheckout}
               onBack={() => navigation.goBack()}
             />
           ) : null
@@ -544,6 +560,7 @@ function MoreNavigator() {
           token && user?.role === 'player' ? (
             <TeamRightsScreen
               token={token}
+              checkout={storeCheckout}
               onBack={() => navigation.goBack()}
             />
           ) : null
@@ -888,6 +905,8 @@ function ProfileNavigator({
               isPro={pro.isPro}
               token={token}
               service={playerProfileService}
+              userId={user.id}
+              media={playerMediaService}
               onEdit={() => navigation.navigate('PlayerProfile')}
               onAccount={onAccount}
               onBack={onBack}
@@ -1065,7 +1084,6 @@ function NewsNavigator({ onBack }: { onBack(): void }) {
 
 export function AppNavigator() {
   const { user, admin, restoring, restoreError, retryRestore } = useAuth();
-  const reducedMotion = useReducedMotion();
   if (restoring || restoreError) {
     return (
       <View style={styles.startup}>
@@ -1085,57 +1103,8 @@ export function AppNavigator() {
     );
   }
   return (
-    <NavigationContainer theme={theme}>
-      {admin ? (
-        <AdminNavigator />
-      ) : user ? (
-        <MainTabs />
-      ) : (
-        <Stack.Navigator
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.bg },
-            animation: reducedMotion ? 'none' : 'fade_from_bottom',
-          }}
-        >
-          <Stack.Screen name="SignIn">
-            {({ navigation }) => (
-              <SignInScreen
-                onSignUp={() => navigation.navigate('AccountType')}
-              />
-            )}
-          </Stack.Screen>
-          <Stack.Screen name="AccountType">
-            {({ navigation }) => (
-              <AccountTypeScreen
-                onBack={() => navigation.goBack()}
-                onSelect={kind =>
-                  kind === 'player'
-                    ? navigation.navigate('SignUp')
-                    : navigation.navigate('Application', { role: kind })
-                }
-              />
-            )}
-          </Stack.Screen>
-          <Stack.Screen name="SignUp">
-            {({ navigation }) => (
-              <SignUpScreen
-                onBack={() => navigation.goBack()}
-                onSignIn={() => navigation.popTo('SignIn')}
-              />
-            )}
-          </Stack.Screen>
-          <Stack.Screen name="Application">
-            {({ navigation, route }) => (
-              <ApplicationScreen
-                role={route.params.role}
-                onBack={() => navigation.goBack()}
-                onSignIn={() => navigation.popTo('SignIn')}
-              />
-            )}
-          </Stack.Screen>
-        </Stack.Navigator>
-      )}
+    <NavigationContainer theme={theme} ref={navigationRef}>
+      {admin ? <AdminNavigator /> : user ? <MainTabs /> : <AuthNavigator />}
     </NavigationContainer>
   );
 }

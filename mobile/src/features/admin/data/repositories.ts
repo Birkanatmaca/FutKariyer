@@ -8,6 +8,7 @@ import {
   createGiftsRepository,
 } from './http-messaging-repositories';
 import { createPaymentsRepository } from './http-payments-repository';
+import { createReportsRepository } from './http-reports-repository';
 
 export function createAdminRepositories(
   gateway: AdminGateway,
@@ -20,5 +21,6 @@ export function createAdminRepositories(
     gifts: createGiftsRepository(gateway),
     announcements: createAnnouncementsRepository(gateway),
     payments: createPaymentsRepository(gateway),
+    reports: createReportsRepository(gateway),
   };
 }

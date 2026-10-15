@@ -13,6 +13,7 @@ import { Button } from '../../../shared/ui/Button';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import type { PlayerProfileService } from '../application/profile-service';
+import type { PlayerMediaService } from '../application/media-service';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { PlayerProfileContent } from './PlayerProfileContent';
 
@@ -24,8 +25,13 @@ export function PlayerOverviewScreen({
   onAccount,
   onBack,
   isPro = false,
+  userId,
+  media,
 }: {
   fullName: string;
+  // The owner's id and gallery service enable uploads on the own profile.
+  userId?: string;
+  media?: PlayerMediaService;
   isPro?: boolean;
   token: string | null;
   service: PlayerProfileService;
@@ -76,6 +82,11 @@ export function PlayerOverviewScreen({
             profile={profile}
             onEdit={onEdit}
             isPro={isPro}
+            gallery={
+              token && userId && media
+                ? { token, ownerId: userId, service: media, editable: true }
+                : undefined
+            }
           />
         )
       )}

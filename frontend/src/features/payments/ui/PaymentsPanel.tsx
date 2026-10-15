@@ -3,12 +3,14 @@ import { Button } from '../../../shared/ui/Button';
 import { Feedback } from '../../../shared/ui/Feedback';
 import { copy } from '../../../shared/lib/copy';
 import type {
+  CatalogUpdate,
   Payment,
   PaymentPackage,
   PaymentPage,
   PaymentStatus,
 } from '../domain/models';
 import type { PaymentService } from '../application/payment-service';
+import { CatalogEditor } from './CatalogEditor';
 import { ProPlanSection } from './ProPlanSection';
 
 const statuses: Array<PaymentStatus | 'all'> = [
@@ -35,7 +37,6 @@ function date(value: string) {
 
 export function PaymentsPanel({ service }: { service: PaymentService }) {
   const [packages, setPackages] = useState<PaymentPackage[] | null>(null);
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [packageError, setPackageError] = useState<string | null>(null);
   const [packageBusy, setPackageBusy] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
@@ -53,13 +54,7 @@ export function PaymentsPanel({ service }: { service: PaymentService }) {
     service
       .packages()
       .then(value => {
-        if (!current) return;
-        setPackages(value);
-        setDrafts(
-          Object.fromEntries(
-            value.map(item => [item.id, (item.amountMinor / 100).toFixed(2)]),
-          ),
-        );
+        if (current) setPackages(value);
       })
       .catch(failure => {
         if (current)
@@ -101,55 +96,13 @@ export function PaymentsPanel({ service }: { service: PaymentService }) {
     };
   }, [service, status, page, search, revision]);
 
-  async function savePackage(item: PaymentPackage) {
-    if (packageBusy) return;
-    const normalized = (drafts[item.id] || '').trim().replace(',', '.');
-    const amount = Number(normalized);
-    const amountMinor = Math.round(amount * 100);
-    if (!Number.isFinite(amount) || amountMinor < 100) {
-      setPackageError('Paket fiyatı en az 1 TL olmalı.');
-      return;
-    }
-    setPackageBusy(item.id);
-    setPackageError(null);
-    setNotice(null);
-    try {
-      const updated = await service.updatePackage(
-        item.id,
-        amountMinor,
-        item.active,
-      );
-      setPackages(
-        current =>
-          current?.map(value =>
-            value.id === updated.id ? updated : value,
-          ) || [updated],
-      );
-      setDrafts(current => ({
-        ...current,
-        [updated.id]: (updated.amountMinor / 100).toFixed(2),
-      }));
-      setNotice(copy.payments.saved);
-    } catch (failure) {
-      setPackageError(
-        failure instanceof Error ? failure.message : copy.payments.packageError,
-      );
-    } finally {
-      setPackageBusy('');
-    }
-  }
-
-  async function togglePackage(item: PaymentPackage, active: boolean) {
+  async function updatePackage(item: PaymentPackage, values: CatalogUpdate) {
     if (packageBusy) return;
     setPackageBusy(item.id);
     setPackageError(null);
     setNotice(null);
     try {
-      const updated = await service.updatePackage(
-        item.id,
-        item.amountMinor,
-        active,
-      );
+      const updated = await service.updatePackage(item.id, values);
       setPackages(
         current =>
           current?.map(value =>
@@ -202,56 +155,19 @@ export function PaymentsPanel({ service }: { service: PaymentService }) {
         {packages ? (
           <div className="payment-package-grid">
             {packages.map(item => (
-              <article className="payment-package" key={item.id}>
-                <div>
-                  <h3>{copy.payments.rights(item.credits)}</h3>
-                  <span
-                    className={
-                      'league-status ' + (item.active ? 'active' : 'neutral')
-                    }
-                  >
-                    {item.active
-                      ? copy.payments.active
-                      : copy.payments.inactive}
-                  </span>
-                </div>
-                <label className="field">
-                  <span>{copy.payments.price}</span>
-                  <input
-                    type="number"
-                    min="1"
-                    step="0.01"
-                    inputMode="decimal"
-                    value={drafts[item.id] ?? ''}
-                    onChange={event =>
-                      setDrafts(current => ({
-                        ...current,
-                        [item.id]: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <div className="payment-package-actions">
-                  <label className="payment-active-toggle">
-                    <input
-                      type="checkbox"
-                      checked={item.active}
-                      disabled={packageBusy === item.id}
-                      onChange={event =>
-                        void togglePackage(item, event.target.checked)
-                      }
-                    />
-                    {copy.payments.active}
-                  </label>
-                  <Button
-                    className="button-small"
-                    busy={packageBusy === item.id}
-                    onClick={() => void savePackage(item)}
-                  >
-                    {copy.payments.save}
-                  </Button>
-                </div>
-              </article>
+              <CatalogEditor
+                key={item.id}
+                title={copy.payments.rights(item.credits)}
+                saved={item}
+                priceLabel={copy.payments.price}
+                saveLabel={copy.payments.save}
+                busy={packageBusy === item.id}
+                onSave={values => void updatePackage(item, values)}
+                onInvalid={() => {
+                  setNotice(null);
+                  setPackageError(null);
+                }}
+              />
             ))}
           </div>
         ) : packageError ? null : (

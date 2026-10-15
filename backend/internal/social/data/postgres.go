@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
+	moderation "futcareer/backend/internal/moderation/data"
 	"futcareer/backend/internal/social/domain"
 )
 
@@ -15,6 +16,10 @@ var _ domain.Repository = (*Postgres)(nil)
 func New(db *sql.DB) *Postgres { return &Postgres{db: db} }
 
 const activeAuthor = `u.active AND u.role IN ('player','club','coach')`
+
+// visibleToViewer hides authors the viewer ($1) blocked or was blocked by.
+var visibleToViewer = moderation.NotBlocked("$1", "u.id")
+
 const postColumns = `p.id,u.id,u.full_name,u.role,u.verified,
  CASE WHEN u.role='club' THEN COALESCE((SELECT football_type FROM clubs WHERE user_id=u.id),'unknown')
   WHEN u.role='player' THEN COALESCE((SELECT CASE WHEN discoverable THEN football_type ELSE 'unknown' END FROM player_profiles WHERE user_id=u.id),'unknown')
@@ -47,7 +52,7 @@ func scanPost(row scanner) (domain.Post, error) {
 	return p, err
 }
 func getPost(ctx context.Context, q queryer, userID, id string) (domain.Post, error) {
-	return scanPost(q.QueryRowContext(ctx, `SELECT `+postColumns+` FROM social_posts p JOIN users u ON u.id=p.author_id WHERE p.id=$2 AND `+activeAuthor, userID, id))
+	return scanPost(q.QueryRowContext(ctx, `SELECT `+postColumns+` FROM social_posts p JOIN users u ON u.id=p.author_id WHERE p.id=$2 AND `+activeAuthor+` AND `+visibleToViewer, userID, id))
 }
 func (r *Postgres) GetPost(ctx context.Context, userID, id string) (domain.Post, error) {
 	return getPost(ctx, r.db, userID, id)
@@ -69,7 +74,7 @@ func (r *Postgres) Feed(ctx context.Context, userID string, after domain.FeedCur
 		FROM social_posts p JOIN users u ON u.id=p.author_id
 		LEFT JOIN player_profiles pp ON pp.user_id=u.id LEFT JOIN clubs c ON c.user_id=u.id
 		CROSS JOIN viewer v
-		WHERE `+activeAuthor+` AND p.created_at<=$2::timestamptz
+		WHERE `+activeAuthor+` AND `+visibleToViewer+` AND p.created_at<=$2::timestamptz
 			AND (NOT $3 OR EXISTS(SELECT 1 FROM profile_follows f WHERE f.profile_id=p.author_id AND f.follower_id=$1))
 	), ranked AS (
 		SELECT id,created_at,category,relevance,
@@ -203,7 +208,7 @@ func (r *Postgres) Replies(ctx context.Context, userID, postID string, after dom
 	if _, err := r.GetPost(ctx, userID, postID); err != nil {
 		return nil, err
 	}
-	rows, err := r.db.QueryContext(ctx, `SELECT r.id,r.post_id,u.id,u.full_name,u.role,u.verified,r.body,r.created_at,r.author_id=$1 FROM social_replies r JOIN users u ON u.id=r.author_id JOIN social_posts p ON p.id=r.post_id JOIN users pu ON pu.id=p.author_id WHERE r.post_id=$2 AND `+activeAuthor+` AND pu.active AND pu.role IN ('player','club','coach') AND ($3='' OR (r.created_at,r.id)<($4::timestamptz,$3)) ORDER BY r.created_at DESC,r.id DESC LIMIT $5`, userID, postID, after.ID, after.CreatedAt, domain.PageSize+1)
+	rows, err := r.db.QueryContext(ctx, `SELECT r.id,r.post_id,u.id,u.full_name,u.role,u.verified,r.body,r.created_at,r.author_id=$1 FROM social_replies r JOIN users u ON u.id=r.author_id JOIN social_posts p ON p.id=r.post_id JOIN users pu ON pu.id=p.author_id WHERE r.post_id=$2 AND `+activeAuthor+` AND `+visibleToViewer+` AND pu.active AND pu.role IN ('player','club','coach') AND ($3='' OR (r.created_at,r.id)<($4::timestamptz,$3)) ORDER BY r.created_at DESC,r.id DESC LIMIT $5`, userID, postID, after.ID, after.CreatedAt, domain.PageSize+1)
 	if err != nil {
 		return nil, err
 	}

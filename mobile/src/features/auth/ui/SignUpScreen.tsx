@@ -20,9 +20,11 @@ import {
 } from '../application/validation';
 export function SignUpScreen({
   onBack,
+  onInfo,
   onSignIn,
 }: {
   onBack?: () => void;
+  onInfo?: () => void;
   onSignIn(): void;
 }) {
   const { signUp } = useAuth();
@@ -94,6 +96,8 @@ export function SignUpScreen({
       title={copy.signUp.title}
       description={copy.signUp.description}
       onBack={onBack ?? onSignIn}
+      onInfo={onInfo}
+      eyebrow={copy.authStep(2, 2)}
       compact
     >
       <View style={styles.form}>

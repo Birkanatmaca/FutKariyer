@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import Video from 'react-native-video';
 import { useIsFocused } from '@react-navigation/native';
-import { copy } from '../../../shared/lib/copy';
-import type { MediaSource } from '../domain/models';
+import { copy } from '../lib/copy';
+import type { MediaSource } from '../domain/media';
 
 export function VideoPlayer({
   source,

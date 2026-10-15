@@ -72,6 +72,8 @@ export interface AuthRepository {
   apply(input: AccountApplicationInput): Promise<AccountApplicationResult>;
   me(token: string): Promise<User>;
   logout(token: string): Promise<void>;
+  // Permanently removes the signed-in mobile account; needs its password.
+  deleteAccount(token: string, password: string): Promise<void>;
   adminLogin(input: LoginInput): Promise<AdminSession>;
   adminMe(token: string): Promise<AdminUser>;
   adminLogout(token: string): Promise<void>;

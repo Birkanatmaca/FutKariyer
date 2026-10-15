@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Keyboard, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Text, View } from 'react-native';
 import {
   Banknote,
   CreditCard,
@@ -8,24 +8,18 @@ import {
   Undo2,
 } from 'lucide-react-native';
 import { BackLink } from '../../../../shared/ui/BackLink';
-import { ErrorBanner } from '../../../../shared/ui/ErrorBanner';
 import { Field } from '../../../../shared/ui/Field';
 import { PageHeader } from '../../../../shared/ui/PageHeader';
-import { ApiError } from '../../../../shared/api/client';
 import { copy } from '../../../../shared/lib/copy';
 import type { AdminServices } from '../../application/admin-services';
-import {
-  errorMessage,
-  usePagedList,
-  useResource,
-} from '../../application/hooks';
-import { parsePrice, priceText } from '../../application/validation';
+import { usePagedList, useResource } from '../../application/hooks';
 import type {
   PaymentFilter,
   PaymentPackage,
   PaymentStatus,
 } from '../../domain/models';
 import { AdminList } from '../parts/AdminList';
+import { CatalogEditor } from './CatalogEditor';
 import { ProPlanCard } from './ProPlanCard';
 import {
   Card,
@@ -34,10 +28,7 @@ import {
   LoadState,
   Metric,
   SectionTitle,
-  SmallButton,
-  SuccessNotice,
   Tag,
-  ToggleRow,
   adminStyles,
   formatDate,
   formatMoney,
@@ -259,74 +250,17 @@ function PackageCard({
   services: AdminServices;
   onSaved(updated: PaymentPackage): void;
 }) {
-  const [price, setPrice] = useState(priceText(item.amountMinor));
-  const [fieldError, setFieldError] = useState<string | undefined>();
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    setPrice(priceText(item.amountMinor));
-  }, [item.amountMinor]);
-  async function update(amountMinor: number | null, active: boolean) {
-    if (busy) return;
-    setError(null);
-    setNotice(null);
-    setFieldError(undefined);
-    if (amountMinor === null) {
-      setFieldError(text.priceError);
-      return;
-    }
-    Keyboard.dismiss();
-    setBusy(true);
-    try {
-      onSaved(
-        await services.payments.updatePackage(item.id, amountMinor, active),
-      );
-      setNotice(text.saved);
-    } catch (failure) {
-      if (failure instanceof ApiError)
-        setFieldError(failure.fields.amountMinor);
-      setError(errorMessage(failure));
-    } finally {
-      setBusy(false);
-    }
-  }
   return (
-    <Card>
-      <View style={adminStyles.row}>
-        <Text style={[adminStyles.rowTitle, adminStyles.flex]}>
-          {text.rights(item.credits)}
-        </Text>
-        <Tag
-          label={item.active ? text.onSale : text.offSale}
-          tone={item.active ? 'success' : 'neutral'}
-        />
-      </View>
-      <Field
-        label={text.price}
-        value={price}
-        onChangeText={setPrice}
-        error={fieldError}
-        keyboardType="decimal-pad"
-        maxLength={10}
-        editable={!busy}
-      />
-      <ToggleRow
-        label={text.onSale}
-        hint={text.onSaleHint}
-        value={item.active}
-        onChange={value => update(item.amountMinor, value)}
-        disabled={busy}
-      />
-      <SuccessNotice message={notice} />
-      <ErrorBanner message={error} />
-      <SmallButton
-        label={text.savePackage}
-        tone="brand"
-        accessibilityLabel={text.rights(item.credits) + ', ' + text.savePackage}
-        onPress={() => update(parsePrice(price), item.active)}
-        loading={busy}
-      />
-    </Card>
+    <CatalogEditor
+      title={text.rights(item.credits)}
+      saved={item}
+      priceLabel={text.price}
+      onSaleHint={text.onSaleHint}
+      saveLabel={text.savePackage}
+      savedNotice={text.saved}
+      onSave={async update =>
+        onSaved(await services.payments.updatePackage(item.id, update))
+      }
+    />
   );
 }

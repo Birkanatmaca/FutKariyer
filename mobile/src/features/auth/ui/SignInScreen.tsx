@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, StyleSheet, Text, View } from 'react-native';
 import { LockKeyhole, UserRound } from 'lucide-react-native';
 import { AuthFrame } from './AuthFrame';
 import { AuthNotice } from './AuthNotice';
@@ -8,7 +8,7 @@ import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
-import { colors, space } from '../../../styles/tokens';
+import { colors, space, type } from '../../../styles/tokens';
 import { useAuth } from '../application/AuthProvider';
 import { validateLogin, type FieldErrors } from '../application/validation';
 
@@ -61,6 +61,9 @@ export function SignInScreen({ onSignUp }: { onSignUp(): void }) {
   return (
     <AuthFrame title={copy.signIn.title} description={copy.signIn.description}>
       <View style={styles.form}>
+        <Text accessibilityRole="header" style={styles.heading}>
+          {copy.signIn.formTitle}
+        </Text>
         <Field
           label={copy.form.identifier}
           icon={UserRound}
@@ -93,30 +96,26 @@ export function SignInScreen({ onSignUp }: { onSignUp(): void }) {
         <AuthNotice message={notice ?? sessionNotice} live />
         <ErrorBanner message={error} />
         <Button label={copy.signIn.button} onPress={submit} loading={busy} />
-        <View style={styles.switch}>
-          <Text style={styles.question}>{copy.signIn.question}</Text>
-          <Pressable
-            accessibilityRole="button"
-            onPress={onSignUp}
-            disabled={busy}
-            hitSlop={10}
-          >
-            <Text style={styles.link}>{copy.signIn.link}</Text>
-          </Pressable>
+        <View style={styles.divider} accessibilityElementsHidden>
+          <View style={styles.rule} />
+          <Text style={styles.or}>{copy.signIn.or}</Text>
+          <View style={styles.rule} />
         </View>
+        <Button
+          label={copy.signIn.link}
+          accessibilityLabel={copy.signIn.question + ' ' + copy.signIn.link}
+          onPress={onSignUp}
+          disabled={busy}
+          secondary
+        />
       </View>
     </AuthFrame>
   );
 }
 const styles = StyleSheet.create({
   form: { gap: space.lg },
-  switch: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: space.sm,
-    paddingVertical: space.sm,
-  },
-  question: { color: colors.secondary, fontSize: 13 },
-  link: { color: colors.brand, fontSize: 13, fontWeight: '700' },
+  heading: { ...type.headline, fontSize: 20, color: colors.text },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  rule: { flex: 1, height: 1, backgroundColor: colors.border },
+  or: { ...type.caption, color: colors.muted },
 });

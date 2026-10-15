@@ -22,15 +22,15 @@ var _ domain.Repository = (*Postgres)(nil)
 func New(db *sql.DB) *Postgres { return &Postgres{db: db} }
 
 func (r *Postgres) ListPackages(ctx context.Context, includeInactive bool) ([]domain.Package, error) {
-	rows, err := r.db.QueryContext(ctx, `SELECT id,credits,amount_minor,currency,active,sort_order FROM team_request_packages WHERE ($1 OR active) ORDER BY sort_order,credits`, includeInactive)
+	rows, err := r.db.QueryContext(ctx, `SELECT `+packageColumns+` FROM team_request_packages WHERE ($1 OR active) ORDER BY sort_order,credits`, includeInactive)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	items := []domain.Package{}
 	for rows.Next() {
-		var item domain.Package
-		if err := rows.Scan(&item.ID, &item.Credits, &item.AmountMinor, &item.Currency, &item.Active, &item.SortOrder); err != nil {
+		item, err := scanPackage(rows)
+		if err != nil {
 			return nil, err
 		}
 		items = append(items, item)
@@ -44,11 +44,32 @@ func (r *Postgres) ListPackages(ctx context.Context, includeInactive bool) ([]do
 	return items, nil
 }
 
-func (r *Postgres) UpdatePackage(ctx context.Context, id string, amountMinor int64, active bool) (domain.Package, error) {
+const packageColumns = `id,credits,amount_minor,currency,active,sort_order,COALESCE(apple_product_id,''),COALESCE(google_product_id,'')`
+
+func scanPackage(row interface{ Scan(...any) error }) (domain.Package, error) {
 	var item domain.Package
-	err := r.db.QueryRowContext(ctx, `UPDATE team_request_packages SET amount_minor=$2,active=$3,updated_at=now() WHERE id=$1 RETURNING id,credits,amount_minor,currency,active,sort_order`, id, amountMinor, active).Scan(&item.ID, &item.Credits, &item.AmountMinor, &item.Currency, &item.Active, &item.SortOrder)
+	err := row.Scan(&item.ID, &item.Credits, &item.AmountMinor, &item.Currency, &item.Active, &item.SortOrder, &item.AppleProductID, &item.GoogleProductID)
+	return item, err
+}
+
+// storeProductArgs keeps the current product ids when products is nil.
+func storeProductArgs(products *domain.StoreProducts) (bool, string, string) {
+	if products == nil {
+		return false, "", ""
+	}
+	return true, products.AppleProductID, products.GoogleProductID
+}
+
+const setStoreProducts = `apple_product_id=CASE WHEN $4 THEN NULLIF($5,'') ELSE apple_product_id END,google_product_id=CASE WHEN $4 THEN NULLIF($6,'') ELSE google_product_id END`
+
+func (r *Postgres) UpdatePackage(ctx context.Context, id string, amountMinor int64, active bool, products *domain.StoreProducts) (domain.Package, error) {
+	replace, apple, google := storeProductArgs(products)
+	item, err := scanPackage(r.db.QueryRowContext(ctx, `UPDATE team_request_packages SET amount_minor=$2,active=$3,`+setStoreProducts+`,updated_at=now() WHERE id=$1 RETURNING `+packageColumns, id, amountMinor, active, replace, apple, google))
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.Package{}, domain.ErrNotFound
+	}
+	if isUniqueViolation(err) {
+		return domain.Package{}, domain.ErrDuplicateProduct
 	}
 	return item, err
 }
@@ -125,11 +146,11 @@ func (r *Postgres) CreateOrder(ctx context.Context, playerID, packageID, orderID
 	return order, tx.Commit()
 }
 
-const proPlanColumns = `id,days,bonus_credits,amount_minor,currency,active`
+const proPlanColumns = `id,days,bonus_credits,amount_minor,currency,active,COALESCE(apple_product_id,''),COALESCE(google_product_id,'')`
 
 func scanProPlan(row interface{ Scan(...any) error }) (domain.ProPlan, error) {
 	var plan domain.ProPlan
-	err := row.Scan(&plan.ID, &plan.Days, &plan.BonusCredits, &plan.AmountMinor, &plan.Currency, &plan.Active)
+	err := row.Scan(&plan.ID, &plan.Days, &plan.BonusCredits, &plan.AmountMinor, &plan.Currency, &plan.Active, &plan.AppleProductID, &plan.GoogleProductID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return plan, domain.ErrNotFound
 	}
@@ -140,8 +161,13 @@ func (r *Postgres) ProPlan(ctx context.Context) (domain.ProPlan, error) {
 	return scanProPlan(r.db.QueryRowContext(ctx, `SELECT `+proPlanColumns+` FROM pro_plans ORDER BY created_at,id LIMIT 1`))
 }
 
-func (r *Postgres) UpdateProPlan(ctx context.Context, id string, amountMinor int64, active bool) (domain.ProPlan, error) {
-	return scanProPlan(r.db.QueryRowContext(ctx, `UPDATE pro_plans SET amount_minor=$2,active=$3,updated_at=now() WHERE id=$1 RETURNING `+proPlanColumns, id, amountMinor, active))
+func (r *Postgres) UpdateProPlan(ctx context.Context, id string, amountMinor int64, active bool, products *domain.StoreProducts) (domain.ProPlan, error) {
+	replace, apple, google := storeProductArgs(products)
+	plan, err := scanProPlan(r.db.QueryRowContext(ctx, `UPDATE pro_plans SET amount_minor=$2,active=$3,`+setStoreProducts+`,updated_at=now() WHERE id=$1 RETURNING `+proPlanColumns, id, amountMinor, active, replace, apple, google))
+	if isUniqueViolation(err) {
+		return domain.ProPlan{}, domain.ErrDuplicateProduct
+	}
+	return plan, err
 }
 
 func (r *Postgres) CreateProOrder(ctx context.Context, userID, planID, orderID string) (domain.Order, error) {

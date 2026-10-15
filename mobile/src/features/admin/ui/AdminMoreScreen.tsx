@@ -47,7 +47,7 @@ export function AdminMoreScreen({
       />
       <AdminMenu
         onOpen={onOpen}
-        only={['leagues', 'gifts', 'announcements', 'payments']}
+        only={['reports', 'leagues', 'gifts', 'announcements', 'payments']}
       />
       <View style={styles.account}>
         <View style={styles.avatar}>

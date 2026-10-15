@@ -25,14 +25,17 @@ function validNotification(
     typeof item.createdAt === 'string' &&
     Number.isFinite(Date.parse(item.createdAt)) &&
     (item.readAt === null ||
-      (typeof item.readAt === 'string' && Number.isFinite(Date.parse(item.readAt))))
+      (typeof item.readAt === 'string' &&
+        Number.isFinite(Date.parse(item.readAt))))
   );
 }
 
 function validCount(value: unknown): value is { unreadCount: number } {
   const result = value as { unreadCount: number };
   return (
-    !!result && Number.isSafeInteger(result.unreadCount) && result.unreadCount >= 0
+    !!result &&
+    Number.isSafeInteger(result.unreadCount) &&
+    result.unreadCount >= 0
   );
 }
 

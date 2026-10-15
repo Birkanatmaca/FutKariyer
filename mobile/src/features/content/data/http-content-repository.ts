@@ -14,7 +14,7 @@ function imageID(value: unknown, optional = false) {
     ((optional && value === '') || /^[a-f0-9]{32}$/.test(value))
   );
 }
-function base(value: unknown): value is Article | Advertisement {
+function base(value: unknown): value is Article {
   const item = value as Article;
   return (
     !!item &&
@@ -26,10 +26,15 @@ function base(value: unknown): value is Article | Advertisement {
     Number.isFinite(Date.parse(item.updatedAt))
   );
 }
-function ad(value: unknown): value is Advertisement {
-  const item = value as Advertisement;
+type AdvertisementPayload = Advertisement & {
+  active: boolean;
+  sortOrder: number;
+};
+function ad(value: unknown): value is AdvertisementPayload {
+  const item = value as AdvertisementPayload;
   return (
-    base(value) &&
+    !!item &&
+    imageID(item.id) &&
     imageID(item.imageId) &&
     item.active === true &&
     Number.isInteger(item.sortOrder) &&
@@ -50,7 +55,10 @@ function article(value: unknown): value is Article {
 }
 export const contentRepository: ContentRepository = {
   async home(token) {
-    const out = await request<HomeContent>('/v1/content/home', { token });
+    const out = await request<{
+      advertisements: unknown[];
+      news: Article[];
+    }>('/v1/content/home', { token });
     if (
       !out ||
       !Array.isArray(out.advertisements) ||
@@ -61,7 +69,11 @@ export const contentRepository: ContentRepository = {
       !out.news.every(item => article(item) && item.showOnHome)
     )
       throw new ApiError(copy.form.unexpected);
-    return out;
+    // Only the picture reaches the home screen; admin titles are dropped here.
+    const advertisements = (out.advertisements as AdvertisementPayload[]).map(
+      ({ id, imageId }): Advertisement => ({ id, imageId }),
+    );
+    return { advertisements, news: out.news } satisfies HomeContent;
   },
   async news(token, page) {
     const out = await request<NewsPage>('/v1/content/news?page=' + page, {

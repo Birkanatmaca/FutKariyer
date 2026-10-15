@@ -17,11 +17,17 @@ import (
 type Handler struct {
 	auth    *auth.Service
 	service *application.Service
+	push    *application.PushService
 }
 
-func New(authService *auth.Service, service *application.Service) http.Handler {
+// New serves the notification centre and, when push is given, device registration.
+func New(authService *auth.Service, service *application.Service, push ...*application.PushService) http.Handler {
 	h := &Handler{auth: authService, service: service}
 	mux := http.NewServeMux()
+	if len(push) > 0 && push[0] != nil {
+		h.push = push[0]
+		mux.HandleFunc("PUT /v1/me/push-devices", h.registerDevice)
+	}
 	mux.HandleFunc("GET /v1/me/notifications", h.list)
 	mux.HandleFunc("GET /v1/me/notifications/unread-count", h.unreadCount)
 	mux.HandleFunc("PUT /v1/me/notifications/read-all", h.markAllRead)
@@ -137,4 +143,28 @@ func (h *Handler) markAllRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	write(w, http.StatusOK, map[string]int{"unreadCount": 0})
+}
+
+// registerDevice ties an FCM token to the calling session.
+func (h *Handler) registerDevice(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.userID(w, r)
+	if !ok {
+		return
+	}
+	var input struct {
+		Token    string `json:"token"`
+		Platform string `json:"platform"`
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 8192))
+	decoder.DisallowUnknownFields()
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") || decoder.Decode(&input) != nil {
+		h.failure(w, auth.ValidationError{"device": "Geçerli bir cihaz kaydı gönder."})
+		return
+	}
+	parts := strings.Fields(r.Header.Get("Authorization"))
+	if err := h.push.Register(r.Context(), userID, auth.HashToken(parts[1]), input.Token, input.Platform); err != nil {
+		h.failure(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

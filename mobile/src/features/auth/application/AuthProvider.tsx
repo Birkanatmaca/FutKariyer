@@ -40,6 +40,7 @@ type AuthContextValue = {
   // Applications never create a session; the account waits for approval.
   apply(input: AccountApplicationInput): Promise<void>;
   signOut(): Promise<void>;
+  deleteAccount(password: string): Promise<void>;
   // Called when an admin endpoint answers 401 (expired or revoked session).
   expireAdminSession(): Promise<void>;
 };
@@ -185,6 +186,13 @@ export function AuthProvider({
     await storage.clear();
     setCurrent(null);
   }
+  async function deleteAccount(password: string) {
+    if (current?.kind !== 'user') return;
+    await repository.deleteAccount(current.saved.token, password);
+    await storage.clear().catch(() => {});
+    setCurrent(null);
+    setSessionNotice(copy.account.deleted);
+  }
   const expireAdminSession = useCallback(async () => {
     if (currentRef.current?.kind !== 'admin') {
       return;
@@ -208,6 +216,7 @@ export function AuthProvider({
         signUp,
         apply,
         signOut,
+        deleteAccount,
         expireAdminSession,
       }}
     >

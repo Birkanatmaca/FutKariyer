@@ -6,8 +6,6 @@ export function createProService(repository: ProRepository) {
     setPrivateBrowsing: (token: string, on: boolean) =>
       repository.setPrivateBrowsing(token, on),
     offer: (token: string) => repository.offer(token),
-    checkout: (token: string, planId: string) =>
-      repository.checkout(token, planId),
     visitors: (token: string) => repository.visitors(token),
   };
 }

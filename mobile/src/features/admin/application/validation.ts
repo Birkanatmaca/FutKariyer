@@ -2,10 +2,14 @@ import { copy } from '../../../shared/lib/copy';
 import type {
   AccountForm,
   AnnouncementDraft,
+  CatalogUpdate,
   GiftDraft,
   LeagueForm,
   LeagueMatch,
   MatchForm,
+  ContentReport,
+  ReportAction,
+  StoreProductIds,
 } from '../domain/models';
 
 export type FieldErrors = Record<string, string>;
@@ -254,4 +258,58 @@ export function parsePrice(value: string): number | null {
 }
 export function priceText(amountMinor: number) {
   return (amountMinor / 100).toFixed(2).replace('.', ',');
+}
+
+// Store product ids mirror the server rules; '' means not sold in that store.
+export const storeProductPatterns = {
+  apple: /^[A-Za-z0-9._]{1,100}$/,
+  google: /^[a-z0-9][a-z0-9._]{0,99}$/,
+} as const;
+export function normalizeStoreProductIds(
+  ids: StoreProductIds,
+): StoreProductIds {
+  return {
+    appleProductId: ids.appleProductId.trim(),
+    googleProductId: ids.googleProductId.trim(),
+  };
+}
+export function validateStoreProductIds(input: StoreProductIds): FieldErrors {
+  const ids = normalizeStoreProductIds(input);
+  const fields: FieldErrors = {};
+  if (
+    ids.appleProductId &&
+    !storeProductPatterns.apple.test(ids.appleProductId)
+  )
+    fields.appleProductId = text.payments.appleProductError;
+  if (
+    ids.googleProductId &&
+    !storeProductPatterns.google.test(ids.googleProductId)
+  )
+    fields.googleProductId = text.payments.googleProductError;
+  return fields;
+}
+
+// The package / Pro plan form: reporting amount in lira plus both store ids.
+export type CatalogDraft = StoreProductIds & { price: string };
+export function toCatalogUpdate(
+  draft: CatalogDraft,
+  active: boolean,
+): { update: CatalogUpdate } | { fields: FieldErrors } {
+  const fields = validateStoreProductIds(draft);
+  const amountMinor = parsePrice(draft.price);
+  if (amountMinor === null) fields.amountMinor = text.payments.priceError;
+  if (amountMinor === null || Object.keys(fields).length) return { fields };
+  return {
+    update: { amountMinor, active, ...normalizeStoreProductIds(draft) },
+  };
+}
+
+// Actions offered for an open report. Only posts and replies can be removed;
+// suspending needs the target account to still exist.
+export function reportActions(report: ContentReport): ReportAction[] {
+  if (report.status !== 'open') return [];
+  const actions: ReportAction[] = ['dismiss'];
+  if (report.targetKind !== 'user') actions.push('remove');
+  if (report.targetUserId) actions.push('suspend');
+  return actions;
 }

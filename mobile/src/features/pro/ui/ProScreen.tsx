@@ -1,11 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  Linking,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Eye, Sparkles, Ticket, VenetianMask } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { PageHeader } from '../../../shared/ui/PageHeader';
@@ -17,38 +11,56 @@ import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
 import { colors, radius, space, type } from '../../../styles/tokens';
 import type { ProService } from '../application/pro-service';
-import { formatDate, formatPrice } from './format';
+import { formatDate } from './format';
+import {
+  productIdFor,
+  storeAvailable,
+  type StoreCheckout,
+} from '../../payments';
 
 export function ProScreen({
   token,
   service,
+  checkout,
   onBack,
 }: {
   token: string;
   service: ProService;
+  checkout: StoreCheckout;
   onBack(): void;
 }) {
-  const load = useCallback(
-    () =>
-      Promise.all([service.offer(token), service.status(token)]).then(
-        ([offer, state]) => ({ offer, status: state.pro }),
-      ),
-    [service, token],
-  );
+  const load = useCallback(async () => {
+    const [offer, state] = await Promise.all([
+      service.offer(token),
+      service.status(token),
+    ]);
+    const productId = productIdFor(checkout.store, offer.plan);
+    const available = storeAvailable(checkout.store, offer.stores);
+    // The store's own price is charged and shown.
+    const prices: Record<string, string> =
+      available && productId
+        ? await checkout.prices([productId]).catch(() => ({}))
+        : {};
+    return { offer, status: state.pro, price: prices[productId] ?? '' };
+  }, [checkout, service, token]);
   const state = useFocusedResource(load);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   async function buy() {
     const offer = state.data?.offer;
-    if (busy || !offer?.checkoutEnabled || !offer.plan.active) return;
+    if (busy || !state.data?.price || !offer?.plan.active) return;
     setBusy(true);
     setError('');
     setNotice('');
     try {
-      const order = await service.checkout(token, offer.plan.id);
-      await Linking.openURL(order.checkoutUrl);
-      setNotice(copy.pro.checkoutStarted);
+      const outcome = await checkout.buy(token, 'pro', offer.plan.id);
+      if (outcome === 'paid') {
+        setNotice(copy.pro.purchased);
+        state.retry();
+      } else if (outcome === 'pending') setNotice(copy.pro.pending);
+      else if (outcome === 'failed' || outcome === 'refunded')
+        setError(copy.pro.failed);
     } catch (failure) {
       setError(
         failure instanceof Error ? failure.message : copy.form.unexpected,
@@ -113,12 +125,7 @@ export function ProScreen({
           </View>
           <View style={styles.offer}>
             <View style={styles.priceRow}>
-              <Text style={styles.price}>
-                {formatPrice(
-                  data.offer.plan.amountMinor,
-                  data.offer.plan.currency,
-                )}
-              </Text>
+              <Text style={styles.price}>{data.price || '—'}</Text>
               <Text style={styles.period}>
                 {' / ' + copy.pro.perPeriod(data.offer.plan.days)}
               </Text>
@@ -134,20 +141,20 @@ export function ProScreen({
             {error ? <ErrorBanner message={error} /> : null}
             <Button
               label={
-                !data.offer.checkoutEnabled
+                !data.price
                   ? copy.pro.purchaseSoon
                   : data.status.active
                   ? copy.pro.renew
                   : copy.pro.buy
               }
               loading={busy}
-              disabled={!data.offer.checkoutEnabled || !data.offer.plan.active}
+              disabled={!data.price || !data.offer.plan.active}
               onPress={buy}
             />
           </View>
           {!data.offer.plan.active ? (
             <ErrorBanner message={copy.pro.offSale} />
-          ) : !data.offer.checkoutEnabled ? (
+          ) : !data.price ? (
             <ErrorBanner message={copy.pro.unavailable} />
           ) : null}
         </>

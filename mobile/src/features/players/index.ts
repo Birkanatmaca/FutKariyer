@@ -9,3 +9,10 @@ export type {
   PlayerAvailability,
 } from './domain/profile';
 export { isPlayerProfile } from './domain/profile';
+export type { PlayerMediaService } from './application/media-service';
+import { createPlayerMediaService } from './application/media-service';
+import { playerMediaRepository } from './data/http-media-repository';
+// Composed once; screens receive it as a prop.
+export const playerMediaService = createPlayerMediaService(
+  playerMediaRepository,
+);

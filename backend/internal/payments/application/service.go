@@ -17,6 +17,8 @@ var packageIDPattern = regexp.MustCompile(`^[a-f0-9]{32}$`)
 type Service struct {
 	repo    domain.Repository
 	adapter CheckoutAdapter
+	apple   domain.AppStoreVerifier
+	google  domain.GooglePlayVerifier
 }
 
 func New(repo domain.Repository, adapters ...CheckoutAdapter) *Service {
@@ -39,22 +41,32 @@ func (s *Service) Packages(ctx context.Context, includeInactive bool) ([]domain.
 	return s.repo.ListPackages(ctx, includeInactive)
 }
 
-func (s *Service) UpdatePackage(ctx context.Context, id string, amountMinor int64, active bool) (domain.Package, error) {
+func (s *Service) UpdatePackage(ctx context.Context, id string, amountMinor int64, active bool, products *domain.StoreProducts) (domain.Package, error) {
 	if !packageIDPattern.MatchString(id) || amountMinor < 100 || amountMinor > 100000000 {
 		return domain.Package{}, auth.ValidationError{"package": "Paket kimliği veya tutarı geçersiz. Tutar 1 TL ile 1.000.000 TL arasında olmalı."}
 	}
-	return s.repo.UpdatePackage(ctx, id, amountMinor, active)
+	if products != nil && !domain.ValidStoreProducts(*products) {
+		return domain.Package{}, storeProductError("package")
+	}
+	return s.repo.UpdatePackage(ctx, id, amountMinor, active, products)
+}
+
+func storeProductError(field string) auth.ValidationError {
+	return auth.ValidationError{field: "Mağaza ürün kimliği en fazla 100 karakter olmalı; harf, rakam, nokta ve alt çizgi içerebilir (Google Play için küçük harf)."}
 }
 
 func (s *Service) ProPlan(ctx context.Context) (domain.ProPlan, error) {
 	return s.repo.ProPlan(ctx)
 }
 
-func (s *Service) UpdateProPlan(ctx context.Context, id string, amountMinor int64, active bool) (domain.ProPlan, error) {
+func (s *Service) UpdateProPlan(ctx context.Context, id string, amountMinor int64, active bool, products *domain.StoreProducts) (domain.ProPlan, error) {
 	if !packageIDPattern.MatchString(id) || amountMinor < 100 || amountMinor > 100000000 {
 		return domain.ProPlan{}, auth.ValidationError{"plan": "Plan kimliği veya tutarı geçersiz. Tutar 1 TL ile 1.000.000 TL arasında olmalı."}
 	}
-	return s.repo.UpdateProPlan(ctx, id, amountMinor, active)
+	if products != nil && !domain.ValidStoreProducts(*products) {
+		return domain.ProPlan{}, storeProductError("plan")
+	}
+	return s.repo.UpdateProPlan(ctx, id, amountMinor, active, products)
 }
 
 func (s *Service) Payments(ctx context.Context, query domain.Query) (domain.Page, error) {

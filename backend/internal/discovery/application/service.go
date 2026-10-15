@@ -111,7 +111,7 @@ func (s *Service) Get(ctx context.Context, viewer domain.Viewer, role, id string
 	if viewer.ID == id {
 		return Profile{}, domain.ErrForbidden
 	}
-	profile, err := s.repo.Get(ctx, role, id)
+	profile, err := s.repo.Get(ctx, role, id, viewer.ID)
 	if err != nil {
 		return Profile{}, err
 	}

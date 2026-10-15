@@ -41,9 +41,11 @@ const options: {
 
 export function AccountTypeScreen({
   onBack,
+  onInfo,
   onSelect,
 }: {
   onBack(): void;
+  onInfo?: () => void;
   onSelect(kind: SignUpKind): void;
 }) {
   return (
@@ -51,6 +53,8 @@ export function AccountTypeScreen({
       title={copy.accountType.title}
       description={copy.accountType.description}
       onBack={onBack}
+      onInfo={onInfo}
+      eyebrow={copy.authStep(1, 2)}
       compact
     >
       <View style={styles.list}>

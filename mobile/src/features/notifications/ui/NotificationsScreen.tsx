@@ -1,5 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {
   ArrowLeft,
   Bell,
@@ -63,7 +69,10 @@ export function NotificationsScreen({
   const [busyAll, setBusyAll] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const load = useCallback(() => service.list(token, page), [service, token, page]);
+  const load = useCallback(
+    () => service.list(token, page),
+    [service, token, page],
+  );
   const state = useFocusedResource(load);
   const items = state.data?.items ?? [];
   // Filtering runs over the loaded page only; the server has no unread-only query.
@@ -80,7 +89,9 @@ export function NotificationsScreen({
       setNotice(copy.notifications.markedRead);
       state.retry();
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : copy.form.unexpected);
+      setError(
+        failure instanceof Error ? failure.message : copy.form.unexpected,
+      );
     } finally {
       setBusyID('');
     }
@@ -96,7 +107,9 @@ export function NotificationsScreen({
       setNotice(copy.notifications.allMarkedRead);
       state.retry();
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : copy.form.unexpected);
+      setError(
+        failure instanceof Error ? failure.message : copy.form.unexpected,
+      );
     } finally {
       setBusyAll(false);
     }
@@ -274,8 +287,7 @@ function NotificationCard({
   const read = item.readAt !== null;
   const Icon = kindIcon[item.kind];
   const opensGifts = item.kind === 'gift' && !!onOpenGifts;
-  const opensConnections =
-    item.kind === 'connection' && !!onOpenConnections;
+  const opensConnections = item.kind === 'connection' && !!onOpenConnections;
   // Opportunity notifications may point at a club listing; the caller decides
   // whether the listing is still open, otherwise tapping only marks it read.
   const opensListing =
@@ -343,7 +355,9 @@ function NotificationCard({
             ) : (
               <>
                 <CheckCheck size={15} color={colors.brand} />
-                <Text style={styles.markReadText}>{copy.notifications.markRead}</Text>
+                <Text style={styles.markReadText}>
+                  {copy.notifications.markRead}
+                </Text>
               </>
             )}
           </Pressable>
@@ -458,7 +472,12 @@ const styles = StyleSheet.create({
   cardTitle: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '700' },
   cardBody: { color: colors.secondary, fontSize: 13, lineHeight: 19 },
   date: { color: colors.muted, fontSize: 11 },
-  unreadDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.brand },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.brand,
+  },
   markRead: {
     alignSelf: 'flex-start',
     minHeight: 36,
@@ -486,7 +505,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.raised,
   },
   emptyTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  emptyBody: { color: colors.muted, fontSize: 12, lineHeight: 18, textAlign: 'center' },
+  emptyBody: {
+    color: colors.muted,
+    fontSize: 12,
+    lineHeight: 18,
+    textAlign: 'center',
+  },
   pagination: {
     flexDirection: 'row',
     alignItems: 'center',

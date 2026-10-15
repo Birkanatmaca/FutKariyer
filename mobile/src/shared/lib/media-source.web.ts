@@ -1,5 +1,5 @@
-import { requestBlob } from '../../../shared/api/client';
-import type { MediaSource } from '../domain/models';
+import { requestBlob } from '../api/client';
+import type { MediaSource } from '../domain/media';
 
 export async function mediaSource(
   token: string,

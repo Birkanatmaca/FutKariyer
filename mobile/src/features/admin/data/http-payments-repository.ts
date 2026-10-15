@@ -1,5 +1,6 @@
 import type {
   AdminGateway,
+  CatalogUpdate,
   Payment,
   PaymentPackage,
   PaymentPage,
@@ -22,6 +23,10 @@ import {
 const credits = [2, 5, 10];
 const isAmount = (value: unknown) =>
   Number.isSafeInteger(value) && (value as number) > 0;
+// Ids may be '' (not sold in that store); the server validates their format.
+const hasStoreIds = (value: Record<string, unknown>) =>
+  typeof value.appleProductId === 'string' &&
+  typeof value.googleProductId === 'string';
 
 export function isPaymentPackage(value: unknown): value is PaymentPackage {
   return (
@@ -31,7 +36,8 @@ export function isPaymentPackage(value: unknown): value is PaymentPackage {
     isAmount(value.amountMinor) &&
     value.currency === 'TRY' &&
     typeof value.active === 'boolean' &&
-    Number.isInteger(value.sortOrder)
+    Number.isInteger(value.sortOrder) &&
+    hasStoreIds(value)
   );
 }
 export function isPayment(value: unknown): value is Payment {
@@ -62,7 +68,8 @@ export function isProPlan(value: unknown): value is ProPlan {
     isCount(value.bonusCredits) &&
     isAmount(value.amountMinor) &&
     value.currency === 'TRY' &&
-    typeof value.active === 'boolean'
+    typeof value.active === 'boolean' &&
+    hasStoreIds(value)
   );
 }
 export function isPaymentPage(
@@ -85,6 +92,13 @@ export function isPaymentPage(
   );
 }
 
+const catalogBody = (update: CatalogUpdate) => ({
+  amountMinor: update.amountMinor,
+  active: update.active,
+  appleProductId: update.appleProductId,
+  googleProductId: update.googleProductId,
+});
+
 export function createPaymentsRepository(
   gateway: AdminGateway,
 ): PaymentsRepository {
@@ -97,10 +111,10 @@ export function createPaymentsRepository(
         unexpected();
       return result.items as PaymentPackage[];
     },
-    async updatePackage(id, amountMinor, active) {
+    async updatePackage(id, update) {
       const result = await gateway.request<unknown>(
         '/v1/admin/payments/packages/' + segment(id),
-        { method: 'PUT', body: { amountMinor, active } },
+        { method: 'PUT', body: catalogBody(update) },
       );
       if (!isRecord(result) || !isPaymentPackage(result.package)) unexpected();
       return result.package as PaymentPackage;
@@ -112,10 +126,10 @@ export function createPaymentsRepository(
       if (!isRecord(result) || !isProPlan(result.plan)) unexpected();
       return result.plan as ProPlan;
     },
-    async updateProPlan(id, amountMinor, active) {
+    async updateProPlan(id, update) {
       const result = await gateway.request<unknown>(
         '/v1/admin/payments/pro-plan/' + segment(id),
-        { method: 'PUT', body: { amountMinor, active } },
+        { method: 'PUT', body: catalogBody(update) },
       );
       if (!isRecord(result) || !isProPlan(result.plan)) unexpected();
       return result.plan as ProPlan;

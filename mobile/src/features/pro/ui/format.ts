@@ -1,11 +1,6 @@
 import { copy } from '../../../shared/lib/copy';
 import { relativeTime } from '../domain/visitors';
 
-export const formatPrice = (amountMinor: number, currency: string) =>
-  new Intl.NumberFormat('tr-TR', { style: 'currency', currency }).format(
-    amountMinor / 100,
-  );
-
 export const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('tr-TR', {
     day: 'numeric',

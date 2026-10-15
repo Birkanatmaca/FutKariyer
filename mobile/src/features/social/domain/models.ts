@@ -8,25 +8,22 @@ export const maxPostLength = 500;
 export const maxImageBytes = 4 * 1024 * 1024;
 export const maxVideoBytes = 30 * 1024 * 1024;
 export type FeedScope = 'explore' | 'following';
-export type MediaKind = 'image' | 'video';
+import type {
+  MediaKind,
+  MediaSource,
+  SelectedMedia,
+} from '../../../shared/domain/media';
+export type {
+  MediaKind,
+  MediaSource,
+  SelectedMedia,
+} from '../../../shared/domain/media';
 export type SocialMedia = {
   kind: MediaKind;
   mime: string;
   size: number;
   width: number;
   height: number;
-};
-export type SelectedMedia = {
-  kind: MediaKind;
-  uri: string;
-  name: string;
-  mime: string;
-  size: number;
-};
-export type MediaSource = {
-  uri: string;
-  headers?: Record<string, string>;
-  dispose?(): void;
 };
 
 export type SocialAuthor = {

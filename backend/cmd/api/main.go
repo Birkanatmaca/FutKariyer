@@ -47,11 +47,16 @@ import (
 	listingapplication "futcareer/backend/internal/listings/application"
 	listingdata "futcareer/backend/internal/listings/data"
 	listingtransport "futcareer/backend/internal/listings/transport"
+	moderationapplication "futcareer/backend/internal/moderation/application"
+	moderationdata "futcareer/backend/internal/moderation/data"
+	moderationtransport "futcareer/backend/internal/moderation/transport"
 	notificationsapplication "futcareer/backend/internal/notifications/application"
 	notificationsdata "futcareer/backend/internal/notifications/data"
+	notificationsdomain "futcareer/backend/internal/notifications/domain"
 	notificationstransport "futcareer/backend/internal/notifications/transport"
 	paymentapplication "futcareer/backend/internal/payments/application"
 	paymentdata "futcareer/backend/internal/payments/data"
+	paymentdomain "futcareer/backend/internal/payments/domain"
 	paymenttransport "futcareer/backend/internal/payments/transport"
 	"futcareer/backend/internal/platform/adminweb"
 	"futcareer/backend/internal/platform/postgres"
@@ -152,10 +157,21 @@ func run() error {
 	contentService := contentapplication.New(contentdata.New(db))
 	leagueService := leagueapplication.New(leaguedata.New(db))
 	notificationService := notificationsapplication.New(notificationsdata.New(db))
-	notificationsHandler := notificationstransport.New(authService, notificationService)
+	pushSender, err := pushSender()
+	if err != nil {
+		return err
+	}
+	pushService := notificationsapplication.NewPush(notificationsdata.New(db), pushSender)
+	notificationsHandler := notificationstransport.New(authService, notificationService, pushService)
+	routes.Handle("/v1/me/push-devices", notificationsHandler)
 	routes.Handle("/v1/me/notifications", notificationsHandler)
 	routes.Handle("/v1/me/notifications/", notificationsHandler)
 	paymentService := paymentapplication.New(paymentdata.New(db), paymentAdapter)
+	appStore, googlePlay, err := storeVerifiers()
+	if err != nil {
+		return err
+	}
+	paymentService.WithStores(appStore, googlePlay)
 	adminFeatures := http.NewServeMux()
 	adminFeatures.Handle("/v1/admin/content/", contenttransport.NewAdmin(contentService))
 	leagueAdminHandler := leaguetransport.NewAdmin(leagueService)
@@ -167,6 +183,10 @@ func run() error {
 	adminFeatures.Handle("/v1/admin/applications/", applicationAdmin)
 	adminFeatures.Handle("/v1/admin/club-overviews/", clubtransport.NewAdmin(clubapplication.New(clubdata.New(db), leagueService)))
 	adminFeatures.Handle("/v1/admin/announcements", notificationstransport.NewAdmin(notificationsapplication.NewAnnouncements(notificationsdata.New(db))))
+	moderationService := moderationapplication.New(moderationdata.New(db))
+	adminReports := moderationtransport.NewAdmin(moderationService)
+	adminFeatures.Handle("/v1/admin/reports", adminReports)
+	adminFeatures.Handle("/v1/admin/reports/", adminReports)
 	adminPaymentHandler := paymenttransport.NewAdmin(paymentService)
 	adminFeatures.Handle("/v1/admin/payments", adminPaymentHandler)
 	adminFeatures.Handle("/v1/admin/payments/", adminPaymentHandler)
@@ -208,10 +228,16 @@ func run() error {
 	routes.Handle("/v1/payments/", publicPayments)
 	routes.Handle("/v1/me/team-request-payments", publicPayments)
 	routes.Handle("/v1/me/pro-payments", publicPayments)
+	moderationHandler := moderationtransport.New(authService, moderationService)
+	routes.Handle("/v1/reports", moderationHandler)
+	routes.Handle("/v1/me/blocks", moderationHandler)
+	routes.Handle("/v1/me/blocks/", moderationHandler)
+	routes.Handle("/v1/me/store-orders", publicPayments)
+	routes.Handle("/v1/me/store-purchases", publicPayments)
 	proHandler := protransport.New(authService, proService)
 	routes.Handle("/v1/me/pro", proHandler)
 	routes.Handle("/v1/me/pro/", proHandler)
-	routes.Handle("/v1/players/", playertransport.New(authService, playerapplication.New(playerRepo)))
+	routes.Handle("/v1/players/", playertransport.New(authService, playerapplication.New(playerRepo), playerapplication.NewMedia(playerRepo)))
 	discoveryHandler := discoverytransport.New(authService, discoveryapplication.New(discoverydata.New(db)))
 	routes.Handle("/v1/discovery/", discoveryHandler)
 	routes.Handle("/v1/me/", discoveryHandler)
@@ -237,6 +263,8 @@ func run() error {
 	defer listener.Close()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	go paymentService.RunGoogleRefundSync(ctx, time.Hour)
+	go pushService.Run(ctx, 5*time.Second)
 	serveResult := make(chan error, 1)
 	go func() {
 		serveResult <- server.Serve(listener)
@@ -256,4 +284,44 @@ func run() error {
 		return fmt.Errorf("shutdown failed: %w", err)
 	}
 	return nil
+}
+
+// storeVerifiers enables App Store and Google Play purchases when configured.
+// Without a store, the app shows that purchases are unavailable there.
+func storeVerifiers() (paymentdomain.AppStoreVerifier, paymentdomain.GooglePlayVerifier, error) {
+	var apple paymentdomain.AppStoreVerifier
+	var google paymentdomain.GooglePlayVerifier
+	if bundleID := os.Getenv("APPLE_BUNDLE_ID"); bundleID != "" {
+		verifier, err := paymentdata.NewAppStore(bundleID)
+		if err != nil {
+			return nil, nil, err
+		}
+		apple = verifier
+	}
+	packageName, account := os.Getenv("GOOGLE_PLAY_PACKAGE_NAME"), os.Getenv("GOOGLE_PLAY_SERVICE_ACCOUNT_FILE")
+	if packageName != "" || account != "" {
+		if packageName == "" || account == "" {
+			return nil, nil, errors.New("GOOGLE_PLAY_PACKAGE_NAME and GOOGLE_PLAY_SERVICE_ACCOUNT_FILE must be configured together")
+		}
+		verifier, err := paymentdata.NewGooglePlay(packageName, account)
+		if err != nil {
+			return nil, nil, err
+		}
+		google = verifier
+	}
+	return apple, google, nil
+}
+
+// pushSender enables Firebase Cloud Messaging when a service account is set;
+// otherwise notifications stay in the in-app centre only.
+func pushSender() (notificationsdomain.PushSender, error) {
+	file := os.Getenv("FIREBASE_SERVICE_ACCOUNT_FILE")
+	if file == "" {
+		return nil, nil
+	}
+	sender, err := notificationsdata.NewFCM(file)
+	if err != nil {
+		return nil, err
+	}
+	return sender, nil
 }

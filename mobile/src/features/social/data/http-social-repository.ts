@@ -1,6 +1,10 @@
 import { ApiError, request } from '../../../shared/api/client';
-import { appendMedia, pickMedia, releaseMedia } from './media-picker';
-import { mediaSource } from './media-source';
+import {
+  appendMedia,
+  pickMedia,
+  releaseMedia,
+} from '../../../shared/lib/media-picker';
+import { mediaSource } from '../../../shared/lib/media-source';
 import { maxImageBytes, maxVideoBytes } from '../domain/models';
 import { copy } from '../../../shared/lib/copy';
 import type {

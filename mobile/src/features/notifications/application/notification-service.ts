@@ -1,6 +1,8 @@
 import type { NotificationsRepository } from '../domain/models';
 
-export function createNotificationsService(repository: NotificationsRepository) {
+export function createNotificationsService(
+  repository: NotificationsRepository,
+) {
   return {
     list(token: string, page = 1) {
       return repository.list(token, page);
@@ -17,4 +19,6 @@ export function createNotificationsService(repository: NotificationsRepository) 
   };
 }
 
-export type NotificationsService = ReturnType<typeof createNotificationsService>;
+export type NotificationsService = ReturnType<
+  typeof createNotificationsService
+>;

@@ -121,6 +121,7 @@ export function ApplicationScreen({
       title={title}
       description={text.description}
       onBack={onBack}
+      eyebrow={copy.authStep(2, 2)}
       compact
     >
       <View style={styles.form}>

@@ -29,6 +29,7 @@ func New(service *application.Service) http.Handler {
 	mux.HandleFunc("POST /v1/auth/applications", h.apply)
 	mux.HandleFunc("GET /v1/auth/me", h.me)
 	mux.HandleFunc("POST /v1/auth/logout", h.logout)
+	mux.HandleFunc("DELETE /v1/auth/account", h.deleteAccount)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -152,6 +153,23 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.service.Logout(r.Context(), token); err != nil {
+		failure(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) deleteAccount(w http.ResponseWriter, r *http.Request) {
+	if h.limited(w, r) {
+		return
+	}
+	var in struct {
+		Password string `json:"password"`
+	}
+	if !decode(w, r, &in) {
+		return
+	}
+	if err := h.service.DeleteAccount(r.Context(), bearer(r), in.Password); err != nil {
 		failure(w, err)
 		return
 	}

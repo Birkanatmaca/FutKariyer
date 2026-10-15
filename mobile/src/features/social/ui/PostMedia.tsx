@@ -13,7 +13,7 @@ import { colors, radius, space } from '../../../styles/tokens';
 import type { SocialMedia } from '../domain/models';
 import type { SocialService } from '../application/social-service';
 import { usePostMedia } from '../application/usePostMedia';
-import { VideoPlayer } from './VideoPlayer';
+import { VideoPlayer } from '../../../shared/ui/VideoPlayer';
 
 export function PostMedia({
   media,

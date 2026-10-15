@@ -20,6 +20,11 @@ import type { SocialService } from '../application/social-service';
 import { PostComposer } from './PostComposer';
 import { SocialPostCard } from './SocialPostCard';
 import { DeleteContentPrompt } from './DeleteContentPrompt';
+import {
+  ModerationSheet,
+  moderationService,
+  type ModerationTarget,
+} from '../../moderation';
 
 export function SocialThreadScreen({
   token,
@@ -48,6 +53,7 @@ export function SocialThreadScreen({
     reply: boolean;
   } | null>(null);
   const [error, setError] = useState('');
+  const [moderating, setModerating] = useState<ModerationTarget | null>(null);
   async function send(body: string) {
     setSending(true);
     setError('');
@@ -146,6 +152,15 @@ export function SocialThreadScreen({
                   busy={busy || sending}
                   onLike={() => like()}
                   onDelete={() => setDeleteTarget({ id, reply: false })}
+                  onMore={() =>
+                    post.data &&
+                    setModerating({
+                      kind: 'post',
+                      id,
+                      userId: post.data.author.id,
+                      name: post.data.author.fullName,
+                    })
+                  }
                 />
                 <PostComposer
                   name={name}
@@ -171,6 +186,14 @@ export function SocialThreadScreen({
             service={service}
             busy={busy || sending}
             onDelete={() => setDeleteTarget({ id: item.id, reply: true })}
+            onMore={() =>
+              setModerating({
+                kind: 'reply',
+                id: item.id,
+                userId: item.author.id,
+                name: item.author.fullName,
+              })
+            }
           />
         )}
         ListEmptyComponent={
@@ -212,6 +235,17 @@ export function SocialThreadScreen({
         reply={deleteTarget?.reply}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={() => remove()}
+      />
+      <ModerationSheet
+        target={moderating}
+        token={token}
+        service={moderationService}
+        onClose={() => setModerating(null)}
+        onBlocked={userId => {
+          // Blocking the post's author closes the thread; a reply author only drops out.
+          if (userId === post.data?.author.id) onBack();
+          else replies.refresh();
+        }}
       />
     </SafeAreaView>
   );

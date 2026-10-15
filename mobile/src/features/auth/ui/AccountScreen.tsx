@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ArrowLeft, LockKeyhole } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Ban,
+  ChevronRight,
+  LockKeyhole,
+  Trash2,
+} from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { PageHeader } from '../../../shared/ui/PageHeader';
 import { confirmSignOut } from './confirm-sign-out';
+import { DeleteAccountPrompt } from './DeleteAccountPrompt';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import { useAuth } from '../application/AuthProvider';
@@ -13,14 +20,18 @@ export function AccountScreen({
   onBack,
   settings = !!onBack,
   extra,
+  onBlockedUsers,
 }: {
   onBack?: () => void;
   settings?: boolean;
   // Settings supplied by the app shell (e.g. Pro private browsing).
   extra?: React.ReactNode;
+  // Opens the blocked accounts list (moderation feature).
+  onBlockedUsers?: () => void;
 } = {}) {
-  const { user, signOut } = useAuth();
+  const { user, signOut, deleteAccount } = useAuth();
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   if (!user) {
     return null;
@@ -112,6 +123,17 @@ export function AccountScreen({
         </View>
       )}
       {settings ? extra : null}
+      {settings && onBlockedUsers ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onBlockedUsers}
+          style={styles.row}
+        >
+          <Ban size={18} color={colors.secondary} />
+          <Text style={styles.rowText}>{copy.moderation.blockedTitle}</Text>
+          <ChevronRight size={18} color={colors.muted} />
+        </Pressable>
+      ) : null}
       <Button
         label={copy.profile.logout}
         secondary
@@ -119,6 +141,24 @@ export function AccountScreen({
         onPress={logout}
       />
       <ErrorBanner message={error} />
+      {settings ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setDeleting(true)}
+          disabled={busy}
+          style={styles.row}
+        >
+          <Trash2 size={18} color={colors.danger} />
+          <Text style={[styles.rowText, styles.danger]}>
+            {copy.account.delete}
+          </Text>
+        </Pressable>
+      ) : null}
+      <DeleteAccountPrompt
+        visible={deleting}
+        onCancel={() => setDeleting(false)}
+        onDelete={deleteAccount}
+      />
     </Screen>
   );
 }
@@ -183,4 +223,17 @@ const styles = StyleSheet.create({
   noteContent: { flex: 1, gap: space.sm },
   noteTitle: { color: colors.text, fontWeight: '600', fontSize: 13 },
   noteText: { color: colors.secondary, fontSize: 12, lineHeight: 20 },
+  row: {
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingHorizontal: space.lg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  rowText: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600' },
+  danger: { color: colors.danger },
 });

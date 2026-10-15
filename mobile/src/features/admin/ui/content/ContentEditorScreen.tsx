@@ -26,6 +26,7 @@ import {
 } from '../parts/AdminParts';
 import { confirm } from '../parts/confirm';
 import { colors } from '../../../../styles/tokens';
+import { advertisementImage } from '../../../content';
 
 const text = copy.admin.content;
 
@@ -181,7 +182,14 @@ export function ContentEditorScreen({
             </Text>
           ) : (
             <Text style={adminStyles.rowMeta}>
-              {image ? text.newImage : text.imageHint}
+              {image
+                ? text.newImage
+                : section === 'ads'
+                ? text.adImageHint(
+                    advertisementImage.width,
+                    advertisementImage.height,
+                  )
+                : text.imageHint}
             </Text>
           )}
         </View>

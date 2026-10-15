@@ -18,7 +18,7 @@ Futbolcuları, kulüpleri ve antrenörleri bir araya getiren futbol ağı. React
 - Oyuncu aramasında isim, mevki, baskın ayak ve uygunluk filtreleri; özel iletişim bilgisi içermeyen profil detayı
 - Sporcu profilinde dairesel fotoğraf alanı, futbol bilgileri ve düzenle butonu; Fotoğraflar/Videolar sekmeleri ve üç sütunlu kare galeri düzeni
 - Kişisel karşılama kartı ve gerçek profil görüntüleme, takipçi ve takip edilen sayaçları
-- Yönetici panelinden JPEG/PNG reklam görseli yükleme, sıralama ve yayınlama; mobilde kayan reklamlar
+- Yönetici panelinden JPEG/PNG reklam görseli yükleme, sıralama ve yayınlama; mobilde sabit 1200×600 (2:1) reklam görseli alanı
 - Haber oluşturma/düzenleme/silme; ayrı yayın ve “Ana sayfada göster” tercihleri, mobil haber listesi ve tam metin ekranı
 - Yönetici lig oluşturma/yayınlama, kulüp takımları, fikstür ve skor yönetimi; maç sonuçlarından hesaplanan puan durumu ve lig istatistikleri
 - Etkin kulüplerin takım rehberi; yönetici tarafından düzenlenen takım tanıtımı, saha adresleri ve antrenman programı
@@ -26,9 +26,26 @@ Futbolcuları, kulüpleri ve antrenörleri bir araya getiren futbol ağı. React
 - Pro üyelik (30 gün/49 TL, dönem başına +3 "Pro hakkı"), "Profilini kim görüntüledi" ziyaretçi ekranı, Pro'ya özel gizli gezinme, PRO rozeti ve Takımlar başlığında başvuru hakkı rozeti
 - Sosyal içindeki Oyunlar sekmesi; Arma İzi (gerçek armalarla futbolcu tahmini), Beyaz Nokta (penaltı düellosu), üç oyun kalbi ve başarıyla kazanılan başvuru hakkı; ücretsiz Kafa Kafaya (gerçek puan durumundan iki kulüp karşılaştırması ve en iyi seri)
 
-Oyuncu profili temel alanları Go API üzerinden kaydedilir. Keşifte görünme tercihi liste ve detay erişimini kontrol eder. Sporcular doğrulanmış kulüp/antrenörleri; doğrulanmış kulüp/antrenörler görünür oyuncuları keşfeder. Kişisel profil galerisine medya yükleme ve tanışma istekleri sonraki dilimdedir; sosyal gönderi medyası aşağıdaki kapsamda bağlıdır. E-posta doğrulama ve şifre kurtarma henüz eklenmemiştir. Kullanıcı kararıyla üyelik yaş sınırı ve yaş onayı kaldırılmıştır.
+Oyuncu profili temel alanları Go API üzerinden kaydedilir. Keşifte görünme tercihi liste ve detay erişimini kontrol eder. Sporcular doğrulanmış kulüp/antrenörleri; doğrulanmış kulüp/antrenörler görünür oyuncuları keşfeder. Sporcu profil galerisine fotoğraf/video yüklenebilir; sosyal gönderi medyası da bağlıdır. E-posta doğrulama ve şifre kurtarma henüz eklenmemiştir. Kullanıcı kararıyla üyelik yaş sınırı ve yaş onayı kaldırılmıştır.
 
-## Güncel geliştirme durumu — 15 Ekim 2026: Pro üyelik ve profil ziyaretçileri
+## Güncel geliştirme durumu — 15 Ekim 2026: Mağaza satın alma, moderasyon, profil galerisi, push
+
+Ürün kuralları PROJECT.md içindedir ("Mağaza içi satın alma", "Bildirme, engelleme ve hesap silme", "Oyuncu profili dilimi", "Bildirim merkezi"). Teknik özet:
+
+- **Migration'lar:** `00027_store_purchases.sql` (paket/Pro planına `apple_product_id`/`google_product_id`, Google iade imleci), `00028_moderation.sql` (`user_blocks`, `content_reports`), `00029_player_media.sql` (`player_media`), `00030_push_devices.sql` (oturuma bağlı `push_devices`, `notifications.pushed_at`).
+- **Mağaza satın alma:** `internal/payments` — `POST /v1/me/store-orders` sipariş açar ve hesap jetonunu (Apple `appAccountToken` UUID'i / Google `obfuscatedAccountId`) döner; `POST /v1/me/store-purchases` satın almayı mağaza kaydından doğrular (App Store JWS'i gömülü Apple Root CA G3'e karşı yerelde, Google Play'i Developer API ile) ve mevcut tek seferlik `ApplyEvent` akışından hakları/Pro'yu verir. `POST /v1/payments/app-store/notifications` App Store Server Notifications V2 iade/iptallerini işler; Google iadeleri saatte bir voided purchases listesinden çekilir. Mobilde `react-native-iap` 16.7.2 (`features/payments`), yarım kalan işlemler her açılışta yeniden gönderilir; ürünler tüketilebilir olarak bitirilir.
+- **Moderasyon:** `internal/moderation` — `POST /v1/reports`, `GET/PUT/DELETE /v1/me/blocks[/{userId}]`, yönetici `GET /v1/admin/reports`, `POST /v1/admin/reports/{id}/resolve` (`dismiss`/`remove`/`suspend`). Engel filtresi (`moderation/data.NotBlocked`) sosyal akış/yanıtlar, keşif listesi/detayı/takip ve tanışma isteğinde uygulanır. Hesap silme `DELETE /v1/auth/account` (şifre onayı).
+- **Profil galerisi:** `internal/players` — `POST /v1/players/me/media`, `DELETE /v1/players/me/media/{id}`, `GET /v1/players/{id}/media[/{mediaId}]`. Medya doğrulaması sosyal ile ortak `internal/platform/media` paketindedir. Mobilde seçici/medya kaynağı/video oynatıcı `shared` altına taşındı.
+- **Push:** `PUT /v1/me/push-devices` cihaz token'ını oturuma bağlar; `notifications` dispatcher'ı 5 saniyede bir yeni bildirimleri FCM HTTP v1 ile gönderir (Google servis hesabı token'ı `internal/platform/googleauth`).
+
+### Native kurulum (derlemeden önce)
+
+- **iOS:** `cd mobile/ios && pod install` (react-native-iap, nitro-modules ve Firebase pod'ları). Firebase için `GoogleService-Info.plist` dosyasını Xcode projesine ekle, Podfile'a `use_frameworks! :linkage => :static` ve `$RNFirebaseAsStaticFramework = true` ekle, AppDelegate'te `FirebaseApp.configure()` çağır; Signing & Capabilities'te In-App Purchase, Push Notifications ve Background Modes → Remote notifications aç. APNs anahtarını Firebase konsoluna yükle.
+- **Android:** `android/app/google-services.json` ekle; `android/build.gradle` içine `com.google.gms:google-services` classpath'i, `android/app/build.gradle` içine `apply plugin: 'com.google.gms.google-services'` ekle. Play Billing için ek ayar gerekmez.
+- **Mağazalar:** App Store Connect'te `com.futcareer.rights.2/5/10` (Consumable) ve `com.futcareer.pro.30days` (Non-Renewing Subscription); Play Console'da aynı kimliklerle tek seferlik ürünler oluştur (kimlikler yönetici panelinden değiştirilebilir). App Store Server Notifications V2 adresi: `https://<api>/v1/payments/app-store/notifications`.
+- Firebase yapılandırılmadan uygulama çalışır; push kapalı kalır, bildirim merkezi çalışmaya devam eder.
+
+## Önceki geliştirme durumu — 15 Ekim 2026: Pro üyelik ve profil ziyaretçileri
 
 Ürün kuralları PROJECT.md "Pro üyelik ve profil ziyaretçileri" bölümündedir. Teknik özet:
 
@@ -141,6 +158,10 @@ API varsayılan olarak 8080 portunda çalışır. Örnek ayarlar backend/.env.ex
 | ADMIN_FRONTEND_DIR | Boş; ayarlanırsa derlenen web paneli Go tarafından sunulur |
 | PAYMENT_ADAPTER_URL | Boş; HTTPS sağlayıcı adapter'ı checkout adresi |
 | PAYMENT_ADAPTER_SECRET | Boş; adapter istekleri ve webhook için ortak en az 32 baytlık HMAC anahtarı |
+| APPLE_BUNDLE_ID | Boş; ayarlanırsa App Store satın almaları doğrulanır (iOS bundle id) |
+| GOOGLE_PLAY_PACKAGE_NAME | Boş; Android uygulama kimliği, aşağıdaki dosyayla birlikte |
+| GOOGLE_PLAY_SERVICE_ACCOUNT_FILE | Boş; Play Console'da "finansal verileri görüntüleme" izni olan servis hesabı JSON dosyası |
+| FIREBASE_SERVICE_ACCOUNT_FILE | Boş; ayarlanırsa yeni bildirimler FCM ile push olarak gönderilir |
 
 ### Arma İzi kataloğunu yeniden üret
 

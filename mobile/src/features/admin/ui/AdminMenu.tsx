@@ -5,6 +5,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   CreditCard,
+  Flag,
   Gift,
   Image as ImageIcon,
   ListChecks,
@@ -21,6 +22,7 @@ export type AdminDestination =
   | 'users'
   | 'clubs'
   | 'applications'
+  | 'reports'
   | 'ads'
   | 'news'
   | 'reviews'
@@ -41,6 +43,7 @@ const entries: Record<
     hint: text.applicationsHint,
     icon: ClipboardCheck,
   },
+  reports: { title: text.reports, hint: text.reportsHint, icon: Flag },
   ads: { title: text.ads, hint: text.adsHint, icon: ImageIcon },
   news: { title: text.news, hint: text.newsHint, icon: Newspaper },
   reviews: { title: text.reviews, hint: text.reviewsHint, icon: ListChecks },

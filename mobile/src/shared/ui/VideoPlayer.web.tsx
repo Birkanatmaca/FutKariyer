@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useIsFocused } from '@react-navigation/native';
-import { copy } from '../../../shared/lib/copy';
-import { colors } from '../../../styles/tokens';
-import type { MediaSource } from '../domain/models';
+import { copy } from '../lib/copy';
+import { colors } from '../../styles/tokens';
+import type { MediaSource } from '../domain/media';
 
 export function VideoPlayer({
   source,

@@ -41,6 +41,11 @@ import {
   createApplicationService,
   applicationsRepository,
 } from '../features/applications';
+import {
+  ReportsPanel,
+  createReportsService,
+  reportsRepository,
+} from '../features/reports';
 import { AdminLayout } from './AdminLayout';
 import { Brand } from '../shared/ui/Brand';
 import { Button } from '../shared/ui/Button';
@@ -54,6 +59,7 @@ const paymentService = createPaymentService(paymentsRepository);
 const giftService = createGiftService(giftsRepository);
 const announcementService = createAnnouncementService(announcementsRepository);
 const applicationService = createApplicationService(applicationsRepository);
+const reportsService = createReportsService(reportsRepository);
 
 export function App() {
   const auth = useAdminAuth(authService);
@@ -61,10 +67,12 @@ export function App() {
   const [logoutBusy, setLogoutBusy] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
   const [pendingApplications, setPendingApplications] = useState(0);
+  const [openReports, setOpenReports] = useState(0);
   const userId = auth.user?.id;
   useEffect(() => {
     if (!userId) {
       setPendingApplications(0);
+      setOpenReports(0);
       return;
     }
     let current = true;
@@ -72,6 +80,12 @@ export function App() {
       .countPending()
       .then(count => {
         if (current) setPendingApplications(count);
+      })
+      .catch(() => undefined);
+    reportsService
+      .countOpen()
+      .then(count => {
+        if (current) setOpenReports(count);
       })
       .catch(() => undefined);
     return () => {
@@ -142,6 +156,7 @@ export function App() {
     route === 'club-overview' ||
     route === 'clubs' ||
     route === 'applications' ||
+    route === 'reports' ||
     route === 'ads' ||
     route === 'news' ||
     route === 'leagues' ||
@@ -160,7 +175,7 @@ export function App() {
       onLogout={logout}
       logoutBusy={logoutBusy}
       logoutError={logoutError}
-      badges={{ applications: pendingApplications }}
+      badges={{ applications: pendingApplications, reports: openReports }}
     >
       {route === 'club-overview' && clubId ? (
         <ClubOverviewPanel
@@ -180,6 +195,8 @@ export function App() {
           service={applicationService}
           onPendingCount={updatePendingApplications}
         />
+      ) : section === 'reports' ? (
+        <ReportsPanel service={reportsService} onOpenCount={setOpenReports} />
       ) : section === 'leagues' ? (
         <LeaguesPanel service={leagueService} />
       ) : section === 'payments' ? (

@@ -48,6 +48,36 @@ test('home rejects draft or unfeatured news and invalid editorial image identifi
   });
 });
 
+test('home advertisements reach the app as image-only items', async () => {
+  const advertisement = {
+    id: 'c'.repeat(32),
+    title: 'Admin label',
+    imageId: 'd'.repeat(32),
+    active: true,
+    sortOrder: 0,
+    createdAt: '2026-10-11T10:00:00Z',
+    updatedAt: '2026-10-11T10:00:00Z',
+  };
+  jest
+    .mocked(request)
+    .mockResolvedValueOnce({ advertisements: [advertisement], news: [] });
+  await expect(contentRepository.home('session')).resolves.toEqual({
+    advertisements: [{ id: 'c'.repeat(32), imageId: 'd'.repeat(32) }],
+    news: [],
+  });
+  for (const broken of [
+    { ...advertisement, imageId: '' },
+    { ...advertisement, active: false },
+  ]) {
+    jest
+      .mocked(request)
+      .mockResolvedValueOnce({ advertisements: [broken], news: [] });
+    await expect(contentRepository.home('session')).rejects.toBeInstanceOf(
+      ApiError,
+    );
+  }
+});
+
 test('article identity and personal counters are validated before being displayed', async () => {
   jest.mocked(request).mockResolvedValueOnce({ article });
   await expect(

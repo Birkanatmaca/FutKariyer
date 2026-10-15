@@ -100,6 +100,13 @@ export const authRepository: AuthRepository = {
     }
     return data.user;
   },
+  async deleteAccount(token, password) {
+    await request<void>('/v1/auth/account', {
+      method: 'DELETE',
+      token,
+      body: { password },
+    });
+  },
   async logout(token) {
     await request<void>('/v1/auth/logout', { method: 'POST', token });
   },

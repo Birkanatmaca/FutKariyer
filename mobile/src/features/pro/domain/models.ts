@@ -1,3 +1,5 @@
+import type { StoreAvailability, StoreProductIds } from '../../payments';
+
 // Pro membership: 30 days per purchase, +3 team application rights per period
 // for players, "who viewed your profile" and private browsing. Pro status is
 // always evaluated by the server; the client only renders what it receives.
@@ -8,7 +10,7 @@ export type ProStatus = {
   bonusCredits: number;
 };
 export type ProState = { pro: ProStatus; eligible: boolean };
-export type ProPlan = {
+export type ProPlan = StoreProductIds & {
   id: string;
   days: number;
   bonusCredits: number;
@@ -16,14 +18,7 @@ export type ProPlan = {
   currency: 'TRY';
   active: boolean;
 };
-export type ProOffer = { plan: ProPlan; checkoutEnabled: boolean };
-export type ProCheckout = {
-  orderId: string;
-  status: 'pending';
-  provider: string;
-  providerPaymentId: string;
-  checkoutUrl: string;
-};
+export type ProOffer = { plan: ProPlan; stores: StoreAvailability };
 
 export type VisitorRole = 'player' | 'club' | 'coach' | 'organizer';
 export type VisitorIdentity = {
@@ -73,6 +68,5 @@ export interface ProRepository {
   status(token: string): Promise<ProState>;
   setPrivateBrowsing(token: string, on: boolean): Promise<ProStatus>;
   offer(token: string): Promise<ProOffer>;
-  checkout(token: string, planId: string): Promise<ProCheckout>;
   visitors(token: string): Promise<ProfileVisitors>;
 }

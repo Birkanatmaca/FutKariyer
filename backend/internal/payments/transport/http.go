@@ -33,6 +33,9 @@ func NewPublic(authService *auth.Service, service *application.Service, webhookS
 	mux.HandleFunc("GET /v1/payments/pro-plan", h.proPlan)
 	mux.HandleFunc("POST /v1/me/pro-payments", h.createProOrder)
 	mux.HandleFunc("POST /v1/payments/webhook", h.webhook)
+	mux.HandleFunc("POST /v1/me/store-orders", h.createStoreOrder)
+	mux.HandleFunc("POST /v1/me/store-purchases", h.confirmStorePurchase)
+	mux.HandleFunc("POST /v1/payments/app-store/notifications", h.appStoreNotification)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -77,6 +80,16 @@ func failure(w http.ResponseWriter, err error) {
 		status, code, message = 503, "payment_unavailable", "Güvenli ödeme bağlantısı şu anda kullanılamıyor."
 	case errors.Is(err, domain.ErrInvalidEvent):
 		status, code, message = 422, "invalid_payment_event", "Ödeme bildirimi doğrulanamadı."
+	case errors.Is(err, domain.ErrStoreUnavailable):
+		status, code, message = 503, "store_unavailable", "Mağaza ödemeleri şu anda kullanılamıyor."
+	case errors.Is(err, domain.ErrInvalidPurchase):
+		status, code, message = 422, "invalid_purchase", "Satın alma mağazada doğrulanamadı."
+	case errors.Is(err, domain.ErrPurchaseMismatch):
+		status, code, message = 409, "purchase_mismatch", "Satın alma bu siparişle eşleşmedi."
+	case errors.Is(err, domain.ErrInvalidNotification):
+		status, code, message = 422, "invalid_store_notification", "Mağaza bildirimi doğrulanamadı."
+	case errors.Is(err, domain.ErrDuplicateProduct):
+		status, code, message = 409, "duplicate_product", "Bu mağaza ürün kimliği başka bir üründe kullanılıyor."
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
@@ -113,7 +126,7 @@ func (h *Handler) proPlan(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	write(w, 200, map[string]any{"plan": plan, "checkoutEnabled": h.service.CheckoutEnabled()})
+	write(w, 200, map[string]any{"plan": plan, "checkoutEnabled": h.service.CheckoutEnabled(), "stores": h.service.Stores()})
 }
 
 func (h *Handler) createProOrder(w http.ResponseWriter, r *http.Request) {
@@ -150,15 +163,17 @@ func (h *Handler) adminProPlan(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) updateProPlan(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1024))
 	decoder.DisallowUnknownFields()
-	var input struct {
-		AmountMinor *int64 `json:"amountMinor"`
-		Active      *bool  `json:"active"`
-	}
+	var input catalogUpdate
 	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") || decoder.Decode(&input) != nil || decoder.Decode(&struct{}{}) != io.EOF || input.AmountMinor == nil || input.Active == nil {
 		failure(w, auth.ValidationError{"plan": "Fiyat ve satış durumu birlikte gönderilmeli."})
 		return
 	}
-	plan, err := h.service.UpdateProPlan(r.Context(), r.PathValue("id"), *input.AmountMinor, *input.Active)
+	products, ok := input.products()
+	if !ok {
+		failure(w, auth.ValidationError{"plan": "App Store ve Google Play ürün kimlikleri birlikte gönderilmeli."})
+		return
+	}
+	plan, err := h.service.UpdateProPlan(r.Context(), r.PathValue("id"), *input.AmountMinor, *input.Active, products)
 	if err != nil {
 		failure(w, err)
 		return
@@ -193,7 +208,7 @@ func (h *Handler) packages(w http.ResponseWriter, r *http.Request) {
 		failure(w, err)
 		return
 	}
-	write(w, 200, map[string]any{"items": items, "checkoutEnabled": h.service.CheckoutEnabled()})
+	write(w, 200, map[string]any{"items": items, "checkoutEnabled": h.service.CheckoutEnabled(), "stores": h.service.Stores()})
 }
 
 func (h *Handler) createOrder(w http.ResponseWriter, r *http.Request) {
@@ -311,10 +326,7 @@ func (h *Handler) updatePackage(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1024)
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
-	var input struct {
-		AmountMinor *int64 `json:"amountMinor"`
-		Active      *bool  `json:"active"`
-	}
+	var input catalogUpdate
 	if err := decoder.Decode(&input); err != nil {
 		failure(w, auth.ValidationError{"package": "Geçerli paket bilgisi gönder."})
 		return
@@ -327,10 +339,121 @@ func (h *Handler) updatePackage(w http.ResponseWriter, r *http.Request) {
 		failure(w, auth.ValidationError{"package": "Fiyat ve satış durumu birlikte gönderilmeli."})
 		return
 	}
-	item, err := h.service.UpdatePackage(r.Context(), r.PathValue("id"), *input.AmountMinor, *input.Active)
+	products, ok := input.products()
+	if !ok {
+		failure(w, auth.ValidationError{"package": "App Store ve Google Play ürün kimlikleri birlikte gönderilmeli."})
+		return
+	}
+	item, err := h.service.UpdatePackage(r.Context(), r.PathValue("id"), *input.AmountMinor, *input.Active, products)
 	if err != nil {
 		failure(w, err)
 		return
 	}
 	write(w, 200, map[string]any{"package": item})
+}
+
+// catalogUpdate is the admin edit of a package or the Pro plan. Store product
+// ids are optional but travel together; omitting both keeps the current ids.
+type catalogUpdate struct {
+	AmountMinor     *int64  `json:"amountMinor"`
+	Active          *bool   `json:"active"`
+	AppleProductID  *string `json:"appleProductId"`
+	GoogleProductID *string `json:"googleProductId"`
+}
+
+func (c catalogUpdate) products() (*domain.StoreProducts, bool) {
+	if c.AppleProductID == nil && c.GoogleProductID == nil {
+		return nil, true
+	}
+	if c.AppleProductID == nil || c.GoogleProductID == nil {
+		return nil, false
+	}
+	return &domain.StoreProducts{AppleProductID: strings.TrimSpace(*c.AppleProductID), GoogleProductID: strings.TrimSpace(*c.GoogleProductID)}, true
+}
+
+func (h *Handler) userID(w http.ResponseWriter, r *http.Request) (string, bool) {
+	parts := strings.Fields(r.Header.Get("Authorization"))
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+		failure(w, authdomain.ErrUnauthorized)
+		return "", false
+	}
+	user, err := h.auth.Me(r.Context(), parts[1])
+	if err != nil {
+		failure(w, err)
+		return "", false
+	}
+	return user.ID, true
+}
+
+func decodeJSON(w http.ResponseWriter, r *http.Request, limit int64, out any) bool {
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		return false
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, limit))
+	decoder.DisallowUnknownFields()
+	return decoder.Decode(out) == nil && decoder.Decode(&struct{}{}) == io.EOF
+}
+
+// createStoreOrder records the order the app then pays for in App Store or Google Play.
+func (h *Handler) createStoreOrder(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.userID(w, r)
+	if !ok {
+		return
+	}
+	var input struct {
+		Store   string `json:"store"`
+		Product string `json:"product"`
+		ItemID  string `json:"itemId"`
+	}
+	if !decodeJSON(w, r, 1024, &input) || (input.Store != domain.StoreAppStore && input.Store != domain.StoreGooglePlay) ||
+		(input.Product != domain.ProductTeamRights && input.Product != domain.ProductPro) {
+		failure(w, auth.ValidationError{"store": "Geçerli bir mağaza ve ürün seç."})
+		return
+	}
+	order, err := h.service.CreateStoreOrder(r.Context(), userID, input.Store, input.Product, input.ItemID)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 201, order)
+}
+
+// confirmStorePurchase verifies a finished store purchase; the app finishes
+// the store transaction only when the response says so.
+func (h *Handler) confirmStorePurchase(w http.ResponseWriter, r *http.Request) {
+	if _, ok := h.userID(w, r); !ok {
+		return
+	}
+	var input struct {
+		Store     string `json:"store"`
+		ProductID string `json:"productId"`
+		Token     string `json:"token"`
+	}
+	if !decodeJSON(w, r, 40000, &input) || (input.Store != domain.StoreAppStore && input.Store != domain.StoreGooglePlay) {
+		failure(w, auth.ValidationError{"purchase": "Geçerli bir satın alma kaydı gönder."})
+		return
+	}
+	result, err := h.service.ConfirmStorePurchase(r.Context(), input.Store, input.ProductID, input.Token)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, result)
+}
+
+// appStoreNotification receives App Store Server Notifications V2.
+func (h *Handler) appStoreNotification(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		SignedPayload string `json:"signedPayload"`
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 65536))
+	if decoder.Decode(&input) != nil || input.SignedPayload == "" {
+		failure(w, domain.ErrInvalidNotification)
+		return
+	}
+	if err := h.service.HandleAppStoreNotification(r.Context(), input.SignedPayload); err != nil {
+		failure(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }

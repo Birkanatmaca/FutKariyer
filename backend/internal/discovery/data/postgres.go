@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"futcareer/backend/internal/discovery/domain"
+	moderation "futcareer/backend/internal/moderation/data"
 	players "futcareer/backend/internal/players/domain"
 )
 
@@ -54,7 +55,7 @@ func (r *Postgres) List(ctx context.Context, q domain.Query) (domain.Page, error
 	defer tx.Rollback()
 	result := domain.Page{Items: []domain.Profile{}}
 	// Literal substring search prevents '%' and '_' from becoming SQL wildcards.
-	where := ` WHERE ` + visible + ` AND u.id<>$8 AND ($2='' OR strpos(lower(u.full_name),$2)>0)
+	where := ` WHERE ` + visible + ` AND u.id<>$8 AND ` + moderation.NotBlocked("$8", "u.id") + ` AND ($2='' OR strpos(lower(u.full_name),$2)>0)
 		AND ($3='' OR strpos(lower(p.position),$3)>0)
 		AND ($4='' OR p.dominant_foot=$4) AND ($5='' OR p.availability=$5)
 		AND ($6='' OR p.football_type=$6) AND ($7='' OR p.license_status=$7)`
@@ -98,12 +99,12 @@ func (r *Postgres) List(ctx context.Context, q domain.Query) (domain.Page, error
 	return result, tx.Commit()
 }
 
-func (r *Postgres) Get(ctx context.Context, role, id string) (domain.Profile, error) {
-	return scan(r.db.QueryRowContext(ctx, "SELECT "+columns+joins+" WHERE "+visible+" AND u.id=$2", role, id))
+func (r *Postgres) Get(ctx context.Context, role, id, viewer string) (domain.Profile, error) {
+	return scan(r.db.QueryRowContext(ctx, "SELECT "+columns+joins+" WHERE "+visible+" AND u.id=$2 AND "+moderation.NotBlocked("$3", "u.id"), role, id, viewer))
 }
 
 // Re-check the current actor and target in the write itself, so revoked access cannot create events.
-const actorAllowed = ` AND EXISTS(SELECT 1 FROM users v WHERE v.id=$3 AND v.active AND v.id<>u.id AND
+var actorAllowed = ` AND ` + moderation.NotBlocked("$3", "u.id") + ` AND EXISTS(SELECT 1 FROM users v WHERE v.id=$3 AND v.active AND v.id<>u.id AND
 	((v.role='player' AND u.role IN ('player','club','coach')) OR (v.role IN ('club','coach') AND v.verified AND u.role='player')))`
 
 // RecordView keeps one row per viewer and UTC day. A view is private only while the

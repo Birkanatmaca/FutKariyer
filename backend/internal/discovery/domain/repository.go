@@ -54,7 +54,7 @@ type Page struct {
 
 type Repository interface {
 	List(context.Context, Query) (Page, error)
-	Get(context.Context, string, string) (Profile, error)
+	Get(ctx context.Context, role, id, viewer string) (Profile, error)
 	RecordView(context.Context, string, string, string) error
 	Following(context.Context, string, string) (bool, error)
 	Follow(context.Context, string, string, string, bool) error

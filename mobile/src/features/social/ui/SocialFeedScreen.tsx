@@ -24,6 +24,11 @@ import { useSocialList } from '../application/useSocialList';
 import { SocialPostCard } from './SocialPostCard';
 import { DeleteContentPrompt } from './DeleteContentPrompt';
 import { GamesScreen } from '../../games';
+import {
+  ModerationSheet,
+  moderationService,
+  type ModerationTarget,
+} from '../../moderation';
 
 export function SocialFeedScreen({
   token,
@@ -50,6 +55,7 @@ export function SocialFeedScreen({
   );
   const [busy, setBusy] = useState('');
   const [deleting, setDeleting] = useState('');
+  const [moderating, setModerating] = useState<ModerationTarget | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   useEffect(() => {
@@ -193,6 +199,14 @@ export function SocialFeedScreen({
               onReplies={() => onOpen(item.id)}
               onFollow={() => follow(item.author.id, item.author.following)}
               onDelete={() => setDeleting(item.id)}
+              onMore={() =>
+                setModerating({
+                  kind: 'post',
+                  id: item.id,
+                  userId: item.author.id,
+                  name: item.author.fullName,
+                })
+              }
             />
           )}
           ListEmptyComponent={
@@ -256,6 +270,13 @@ export function SocialFeedScreen({
         busy={!!busy}
         onCancel={() => setDeleting('')}
         onConfirm={() => remove()}
+      />
+      <ModerationSheet
+        target={moderating}
+        token={token}
+        service={moderationService}
+        onClose={() => setModerating(null)}
+        onBlocked={() => feed.refresh()}
       />
     </SafeAreaView>
   );

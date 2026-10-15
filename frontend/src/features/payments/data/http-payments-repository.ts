@@ -1,6 +1,7 @@
 import { ApiError, request } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
 import type {
+  CatalogUpdate,
   Payment,
   PaymentPackage,
   PaymentPage,
@@ -11,6 +12,16 @@ import type {
 
 const validId = (value: unknown) =>
   typeof value === 'string' && /^[a-f0-9]{32}$/.test(value);
+// Ids may be '' (not sold in that store); the server validates their format.
+const hasStoreIds = (item: PaymentPackage | ProPlan) =>
+  typeof item.appleProductId === 'string' &&
+  typeof item.googleProductId === 'string';
+const catalogBody = (update: CatalogUpdate) => ({
+  amountMinor: update.amountMinor,
+  active: update.active,
+  appleProductId: update.appleProductId,
+  googleProductId: update.googleProductId,
+});
 function validPackage(value: unknown): value is PaymentPackage {
   const item = value as PaymentPackage;
   return (
@@ -21,7 +32,8 @@ function validPackage(value: unknown): value is PaymentPackage {
     item.amountMinor > 0 &&
     item.currency === 'TRY' &&
     typeof item.active === 'boolean' &&
-    Number.isInteger(item.sortOrder)
+    Number.isInteger(item.sortOrder) &&
+    hasStoreIds(item)
   );
 }
 function validProPlan(value: unknown): value is ProPlan {
@@ -36,7 +48,8 @@ function validProPlan(value: unknown): value is ProPlan {
     Number.isSafeInteger(item.amountMinor) &&
     item.amountMinor > 0 &&
     item.currency === 'TRY' &&
-    typeof item.active === 'boolean'
+    typeof item.active === 'boolean' &&
+    hasStoreIds(item)
   );
 }
 function validProduct(item: Payment) {
@@ -81,12 +94,13 @@ export const paymentsRepository: PaymentsRepository = {
       throw new ApiError(copy.form.unexpected);
     return result.items;
   },
-  async updatePackage(id, amountMinor, active) {
+  async updatePackage(id, update) {
     const result = await request<{ package: unknown }>(
       '/v1/admin/payments/packages/' + encodeURIComponent(id),
-      { method: 'PUT', body: { amountMinor, active } },
+      { method: 'PUT', body: catalogBody(update) },
     );
-    if (!validPackage(result.package)) throw new ApiError(copy.form.unexpected);
+    if (!result || !validPackage(result.package))
+      throw new ApiError(copy.form.unexpected);
     return result.package;
   },
   async proPlan() {
@@ -97,10 +111,10 @@ export const paymentsRepository: PaymentsRepository = {
       throw new ApiError(copy.form.unexpected);
     return result.plan;
   },
-  async updateProPlan(id, amountMinor, active) {
+  async updateProPlan(id, update) {
     const result = await request<{ plan: unknown }>(
       '/v1/admin/payments/pro-plan/' + encodeURIComponent(id),
-      { method: 'PUT', body: { amountMinor, active } },
+      { method: 'PUT', body: catalogBody(update) },
     );
     if (!result || !validProPlan(result.plan))
       throw new ApiError(copy.form.unexpected);

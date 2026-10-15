@@ -1,5 +1,5 @@
 import React from 'react';
-import { Linking, Switch, Text } from 'react-native';
+import { Switch, Text } from 'react-native';
 import {
   act,
   create,
@@ -36,6 +36,7 @@ import {
 import { createAccountsRepository } from '../src/features/admin/data/http-accounts-repository';
 import type { AdminGateway } from '../src/features/admin/domain/models';
 import { copy } from '../src/shared/lib/copy';
+import type { StoreCheckout } from '../src/features/payments';
 
 jest.mock('../src/shared/api/client', () => ({
   ...jest.requireActual('../src/shared/api/client'),
@@ -154,7 +155,6 @@ function service(over: Partial<ProService> = {}): ProService {
     }),
     setPrivateBrowsing: jest.fn(),
     offer: jest.fn(),
-    checkout: jest.fn(),
     visitors: jest.fn(),
     ...over,
   };
@@ -235,14 +235,24 @@ describe('API boundary validators', () => {
         amountMinor: 4900,
         currency: 'TRY',
         active: true,
+        appleProductId: 'com.futcareer.pro.30days',
+        googleProductId: '',
       },
-      checkoutEnabled: false,
+      stores: { appStore: true, googlePlay: false },
     };
     expect(validProOffer(offer)).toBe(true);
     expect(
       validProOffer({ ...offer, plan: { ...offer.plan, amountMinor: 0 } }),
     ).toBe(false);
-    expect(validProOffer({ ...offer, checkoutEnabled: 'yes' })).toBe(false);
+    expect(validProOffer({ ...offer, stores: { appStore: 'yes' } })).toBe(
+      false,
+    );
+    expect(
+      validProOffer({
+        ...offer,
+        plan: { ...offer.plan, appleProductId: 'bad id/1' },
+      }),
+    ).toBe(false);
   });
 
   it('counts Pro rights in the team quota total', () => {
@@ -387,25 +397,29 @@ describe('ProScreen', () => {
       amountMinor: 4900,
       currency: 'TRY' as const,
       active: true,
+      appleProductId: 'com.futcareer.pro.30days',
+      googleProductId: 'com.futcareer.pro.30days',
     },
-    checkoutEnabled: true,
+    stores: { appStore: true, googlePlay: true },
   };
-  it('shows benefits, price and status and starts the shared checkout flow', async () => {
-    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
-    const checkout = jest.fn().mockResolvedValue({
-      orderId: id(5),
-      status: 'pending',
-      provider: 'p',
-      providerPaymentId: 'x',
-      checkoutUrl: 'https://pay.example/x',
-    });
+  function checkout(over: Partial<StoreCheckout> = {}): StoreCheckout {
+    return {
+      store: 'app_store',
+      prices: jest
+        .fn()
+        .mockResolvedValue({ 'com.futcareer.pro.30days': '₺49,99' }),
+      buy: jest.fn().mockResolvedValue('paid'),
+      recover: jest.fn().mockResolvedValue(undefined),
+      ...over,
+    };
+  }
+  it('shows benefits, the store price and status and buys through the store', async () => {
+    const store = checkout();
     const root = await render(
       <ProScreen
         token="session"
-        service={service({
-          offer: jest.fn().mockResolvedValue(offer),
-          checkout,
-        })}
+        service={service({ offer: jest.fn().mockResolvedValue(offer) })}
+        checkout={store}
         onBack={jest.fn()}
       />,
     );
@@ -416,28 +430,31 @@ describe('ProScreen', () => {
       copy.pro.benefits.rights(3),
       copy.pro.benefits.privateBrowsing,
       copy.pro.inactive,
+      '₺49,99',
     ])
       expect(shown).toContain(label);
-    expect(shown).toMatch(/49/);
+    expect(store.prices).toHaveBeenCalledWith(['com.futcareer.pro.30days']);
     await pressByLabel(root, copy.pro.buy);
-    expect(checkout).toHaveBeenCalledWith('session', id(9));
-    expect(openURL).toHaveBeenCalledWith('https://pay.example/x');
-    expect(texts(root)).toContain(copy.pro.checkoutStarted);
-    openURL.mockRestore();
+    expect(store.buy).toHaveBeenCalledWith('session', 'pro', id(9));
+    expect(texts(root)).toContain(copy.pro.purchased);
   });
 
-  it('keeps purchase disabled when checkout is not configured', async () => {
+  it('keeps purchase disabled when the store is not available', async () => {
+    const store = checkout();
     const root = await render(
       <ProScreen
         token="session"
         service={service({
-          offer: jest
-            .fn()
-            .mockResolvedValue({ ...offer, checkoutEnabled: false }),
+          offer: jest.fn().mockResolvedValue({
+            ...offer,
+            stores: { appStore: false, googlePlay: true },
+          }),
         })}
+        checkout={store}
         onBack={jest.fn()}
       />,
     );
+    expect(store.prices).not.toHaveBeenCalled();
     expect(texts(root)).toContain(copy.pro.unavailable);
     const button = root.root.find(
       node =>
@@ -572,8 +589,20 @@ describe('admin Pro management', () => {
         amountMinor: 4900,
         currency: 'TRY',
         active: false,
+        appleProductId: 'pro.30',
+        googleProductId: '',
       }),
     ).toBe(true);
+    expect(
+      isProPlan({
+        id: id(9),
+        days: 30,
+        bonusCredits: 3,
+        amountMinor: 4900,
+        currency: 'TRY',
+        active: false,
+      }),
+    ).toBe(false);
     expect(
       isProPlan({
         id: 'x',

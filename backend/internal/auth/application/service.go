@@ -193,6 +193,25 @@ func (s *Service) me(ctx context.Context, token, audience string) (PublicUser, e
 	}
 	return Public(user), nil
 }
+
+// DeleteAccount permanently removes the signed-in mobile account after the
+// password is confirmed. Profile, posts, follows, requests and sessions go
+// with it; payment records keep the amount but lose the account link.
+func (s *Service) DeleteAccount(ctx context.Context, token, password string) error {
+	public, err := s.Me(ctx, token)
+	if err != nil {
+		return err
+	}
+	user, err := s.repo.UserByID(ctx, public.ID)
+	if err != nil {
+		return err
+	}
+	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) != nil {
+		return ValidationError{"password": "Şifre doğru değil."}
+	}
+	return s.repo.DeleteUser(ctx, user.ID)
+}
+
 func (s *Service) Logout(ctx context.Context, token string) error {
 	return s.repo.DeleteSession(ctx, HashToken(token))
 }

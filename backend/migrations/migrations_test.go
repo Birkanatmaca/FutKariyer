@@ -24,7 +24,7 @@ func TestMigrationLifecycleAndSchemaGuard(t *testing.T) {
 		t.Fatal(err)
 	}
 	results, err := provider.Up(ctx)
-	if err != nil || len(results) != 26 {
+	if err != nil || len(results) != 30 {
 		t.Fatalf("initial migrations: count=%d error=%v", len(results), err)
 	}
 	if err := migrations.CheckCurrent(ctx, database.DB); err != nil {
@@ -34,7 +34,7 @@ func TestMigrationLifecycleAndSchemaGuard(t *testing.T) {
 	if err != nil || len(results) != 0 {
 		t.Fatalf("repeat up must not reapply migrations: count=%d error=%v", len(results), err)
 	}
-	for i := 0; i < 26; i++ {
+	for i := 0; i < 30; i++ {
 		if _, err := provider.Down(ctx); err != nil {
 			t.Fatal(err)
 		}
@@ -42,13 +42,13 @@ func TestMigrationLifecycleAndSchemaGuard(t *testing.T) {
 			t.Fatal("outdated database was accepted by the schema guard")
 		}
 	}
-	for _, name := range []string{"users", "sessions", "player_profiles", "clubs", "content_images", "advertisements", "news_articles", "profile_views", "profile_follows", "leagues", "league_teams", "league_matches", "team_join_requests", "game_wallets", "football_guess_runs", "team_request_game_rewards", "penalty_shootouts", "team_request_penalty_rewards", "gifts", "user_gifts", "team_request_gift_rewards", "announcements", "connection_requests", "club_squad_members", "club_listings", "tournaments", "tournament_entries", "tournament_entry_players", "account_applications", "head_to_head_runs", "football_guess_seen", "pro_plans", "pro_memberships", "pro_periods"} {
+	for _, name := range []string{"users", "sessions", "player_profiles", "clubs", "content_images", "advertisements", "news_articles", "profile_views", "profile_follows", "leagues", "league_teams", "league_matches", "team_join_requests", "game_wallets", "football_guess_runs", "team_request_game_rewards", "penalty_shootouts", "team_request_penalty_rewards", "gifts", "user_gifts", "team_request_gift_rewards", "announcements", "connection_requests", "club_squad_members", "club_listings", "tournaments", "tournament_entries", "tournament_entry_players", "account_applications", "head_to_head_runs", "football_guess_seen", "pro_plans", "pro_memberships", "pro_periods", "store_sync_cursors", "user_blocks", "content_reports", "player_media", "push_devices"} {
 		if err := database.DB.QueryRowContext(ctx, "SELECT to_regclass($1)::text", name).Scan(&table); err != nil || table.Valid {
 			t.Fatalf("down did not remove %s: %v", name, err)
 		}
 	}
 	results, err = provider.Up(ctx)
-	if err != nil || len(results) != 26 {
+	if err != nil || len(results) != 30 {
 		t.Fatalf("migrations after rollback: count=%d error=%v", len(results), err)
 	}
 	if err := migrations.CheckCurrent(ctx, database.DB); err != nil {

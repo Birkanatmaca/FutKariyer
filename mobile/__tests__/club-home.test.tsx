@@ -27,6 +27,10 @@ jest.mock('@react-navigation/native', () => {
   const react = jest.requireActual('react');
   return {
     DarkTheme: { colors: {} },
+    createNavigationContainerRef: () => ({
+      isReady: () => false,
+      navigate: jest.fn(),
+    }),
     NavigationContainer: ({ children }: { children: React.ReactNode }) =>
       children,
     getFocusedRouteNameFromRoute: () => undefined,

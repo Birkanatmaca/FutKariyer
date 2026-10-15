@@ -4,6 +4,8 @@
 backend/data/
 backend/bin/
 **/build/
+# Go source package, not a build output.
+!backend/internal/games/catalog/build/
 **/.gradle/
 **/Pods/
 **/DerivedData/

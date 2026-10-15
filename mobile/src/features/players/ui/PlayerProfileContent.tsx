@@ -2,17 +2,13 @@ import React from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import type { PlayerProfile } from '../domain/profile';
 import { PlayerProfileHeader } from './PlayerProfileHeader';
-import {
-  PlayerMediaGallery,
-  type GalleryThumbnail,
-} from './PlayerMediaGallery';
+import { PlayerMediaGallery, type GalleryProps } from './PlayerMediaGallery';
 
 export function PlayerProfileContent({
   fullName,
   profile,
   avatarSource,
-  photos,
-  videos,
+  gallery,
   onEdit,
   isPro = false,
 }: {
@@ -20,8 +16,8 @@ export function PlayerProfileContent({
   isPro?: boolean;
   profile: PlayerProfile;
   avatarSource?: ImageSourcePropType;
-  photos?: readonly GalleryThumbnail[];
-  videos?: readonly GalleryThumbnail[];
+  // Signed-in viewer's access to this player's gallery.
+  gallery?: GalleryProps;
   onEdit?(): void;
 }) {
   return (
@@ -33,7 +29,7 @@ export function PlayerProfileContent({
         onEdit={onEdit}
         isPro={isPro}
       />
-      <PlayerMediaGallery photos={photos} videos={videos} />
+      <PlayerMediaGallery {...gallery} />
     </>
   );
 }

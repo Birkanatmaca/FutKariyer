@@ -1,7 +1,7 @@
 import { ApiError, request } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
+import { validStoreProductIds, validStores } from '../../payments';
 import type {
-  ProCheckout,
   ProfileVisitors,
   ProOffer,
   ProRepository,
@@ -40,8 +40,9 @@ export function validProOffer(value: unknown): value is ProOffer {
   const plan = offer?.plan;
   return (
     !!offer &&
-    typeof offer.checkoutEnabled === 'boolean' &&
+    validStores(offer.stores) &&
     !!plan &&
+    validStoreProductIds(plan) &&
     idValid(plan.id) &&
     Number.isSafeInteger(plan.days) &&
     plan.days > 0 &&
@@ -155,24 +156,6 @@ export const proRepository: ProRepository = {
       await request<unknown>('/v1/payments/pro-plan', { token }),
       validProOffer,
     );
-  },
-  async checkout(token, planId) {
-    const result = await request<ProCheckout>('/v1/me/pro-payments', {
-      method: 'POST',
-      token,
-      body: { planId },
-    });
-    if (
-      !result ||
-      !idValid(result.orderId) ||
-      result.status !== 'pending' ||
-      typeof result.provider !== 'string' ||
-      typeof result.providerPaymentId !== 'string' ||
-      typeof result.checkoutUrl !== 'string' ||
-      !result.checkoutUrl.startsWith('https://')
-    )
-      throw new ApiError(copy.form.unexpected);
-    return result;
   },
   async visitors(token) {
     return checked(

@@ -6,7 +6,13 @@ import {
   Text,
   View,
 } from 'react-native';
-import { BadgeCheck, Heart, MessageCircle, Trash2 } from 'lucide-react-native';
+import {
+  BadgeCheck,
+  Ellipsis,
+  Heart,
+  MessageCircle,
+  Trash2,
+} from 'lucide-react-native';
 import { ProBadge } from '../../../shared/ui/ProBadge';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
@@ -21,6 +27,7 @@ export function SocialPostCard({
   onReplies,
   onDelete,
   onFollow,
+  onMore,
   token,
   service,
 }: {
@@ -30,6 +37,8 @@ export function SocialPostCard({
   onReplies?(): void;
   onDelete(): void;
   onFollow?(): void;
+  // Report or block someone else's post or reply.
+  onMore?(): void;
   token: string;
   service: SocialService;
 }) {
@@ -105,6 +114,18 @@ export function SocialPostCard({
                 ? copy.social.followed
                 : copy.social.follow}
             </Text>
+          </Pressable>
+        ) : null}
+        {!item.owned && onMore ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={copy.moderation.more(item.author.fullName)}
+            disabled={busy}
+            onPress={onMore}
+            hitSlop={8}
+            style={styles.delete}
+          >
+            <Ellipsis size={18} color={colors.muted} />
           </Pressable>
         ) : null}
         {item.owned && (

@@ -1,5 +1,5 @@
-import { apiUrl } from '../../../shared/api/client';
-import type { MediaSource } from '../domain/models';
+import { apiUrl } from '../api/client';
+import type { MediaSource } from '../domain/media';
 
 export async function mediaSource(
   token: string,

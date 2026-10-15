@@ -9,17 +9,22 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, Info } from 'lucide-react-native';
 import { Floodlight } from '../../../shared/ui/Floodlight';
-import { ArrowLeft } from 'lucide-react-native';
 import { Brand } from '../../../shared/ui/Brand';
+import { BallMark } from '../../../shared/ui/BallMark';
 import { PitchArt } from '../../../shared/ui/PitchArt';
 import { copy } from '../../../shared/lib/copy';
-import { colors, radius, space } from '../../../styles/tokens';
+import { colors, radius, shadow, space, type } from '../../../styles/tokens';
 
 type Props = PropsWithChildren<{
   title: string;
   description: string;
   onBack?: () => void;
+  // Reopens the product intro (sign-up steps).
+  onInfo?: () => void;
+  // Small label above the title, e.g. the sign-up step.
+  eyebrow?: string;
   compact?: boolean;
 }>;
 export function AuthFrame({
@@ -27,11 +32,13 @@ export function AuthFrame({
   title,
   description,
   onBack,
+  onInfo,
+  eyebrow = copy.authEyebrow,
   compact,
 }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
-      <Floodlight height={520} />
+      <Floodlight height={compact ? 420 : 560} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -43,27 +50,51 @@ export function AuthFrame({
           contentContainerStyle={styles.content}
         >
           <View style={styles.top}>
-            <Brand />
             {onBack ? (
               <Pressable
                 onPress={onBack}
                 accessibilityLabel={copy.form.back}
                 accessibilityRole="button"
-                style={styles.back}
+                style={styles.iconButton}
               >
-                <ArrowLeft size={21} color={colors.text} />
+                <ArrowLeft size={20} color={colors.text} />
+              </Pressable>
+            ) : null}
+            <View style={styles.brand}>
+              <Brand />
+            </View>
+            {onInfo ? (
+              <Pressable
+                onPress={onInfo}
+                accessibilityLabel={copy.onboarding.open}
+                accessibilityRole="button"
+                style={styles.iconButton}
+              >
+                <Info size={20} color={colors.text} />
               </Pressable>
             ) : null}
           </View>
           <View style={[styles.hero, compact && styles.compact]}>
             {!compact && (
-              <View style={styles.pitch} pointerEvents="none">
-                <PitchArt width={155} height={180} />
+              <View
+                style={styles.art}
+                pointerEvents="none"
+                accessibilityElementsHidden
+                importantForAccessibility="no-hide-descendants"
+              >
+                <View style={styles.pitch}>
+                  <PitchArt width={190} height={218} />
+                </View>
+                <View style={styles.halo}>
+                  <View style={styles.haloInner}>
+                    <BallMark size={64} />
+                  </View>
+                </View>
               </View>
             )}
             <View style={styles.eyebrow}>
               <View style={styles.marker} />
-              <Text style={styles.eyebrowText}>{copy.authEyebrow}</Text>
+              <Text style={styles.eyebrowText}>{eyebrow}</Text>
             </View>
             <Text
               accessibilityRole="header"
@@ -73,7 +104,7 @@ export function AuthFrame({
               {title}
             </Text>
           </View>
-          <View style={styles.form}>{children}</View>
+          <View style={styles.card}>{children}</View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -84,8 +115,8 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
   content: {
     paddingHorizontal: space.xl,
-    paddingTop: space.xl,
-    paddingBottom: space.xl,
+    paddingTop: space.lg,
+    paddingBottom: space.xxl,
     width: '100%',
     maxWidth: 480,
     alignSelf: 'center',
@@ -94,34 +125,61 @@ const styles = StyleSheet.create({
   top: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: space.md,
+    minHeight: 44,
   },
-  back: {
+  brand: { flex: 1 },
+  iconButton: {
     width: 44,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.sm,
+    borderRadius: radius.pill,
     backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
   },
-  hero: {
-    paddingTop: space.xxxl,
-    paddingBottom: space.xxl,
-    overflow: 'hidden',
+  hero: { paddingTop: space.lg, paddingBottom: space.xl },
+  compact: { paddingTop: space.xxl, paddingBottom: space.lg },
+  // Floodlit ball over faint pitch lines, sitting above the headline.
+  art: {
+    height: 150,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginBottom: space.md,
   },
-  compact: { paddingTop: space.xxl, paddingBottom: space.xl },
   pitch: {
     position: 'absolute',
-    right: -55,
-    top: 40,
-    opacity: 0.45,
-    transform: [{ rotate: '10deg' }],
+    right: -space.xxl,
+    top: -space.xxl,
+    opacity: 0.7,
+    transform: [{ rotate: '12deg' }],
+  },
+  halo: {
+    width: 132,
+    height: 132,
+    marginRight: space.sm,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.brandWash,
+    borderWidth: 1,
+    borderColor: colors.brandSoft,
+  },
+  haloInner: {
+    width: 92,
+    height: 92,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.brand,
+    ...shadow.glow,
   },
   eyebrow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: space.sm,
-    marginBottom: space.lg,
+    marginBottom: space.md,
   },
   marker: {
     width: 20,
@@ -129,23 +187,21 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand,
     borderRadius: radius.pill,
   },
-  eyebrowText: {
-    fontSize: 10,
-    letterSpacing: 1.8,
-    color: colors.secondary,
-    fontWeight: '700',
-  },
+  eyebrowText: { ...type.eyebrow, ...type.number, color: colors.brand },
   title: {
-    fontSize: 42,
-    lineHeight: 46,
+    fontSize: 44,
+    lineHeight: 48,
     fontWeight: '800',
-    letterSpacing: -1.4,
+    letterSpacing: -1.5,
     color: colors.text,
   },
-  compactTitle: { fontSize: 32, lineHeight: 38, letterSpacing: -0.8 },
-  form: {
-    paddingTop: space.xl,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+  compactTitle: { fontSize: 32, lineHeight: 38, letterSpacing: -0.9 },
+  card: {
+    padding: space.xl,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    ...shadow.layer,
   },
 });

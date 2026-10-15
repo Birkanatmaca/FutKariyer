@@ -29,6 +29,7 @@ import {
   LeaguesScreen,
   LeagueWorkspaceScreen,
   MatchEditorScreen,
+  ReportsScreen,
   createAdminGateway,
   createAdminRepositories,
   createAdminServices,
@@ -75,6 +76,7 @@ type AdminMoreRoutes = {
   Gifts: undefined;
   Announcements: undefined;
   Payments: undefined;
+  Reports: undefined;
 };
 const Tabs = createBottomTabNavigator<AdminTabRoutes>();
 const AccountsStack = createNativeStackNavigator<AccountsRoutes>();
@@ -127,6 +129,8 @@ function openDestination(navigation: TabNavigation, to: AdminDestination) {
             ? 'Gifts'
             : to === 'announcements'
             ? 'Announcements'
+            : to === 'reports'
+            ? 'Reports'
             : 'Payments',
         initial: false,
       });
@@ -416,6 +420,14 @@ function MoreNavigator({
       <MoreStack.Screen name="Payments">
         {({ navigation }) => (
           <AdminPaymentsScreen
+            services={services}
+            onBack={() => navigation.goBack()}
+          />
+        )}
+      </MoreStack.Screen>
+      <MoreStack.Screen name="Reports">
+        {({ navigation }) => (
+          <ReportsScreen
             services={services}
             onBack={() => navigation.goBack()}
           />

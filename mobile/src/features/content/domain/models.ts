@@ -1,12 +1,10 @@
-export type Advertisement = {
-  id: string;
-  title: string;
-  imageId: string;
-  active: boolean;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
-};
+// Home advertisements are image-only: the server supplies just the picture,
+// shown in one fixed-size rectangle. Titles stay an admin-side label.
+export type Advertisement = { id: string; imageId: string };
+// Single source for the ad slot size; admins upload images at this ratio.
+export const advertisementImage = { width: 1200, height: 600 } as const;
+export const advertisementAspectRatio =
+  advertisementImage.width / advertisementImage.height;
 export type Article = {
   id: string;
   title: string;

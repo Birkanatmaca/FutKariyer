@@ -30,13 +30,14 @@ export function AdminDashboardScreen({
   onOpen(destination: AdminDestination): void;
 }) {
   const load = useCallback(async () => {
-    const [applications, reviews, users, clubs] = await Promise.all([
+    const [applications, reviews, reports, users, clubs] = await Promise.all([
       services.applications.countPending(),
       services.content.pendingReviews().then(items => items.length),
+      services.reports.countOpen(),
       services.accounts.list('users', 1, '').then(page => page.total),
       services.accounts.list('clubs', 1, '').then(page => page.total),
     ]);
-    return { applications, reviews, users, clubs };
+    return { applications, reviews, reports, users, clubs };
   }, [services]);
   const counts = useResource(load);
   const { refresh } = counts;
@@ -99,6 +100,7 @@ export function AdminDashboardScreen({
         badges={{
           applications: counts.data?.applications,
           reviews: counts.data?.reviews,
+          reports: counts.data?.reports,
         }}
       />
     </Screen>

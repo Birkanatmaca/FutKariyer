@@ -15,7 +15,7 @@ import {
   type GiftsService,
 } from '../features/gifts';
 import {
-  AdvertisementCarousel,
+  AdvertisementBanner,
   HomeNews,
   type ContentService,
 } from '../features/content';
@@ -186,7 +186,7 @@ export function HomeScreen({
             <>
               {/* Empty sections are hidden instead of saying "will appear here". */}
               {content.data.advertisements.length ? (
-                <AdvertisementCarousel
+                <AdvertisementBanner
                   items={content.data.advertisements}
                   imageUrl={contentService.imageUrl}
                 />
