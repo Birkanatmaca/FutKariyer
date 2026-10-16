@@ -10,6 +10,7 @@ import {
 import { ArrowRight, MapPin, RefreshCw, Shield } from 'lucide-react-native';
 import { useAuth } from '../../auth';
 import { Screen } from '../../../shared/ui/Screen';
+import { Brand } from '../../../shared/ui/Brand';
 import { PageHeader } from '../../../shared/ui/PageHeader';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
@@ -64,6 +65,7 @@ export function TeamsScreen({
     );
   return (
     <Screen>
+      <Brand />
       <PageHeader
         eyebrow={copy.teams.eyebrow}
         title={copy.teams.title}

@@ -17,6 +17,7 @@ import {
   Eye,
 } from 'lucide-react-native';
 import { Screen } from '../shared/ui/Screen';
+import { Brand } from '../shared/ui/Brand';
 import { PageHeader } from '../shared/ui/PageHeader';
 import { copy } from '../shared/lib/copy';
 import { colors, radius, space } from '../styles/tokens';
@@ -203,6 +204,7 @@ export function MoreScreen({
     : entries;
   return (
     <Screen>
+      <Brand />
       <PageHeader
         eyebrow={copy.more.eyebrow}
         title={copy.more.title}

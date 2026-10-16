@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launch screen before React Native draws: night background, FUTCAREER logo centred. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" android:opacity="opaque">
+    <item android:drawable="@color/launch_background"/>
+    <item>
+        <bitmap android:gravity="center" android:src="@drawable/launch_logo"/>
+    </item>
+</layer-list>

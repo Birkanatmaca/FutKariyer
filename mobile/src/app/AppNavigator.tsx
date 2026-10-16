@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import {
   DarkTheme,
   NavigationContainer,
@@ -1087,18 +1087,21 @@ export function AppNavigator() {
   if (restoring || restoreError) {
     return (
       <View style={styles.startup}>
-        <Brand />
-        {restoring ? (
-          <>
-            <ActivityIndicator color={colors.brand} />
-            <Text style={styles.loading}>{copy.form.loading}</Text>
-          </>
-        ) : (
-          <>
-            <ErrorBanner message={restoreError} />
-            <Button label={copy.form.retry} onPress={retryRestore} />
-          </>
-        )}
+        {/* Same size and place as the native launch logo, so the hand-over is seamless. */}
+        <Brand size={44} />
+        <View style={styles.startupStatus}>
+          {restoring ? (
+            <ActivityIndicator
+              color={colors.brand}
+              accessibilityLabel={copy.form.loading}
+            />
+          ) : (
+            <>
+              <ErrorBanner message={restoreError} />
+              <Button label={copy.form.retry} onPress={retryRestore} />
+            </>
+          )}
+        </View>
       </View>
     );
   }
@@ -1113,9 +1116,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
     justifyContent: 'center',
-    padding: space.xxl,
-    gap: space.xl,
-    alignItems: 'stretch',
+    alignItems: 'center',
   },
-  loading: { textAlign: 'center', color: colors.secondary, fontSize: 13 },
+  startupStatus: {
+    position: 'absolute',
+    top: '50%',
+    left: space.xxl,
+    right: space.xxl,
+    marginTop: space.xxxl,
+    gap: space.xl,
+  },
 });

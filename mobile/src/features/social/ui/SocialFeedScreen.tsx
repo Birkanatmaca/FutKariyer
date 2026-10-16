@@ -23,6 +23,7 @@ import type { SocialService } from '../application/social-service';
 import { useSocialList } from '../application/useSocialList';
 import { SocialPostCard } from './SocialPostCard';
 import { DeleteContentPrompt } from './DeleteContentPrompt';
+import { Brand } from '../../../shared/ui/Brand';
 import { GamesScreen } from '../../games';
 import {
   ModerationSheet,
@@ -117,6 +118,9 @@ export function SocialFeedScreen({
   }
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safe}>
+      <View style={styles.brand}>
+        <Brand />
+      </View>
       <View style={styles.tabs}>
         {(['explore', 'following', 'games'] as const).map(value => (
           <Pressable
@@ -282,6 +286,11 @@ export function SocialFeedScreen({
   );
 }
 const styles = StyleSheet.create({
+  brand: {
+    paddingHorizontal: space.xl,
+    paddingTop: space.md,
+    paddingBottom: space.sm,
+  },
   safe: { flex: 1, backgroundColor: colors.bg },
   tabs: {
     width: '100%',

@@ -44,6 +44,7 @@ Bu beceri, Fut Career ürün tasarımı ve uygulama geliştirme işlerinde kulla
 
 ## Görsel kimlik
 
+- Logo (16 Ekim 2026): limon kare üzerinde futbol topu işareti (harf/monogram yok) + FUTCAREER yazısı (koyu zeminde beyaz FUT, limon CAREER; açık zeminde siyah). Logoyu shared/ui/LogoMark, Wordmark ve Brand bileşenleriyle kullan; açılış ekranları ve sekme başlarında Brand bulunur. Çizimleri elle değiştirme: top için app-icon-svg.py, yazı/logo dosyaları için brand-svg.py, PNG ikon ve açılış logosu için app-icon.sh çalıştır.
 - PROJECT.md içindeki renk tokenları tek kaynaktır. Görsel yön "Gece stadyumu"dur: ekran başında tek projektör ışığı (Floodlight bileşeni), hap biçimli ışıyan birincil buton, tipografi ve gölge için styles/tokens.ts içindeki type ve shadow tokenları, lig logoları için aydınlatılmış rozet. Renkleri bileşenlere doğrudan HEX olarak yazma; merkezi tokenlardan kullan.
 - Koyu tema varsayılandır: kömür/lacivert taban, katmanlı yüzeyler, açık metin ve ölçülü limon yeşili marka vurgusu.
 - Marka yeşilini her bileşene yayma. Ana aksiyon, seçili durum ve önemli futbol sinyallerini belirginleştirmek için kullan.

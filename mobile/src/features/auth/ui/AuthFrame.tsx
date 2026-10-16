@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Info } from 'lucide-react-native';
 import { Floodlight } from '../../../shared/ui/Floodlight';
 import { Brand } from '../../../shared/ui/Brand';
-import { BallMark } from '../../../shared/ui/BallMark';
+import { LogoMark } from '../../../shared/ui/LogoMark';
 import { PitchArt } from '../../../shared/ui/PitchArt';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, shadow, space, type } from '../../../styles/tokens';
@@ -87,7 +87,7 @@ export function AuthFrame({
                 </View>
                 <View style={styles.halo}>
                   <View style={styles.haloInner}>
-                    <BallMark size={64} />
+                    <LogoMark size={84} />
                   </View>
                 </View>
               </View>
@@ -167,12 +167,7 @@ const styles = StyleSheet.create({
     borderColor: colors.brandSoft,
   },
   haloInner: {
-    width: 92,
-    height: 92,
-    borderRadius: radius.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.brand,
+    borderRadius: radius.md + 4,
     ...shadow.glow,
   },
   eyebrow: {

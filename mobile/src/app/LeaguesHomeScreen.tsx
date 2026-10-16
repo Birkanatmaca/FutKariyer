@@ -6,6 +6,7 @@ import {
   type FootballService,
 } from '../features/football';
 import { LeagueList, type League } from '../features/leagues';
+import { Brand } from '../shared/ui/Brand';
 import { PageHeader } from '../shared/ui/PageHeader';
 import { Screen } from '../shared/ui/Screen';
 import { copy } from '../shared/lib/copy';
@@ -28,6 +29,7 @@ export function LeaguesHomeScreen({
 }) {
   return (
     <Screen>
+      <Brand />
       <PageHeader
         eyebrow={copy.leagues.eyebrow}
         title={copy.leagues.title}
