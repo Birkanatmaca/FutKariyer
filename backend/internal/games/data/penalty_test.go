@@ -10,19 +10,20 @@ import (
 )
 
 // Requires TEST_DATABASE_URL; skipped otherwise.
-func TestPenaltyShootoutRewardIsServerSideAndOnce(t *testing.T) {
+func TestPenaltyShootoutUsesOnePlayAndScoresOnePointPerGoal(t *testing.T) {
 	db := testpostgres.New(t).DB
 	s := service(t, db)
 	ctx := context.Background()
 	user := actor(t, db, 301, "player")
+	openSeason(t, db)
 
 	start, err := s.StartShootout(ctx, user)
-	if err != nil || start.Penalty == nil || start.Penalty.Status != "active" || start.Hearts != 2 {
+	if err != nil || start.Penalty == nil || start.Penalty.Status != "active" || start.Plays.Penalty.Used != 1 {
 		t.Fatalf("start: %+v %v", start, err)
 	}
 	again, err := s.StartShootout(ctx, user)
-	if err != nil || again.Penalty.ID != start.Penalty.ID || again.Hearts != 2 {
-		t.Fatal("retry spent another heart or created a second shootout")
+	if err != nil || again.Penalty.ID != start.Penalty.ID || again.Plays.Penalty.Used != 1 {
+		t.Fatal("retry used another play or created a second shootout")
 	}
 	if _, err = s.KickShootout(ctx, user, start.Penalty.ID, 1, "left"); !errors.Is(err, domain.ErrQuestionOrder) {
 		t.Fatal("kick ahead of order accepted")
@@ -44,10 +45,10 @@ func TestPenaltyShootoutRewardIsServerSideAndOnce(t *testing.T) {
 	if err != nil || retry.Penalty.Status != "finished" || len(retry.Penalty.Kicks) != len(first.Kicks) {
 		t.Fatal("completed kick retry changed the shootout")
 	}
-	if *first.Winner == "user" && (!first.RewardGranted || retry.Stats.EarnedCredits != 1) {
-		t.Fatal("winning shootout did not grant exactly one application right")
+	if retry.Stats.SeasonPoints != first.Goals.User {
+		t.Fatalf("points %d must equal the user's goals %d", retry.Stats.SeasonPoints, first.Goals.User)
 	}
-	if *first.Winner != "user" && retry.Stats.EarnedCredits != 0 {
-		t.Fatal("losing shootout granted a reward")
+	if gameRewards(t, db) != 0 {
+		t.Fatal("shootouts must not grant application rights any more")
 	}
 }

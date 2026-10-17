@@ -22,12 +22,15 @@ jest.mock('lucide-react-native', () => ({
 const text = copy.games.penalty;
 const id = 'a'.repeat(32);
 const base: GameState = {
-  hearts: 2,
-  maxHearts: 3,
-  nextHeartAt: '2026-10-12T13:00:00Z',
+  plays: {
+    footballGuess: { used: 1, limit: 5 },
+    penalty: { used: 0, limit: 5 },
+    headToHead: { used: 0, limit: 5 },
+  },
+  nextResetAt: '2026-10-12T21:00:00Z',
+  ratingActive: true,
   serverTime: '2026-10-12T10:00:00Z',
-  rewardEligible: true,
-  stats: { played: 0, wins: 0, bestScore: 0, earnedCredits: 0 },
+  stats: { played: 0, wins: 0, bestScore: 0, seasonPoints: 0 },
   run: null,
   penalty: null,
 };
@@ -37,7 +40,6 @@ const active: PenaltyMatch = {
   kicks: [],
   goals: { user: 0, cpu: 0 },
   winner: null,
-  rewardGranted: false,
   nextRole: 'shooter',
 };
 
@@ -47,7 +49,11 @@ function fakeService(responses: { state: GameState; kick?: GameState }) {
     state: async () => responses.state,
     penaltyStart: async () => {
       calls.push(['start']);
-      return { ...base, hearts: 1, penalty: active };
+      return {
+        ...base,
+        plays: { ...base.plays, penalty: { used: 1, limit: 5 } },
+        penalty: active,
+      };
     },
     penaltyKick: async (...args: unknown[]) => {
       calls.push(['kick', ...(args as (string | number)[])]);

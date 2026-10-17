@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 
 	"futcareer/backend/internal/games/domain"
-	notificationsdata "futcareer/backend/internal/notifications/data"
-	notificationsdomain "futcareer/backend/internal/notifications/domain"
+	ratingdata "futcareer/backend/internal/rating/data"
 )
 
 type Postgres struct{ db *sql.DB }
@@ -18,52 +18,76 @@ var _ domain.Repository = (*Postgres)(nil)
 
 func New(db *sql.DB) *Postgres { return &Postgres{db: db} }
 
-func (r *Postgres) begin(ctx context.Context, userID string) (*sql.Tx, string, time.Time, domain.Wallet, error) {
+// begin locks the account row; every game write (and rating task claims)
+// takes this lock, so plays and points stay consistent per account.
+func (r *Postgres) begin(ctx context.Context, userID string) (*sql.Tx, string, time.Time, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, "", time.Time{}, domain.Wallet{}, err
+		return nil, "", time.Time{}, err
 	}
 	var role string
 	var now time.Time
-	// Team application writes take this same lock, so earned credits are immediately spendable without races.
 	err = tx.QueryRowContext(ctx, `SELECT role FROM users WHERE id=$1 AND active AND role IN ('player','club','coach') FOR UPDATE`, userID).Scan(&role)
 	if errors.Is(err, sql.ErrNoRows) {
 		err = domain.ErrForbidden
 	}
+	if err == nil {
+		err = tx.QueryRowContext(ctx, `SELECT clock_timestamp()`).Scan(&now)
+	}
 	if err != nil {
 		tx.Rollback()
-		return nil, "", now, domain.Wallet{}, err
+		return nil, "", now, err
 	}
-	if err = tx.QueryRowContext(ctx, `SELECT clock_timestamp()`).Scan(&now); err != nil {
-		tx.Rollback()
-		return nil, "", now, domain.Wallet{}, err
-	}
-	if _, err = tx.ExecContext(ctx, `INSERT INTO game_wallets(user_id) VALUES($1) ON CONFLICT(user_id) DO NOTHING`, userID); err != nil {
-		tx.Rollback()
-		return nil, "", now, domain.Wallet{}, err
-	}
-	var wallet domain.Wallet
-	var anchor sql.NullTime
-	if err = tx.QueryRowContext(ctx, `SELECT hearts,refill_anchor FROM game_wallets WHERE user_id=$1 FOR UPDATE`, userID).Scan(&wallet.Hearts, &anchor); err != nil {
-		tx.Rollback()
-		return nil, "", now, wallet, err
-	}
-	if anchor.Valid {
-		at := anchor.Time.UTC()
-		wallet.RefillAnchor = &at
-	}
-	now = now.UTC()
-	wallet = wallet.Refill(now)
-	if err = saveWallet(ctx, tx, userID, wallet); err != nil {
-		tx.Rollback()
-		return nil, "", now, wallet, err
-	}
-	return tx, role, now, wallet, nil
+	return tx, role, now.UTC(), nil
 }
-func saveWallet(ctx context.Context, tx *sql.Tx, userID string, w domain.Wallet) error {
-	_, err := tx.ExecContext(ctx, `UPDATE game_wallets SET hearts=$2,refill_anchor=$3 WHERE user_id=$1`, userID, w.Hearts, w.RefillAnchor)
+
+// istanbulDay is the calendar day plays count against; it resets at local midnight.
+const istanbulDay = `($1::timestamptz AT TIME ZONE 'Europe/Istanbul')::date`
+
+// usePlay takes one of today's plays for a game, or fails with ErrNoPlays.
+func usePlay(ctx context.Context, tx *sql.Tx, userID, game string, now time.Time) error {
+	var plays int
+	err := tx.QueryRowContext(ctx, `INSERT INTO game_daily_plays(user_id,game,day,plays) VALUES($2,$3,`+istanbulDay+`,1)
+		ON CONFLICT(user_id,game,day) DO UPDATE SET plays=game_daily_plays.plays+1 WHERE game_daily_plays.plays < $4
+		RETURNING plays`, now, userID, game, domain.DailyPlays).Scan(&plays)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.ErrNoPlays
+	}
 	return err
 }
+
+func playsToday(ctx context.Context, tx *sql.Tx, userID string, now time.Time) (domain.Plays, time.Time, error) {
+	out := domain.Plays{}
+	for _, g := range domain.Games {
+		out[g] = 0
+	}
+	rows, err := tx.QueryContext(ctx, `SELECT game,plays FROM game_daily_plays WHERE user_id=$2 AND day=`+istanbulDay, now, userID)
+	if err != nil {
+		return out, now, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var game string
+		var plays int
+		if err := rows.Scan(&game, &plays); err != nil {
+			return out, now, err
+		}
+		out[game] = plays
+	}
+	if err = rows.Err(); err != nil {
+		return out, now, err
+	}
+	var reset time.Time
+	err = tx.QueryRowContext(ctx, `SELECT ((`+istanbulDay+` + 1)::timestamp AT TIME ZONE 'Europe/Istanbul')`, now).Scan(&reset)
+	return out, reset.UTC(), err
+}
+
+// award records one rating point for a game event; outside a season it does nothing.
+func award(ctx context.Context, tx *sql.Tx, userID, game, ref string, now time.Time) error {
+	_, err := ratingdata.AwardInTx(ctx, tx, userID, game, ref, 1, now)
+	return err
+}
+
 func scanRun(row *sql.Row) (*domain.Run, error) {
 	var run domain.Run
 	var questions, answers []byte
@@ -85,9 +109,18 @@ func scanRun(row *sql.Row) (*domain.Run, error) {
 
 const runColumns = `id,status,questions,answers,score,reward_granted`
 
-func state(ctx context.Context, tx *sql.Tx, userID, role string, now time.Time, wallet domain.Wallet, run *domain.Run) (domain.State, error) {
-	out := domain.State{Wallet: wallet, ServerTime: now, Run: run, RewardEligible: role == "player"}
-	err := tx.QueryRowContext(ctx, `SELECT count(*) FILTER (WHERE status='finished'),count(*) FILTER (WHERE status='finished' AND score>=7),COALESCE(max(score) FILTER (WHERE status='finished'),0),(SELECT COALESCE(sum(credits),0) FROM team_request_game_rewards WHERE player_id=$1)+(SELECT count(*) FROM team_request_penalty_rewards WHERE player_id=$1)+(SELECT count(*) FROM team_request_gift_rewards WHERE player_id=$1) FROM football_guess_runs WHERE user_id=$1`, userID).Scan(&out.Stats.Played, &out.Stats.Wins, &out.Stats.BestScore, &out.Stats.EarnedCredits)
+func state(ctx context.Context, tx *sql.Tx, userID string, now time.Time, run *domain.Run) (domain.State, error) {
+	out := domain.State{ServerTime: now, Run: run}
+	var err error
+	if out.Plays, out.NextResetAt, err = playsToday(ctx, tx, userID, now); err != nil {
+		return out, err
+	}
+	if out.RatingActive, err = ratingdata.ActiveInTx(ctx, tx, now); err != nil {
+		return out, err
+	}
+	err = tx.QueryRowContext(ctx, `SELECT count(*) FILTER (WHERE status='finished'),count(*) FILTER (WHERE status='finished' AND score>=7),COALESCE(max(score) FILTER (WHERE status='finished'),0),
+		(SELECT COALESCE(sum(p.points),0) FROM rating_points p JOIN rating_seasons s ON s.id=p.season_id WHERE p.user_id=$1 AND s.published AND s.starts_at<=$2 AND s.ends_at>$2)
+		FROM football_guess_runs WHERE user_id=$1`, userID, now).Scan(&out.Stats.Played, &out.Stats.Wins, &out.Stats.BestScore, &out.Stats.SeasonPoints)
 	if err != nil {
 		return out, err
 	}
@@ -116,15 +149,15 @@ func scanShootout(row *sql.Row) (*domain.Shootout, error) {
 	}
 	return &sh, nil
 }
-func finish(ctx context.Context, tx *sql.Tx, userID, role string, now time.Time, wallet domain.Wallet, run *domain.Run) (domain.State, error) {
-	out, err := state(ctx, tx, userID, role, now, wallet, run)
+func finish(ctx context.Context, tx *sql.Tx, userID string, now time.Time, run *domain.Run) (domain.State, error) {
+	out, err := state(ctx, tx, userID, now, run)
 	if err != nil {
 		return out, err
 	}
 	return out, tx.Commit()
 }
 func (r *Postgres) State(ctx context.Context, userID string) (domain.State, error) {
-	tx, role, now, wallet, err := r.begin(ctx, userID)
+	tx, _, now, err := r.begin(ctx, userID)
 	if err != nil {
 		return domain.State{}, err
 	}
@@ -136,26 +169,22 @@ func (r *Postgres) State(ctx context.Context, userID string) (domain.State, erro
 	if err != nil {
 		return domain.State{}, err
 	}
-	return finish(ctx, tx, userID, role, now, wallet, run)
+	return finish(ctx, tx, userID, now, run)
 }
 func (r *Postgres) Start(ctx context.Context, userID, runID string, pick domain.QuestionPicker) (domain.State, error) {
-	tx, role, now, wallet, err := r.begin(ctx, userID)
+	tx, _, now, err := r.begin(ctx, userID)
 	if err != nil {
 		return domain.State{}, err
 	}
 	defer tx.Rollback()
 	run, err := scanRun(tx.QueryRowContext(ctx, `SELECT `+runColumns+` FROM football_guess_runs WHERE user_id=$1 AND status='active'`, userID))
 	if err == nil {
-		return finish(ctx, tx, userID, role, now, wallet, run)
+		return finish(ctx, tx, userID, now, run)
 	}
 	if !errors.Is(err, domain.ErrNotFound) {
 		return domain.State{}, err
 	}
-	wallet, err = wallet.Spend(now)
-	if err != nil {
-		return domain.State{}, err
-	}
-	if err = saveWallet(ctx, tx, userID, wallet); err != nil {
+	if err = usePlay(ctx, tx, userID, domain.GameFootballGuess, now); err != nil {
 		return domain.State{}, err
 	}
 	seen, err := seenQuestions(ctx, tx, userID)
@@ -177,10 +206,10 @@ func (r *Postgres) Start(ctx context.Context, userID, runID string, pick domain.
 		return domain.State{}, err
 	}
 	run = &domain.Run{ID: runID, Status: "active", Questions: questions, Answers: []domain.Answer{}}
-	return finish(ctx, tx, userID, role, now, wallet, run)
+	return finish(ctx, tx, userID, now, run)
 }
 func (r *Postgres) Answer(ctx context.Context, userID, runID, questionID, optionID string) (domain.State, error) {
-	tx, role, now, wallet, err := r.begin(ctx, userID)
+	tx, _, now, err := r.begin(ctx, userID)
 	if err != nil {
 		return domain.State{}, err
 	}
@@ -194,15 +223,11 @@ func (r *Postgres) Answer(ctx context.Context, userID, runID, questionID, option
 		return domain.State{}, err
 	}
 	if changed {
-		if run.Status == "finished" && run.Score >= domain.PassingScore && role == "player" {
-			_, err = tx.ExecContext(ctx, `INSERT INTO team_request_game_rewards(run_id,player_id) VALUES($1,$2) ON CONFLICT(run_id) DO NOTHING`, runID, userID)
-			if err != nil {
+		// Each correct answer is one rating point (17 Oct 2026); games grant no other reward.
+		if last := run.Answers[len(run.Answers)-1]; last.Correct {
+			if err = award(ctx, tx, userID, domain.GameFootballGuess, runID+":"+last.QuestionID, now); err != nil {
 				return domain.State{}, err
 			}
-			if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewGameReward(userID, runID, "Arma İzi")); err != nil {
-				return domain.State{}, err
-			}
-			run.RewardGranted = true
 		}
 		answers, err := json.Marshal(run.Answers)
 		if err != nil {
@@ -213,7 +238,7 @@ func (r *Postgres) Answer(ctx context.Context, userID, runID, questionID, option
 			return domain.State{}, err
 		}
 	}
-	return finish(ctx, tx, userID, role, now, wallet, run)
+	return finish(ctx, tx, userID, now, run)
 }
 
 // seenQuestions is the user's Arma İzi history: catalog id -> last shown.
@@ -260,7 +285,7 @@ func latestRun(ctx context.Context, tx *sql.Tx, userID string) (*domain.Run, err
 	return run, err
 }
 func (r *Postgres) StartShootout(ctx context.Context, userID, shootoutID string) (domain.State, error) {
-	tx, role, now, wallet, err := r.begin(ctx, userID)
+	tx, _, now, err := r.begin(ctx, userID)
 	if err != nil {
 		return domain.State{}, err
 	}
@@ -271,28 +296,24 @@ func (r *Postgres) StartShootout(ctx context.Context, userID, shootoutID string)
 	}
 	_, err = scanShootout(tx.QueryRowContext(ctx, shootoutColumns+` FROM penalty_shootouts WHERE user_id=$1 AND status='active'`, userID))
 	if err == nil {
-		return finish(ctx, tx, userID, role, now, wallet, run)
+		return finish(ctx, tx, userID, now, run)
 	}
 	if !errors.Is(err, domain.ErrNotFound) {
 		return domain.State{}, err
 	}
-	wallet, err = wallet.Spend(now)
-	if err != nil {
-		return domain.State{}, err
-	}
-	if err = saveWallet(ctx, tx, userID, wallet); err != nil {
+	if err = usePlay(ctx, tx, userID, domain.GamePenalty, now); err != nil {
 		return domain.State{}, err
 	}
 	if _, err = tx.ExecContext(ctx, `INSERT INTO penalty_shootouts(id,user_id,started_at) VALUES($1,$2,$3)`, shootoutID, userID, now); err != nil {
 		return domain.State{}, err
 	}
-	return finish(ctx, tx, userID, role, now, wallet, run)
+	return finish(ctx, tx, userID, now, run)
 }
 
 // KickShootout resolves one kick under the account lock. The computer's side is
 // chosen by decide while the row is locked, so a retry can't re-roll it.
 func (r *Postgres) KickShootout(ctx context.Context, userID, shootoutID string, index int, side domain.Side, decide func(string, []domain.PenaltyKick) domain.Side) (domain.State, error) {
-	tx, role, now, wallet, err := r.begin(ctx, userID)
+	tx, _, now, err := r.begin(ctx, userID)
 	if err != nil {
 		return domain.State{}, err
 	}
@@ -310,14 +331,11 @@ func (r *Postgres) KickShootout(ctx context.Context, userID, shootoutID string, 
 		return domain.State{}, err
 	}
 	if !replayed {
-		if sh.Status == "finished" && sh.Winner == "user" && role == "player" {
-			if _, err = tx.ExecContext(ctx, `INSERT INTO team_request_penalty_rewards(shootout_id,player_id) VALUES($1,$2) ON CONFLICT(shootout_id) DO NOTHING`, shootoutID, userID); err != nil {
+		// Every goal the user scores as the shooter is one rating point.
+		if kick := sh.Kicks[index]; kick.Role == domain.RoleShooter && kick.Scored {
+			if err = award(ctx, tx, userID, domain.GamePenalty, shootoutID+":"+strconv.Itoa(index), now); err != nil {
 				return domain.State{}, err
 			}
-			if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewGameReward(userID, shootoutID, "Beyaz Nokta")); err != nil {
-				return domain.State{}, err
-			}
-			sh.RewardGranted = true
 		}
 		kicks, err := json.Marshal(sh.Kicks)
 		if err != nil {
@@ -328,7 +346,7 @@ func (r *Postgres) KickShootout(ctx context.Context, userID, shootoutID string, 
 			return domain.State{}, err
 		}
 	}
-	out, err := finish(ctx, tx, userID, role, now, wallet, run)
+	out, err := finish(ctx, tx, userID, now, run)
 	if err != nil {
 		return out, err
 	}

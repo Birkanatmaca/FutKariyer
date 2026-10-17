@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { copy } from '../../../shared/lib/copy';
-import type {
-  GameState,
-  PenaltyKick,
-  PenaltyMatch,
-  Side,
+import {
+  playsLeft,
+  type GameState,
+  type PenaltyKick,
+  type PenaltyMatch,
+  type Side,
 } from '../domain/models';
 import type { GamesService } from './games-service';
 
@@ -46,7 +47,9 @@ export function usePenaltyShootout(service: GamesService, token: string) {
   const lastKick: PenaltyKick | undefined =
     match?.kicks[match.kicks.length - 1];
   const canStart =
-    !busy && (match?.status === 'active' || (data?.hearts ?? 0) > 0);
+    !busy &&
+    (match?.status === 'active' ||
+      (!!data && playsLeft(data.plays.penalty) > 0));
 
   // Runs one server call at a time; a failed call resyncs from the server.
   const run = useCallback(
@@ -98,8 +101,9 @@ export function usePenaltyShootout(service: GamesService, token: string) {
     phase,
     match,
     lastKick,
-    hearts: data?.hearts ?? 0,
-    nextHeartAt: data?.nextHeartAt ?? null,
+    plays: data?.plays.penalty ?? null,
+    nextResetAt: data?.nextResetAt ?? null,
+    ratingActive: data?.ratingActive ?? false,
     serverTime: data?.serverTime ?? null,
     canStart,
     start,

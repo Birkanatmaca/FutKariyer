@@ -78,6 +78,11 @@ beforeEach(() => {
   jest.spyOn(Animated, 'timing').mockReturnValue({
     start: jest.fn(),
   } as unknown as Animated.CompositeAnimation);
+  // The rating trophy's rays turn in a loop.
+  jest.spyOn(Animated, 'loop').mockReturnValue({
+    start: jest.fn(),
+    stop: jest.fn(),
+  } as unknown as Animated.CompositeAnimation);
 });
 
 function texts(root: ReactTestRenderer) {
@@ -152,13 +157,24 @@ test('games are listed under their new names', async () => {
   jest.mocked(request).mockImplementation(async (path: string) =>
     path === '/v1/games/head-to-head'
       ? { best: 4, plays: 2 }
-      : {
-          hearts: 3,
-          maxHearts: 3,
-          nextHeartAt: null,
+      : path === '/v1/rating'
+      ? {
+          season: null,
           serverTime: '2026-10-14T10:00:00Z',
-          rewardEligible: true,
-          stats: { played: 0, wins: 0, bestScore: 0, earnedCredits: 0 },
+          leaderboard: [],
+          me: null,
+          tasks: [],
+        }
+      : {
+          plays: {
+            footballGuess: { used: 0, limit: 5 },
+            penalty: { used: 0, limit: 5 },
+            headToHead: { used: 2, limit: 5 },
+          },
+          nextResetAt: '2026-10-14T21:00:00Z',
+          ratingActive: false,
+          serverTime: '2026-10-14T10:00:00Z',
+          stats: { played: 0, wins: 0, bestScore: 0, seasonPoints: 0 },
           run: null,
           penalty: null,
         },

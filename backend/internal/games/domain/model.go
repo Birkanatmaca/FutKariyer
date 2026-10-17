@@ -6,10 +6,21 @@ import (
 	"time"
 )
 
-const MaxHearts = 3
-const HeartInterval = 6 * time.Hour
+// DailyPlays is how many new games of each kind an account may start per
+// Istanbul calendar day (17 Oct 2026, replaces hearts). Continuing a game in
+// progress never uses a play.
+const DailyPlays = 5
 const QuestionCount = 10
 const PassingScore = 7
+
+// Game keys for daily plays and rating points.
+const (
+	GameFootballGuess = "football_guess"
+	GamePenalty       = "penalty"
+	GameHeadToHead    = "head_to_head"
+)
+
+var Games = []string{GameFootballGuess, GamePenalty, GameHeadToHead}
 
 // DifficultyPlan is the order and size of each Arma İzi bucket in one run.
 var DifficultyPlan = []struct {
@@ -20,64 +31,13 @@ var DifficultyPlan = []struct {
 var (
 	ErrForbidden     = errors.New("game access denied")
 	ErrNotFound      = errors.New("game not found")
-	ErrNoHearts      = errors.New("no game hearts available")
+	ErrNoPlays       = errors.New("no daily game plays left")
 	ErrAnswerLocked  = errors.New("game answer already recorded")
 	ErrQuestionOrder = errors.New("game question out of order")
 )
 
-type Wallet struct {
-	Hearts       int
-	RefillAnchor *time.Time
-}
-
-// Refill preserves the partial interval and stops accruing time at full capacity.
-func (w Wallet) Refill(now time.Time) Wallet {
-	if w.Hearts >= MaxHearts {
-		return Wallet{Hearts: MaxHearts}
-	}
-	if w.RefillAnchor == nil || now.Before(*w.RefillAnchor) {
-		return w
-	}
-	steps := int(now.Sub(*w.RefillAnchor) / HeartInterval)
-	if steps == 0 {
-		return w
-	}
-	w.Hearts += steps
-	if w.Hearts >= MaxHearts {
-		return Wallet{Hearts: MaxHearts}
-	}
-	anchor := w.RefillAnchor.Add(time.Duration(steps) * HeartInterval)
-	w.RefillAnchor = &anchor
-	return w
-}
-
-// Grant adds hearts from a gift. Hearts are capped at MaxHearts, and a partial
-// refill interval starts when the first missing heart appears.
-func (w Wallet) Grant(hearts int, now time.Time) Wallet {
-	w = w.Refill(now)
-	w.Hearts += hearts
-	if w.Hearts >= MaxHearts {
-		return Wallet{Hearts: MaxHearts}
-	}
-	if w.RefillAnchor == nil {
-		anchor := now
-		w.RefillAnchor = &anchor
-	}
-	return w
-}
-
-func (w Wallet) Spend(now time.Time) (Wallet, error) {
-	w = w.Refill(now)
-	if w.Hearts < 1 {
-		return w, ErrNoHearts
-	}
-	if w.Hearts == MaxHearts || w.RefillAnchor == nil {
-		anchor := now
-		w.RefillAnchor = &anchor
-	}
-	w.Hearts--
-	return w, nil
-}
+// Plays is the day's usage per game key.
+type Plays map[string]int
 
 // Club is one clue in a question. HasCrest tells the client whether
 // /v1/games/logos/{id} serves a crest or a name badge should be drawn.
@@ -153,23 +113,25 @@ func (r *Run) Answer(questionID, optionID string) (bool, error) {
 }
 
 type Stats struct {
-	Played        int `json:"played"`
-	Wins          int `json:"wins"`
-	BestScore     int `json:"bestScore"`
-	EarnedCredits int `json:"earnedCredits"`
+	Played    int `json:"played"`
+	Wins      int `json:"wins"`
+	BestScore int `json:"bestScore"`
+	// SeasonPoints is the account's total in the running rating season.
+	SeasonPoints int `json:"seasonPoints"`
 }
 type State struct {
-	Wallet         Wallet
-	ServerTime     time.Time
-	Run            *Run
-	Shootout       *Shootout
-	Stats          Stats
-	RewardEligible bool
+	Plays        Plays
+	NextResetAt  time.Time
+	RatingActive bool
+	ServerTime   time.Time
+	Run          *Run
+	Shootout     *Shootout
+	Stats        Stats
 }
 
 // QuestionPicker builds a new run's questions from the user's history
 // (catalog id -> last time it was shown). It runs inside the start
-// transaction, after the heart is spent, so history and run stay consistent.
+// transaction, after the daily play is used, so history and run stay consistent.
 type QuestionPicker func(seen map[string]time.Time) ([]Question, error)
 
 type Repository interface {

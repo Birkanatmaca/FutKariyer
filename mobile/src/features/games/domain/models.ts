@@ -57,7 +57,6 @@ export type GameRun = {
   answered: number;
   score: number;
   passed: boolean;
-  rewardGranted: boolean;
   question: GameQuestion | null;
   feedback: GameFeedback | null;
 };
@@ -74,20 +73,26 @@ export type PenaltyMatch = {
   kicks: PenaltyKick[];
   goals: { user: number; cpu: number };
   winner: 'user' | 'cpu' | null;
-  rewardGranted: boolean;
   nextRole: 'shooter' | 'keeper' | '';
 };
+// Daily plays per game (17 Oct 2026, replaces hearts); they reset at
+// midnight Istanbul time (nextResetAt).
+export type PlayCount = { used: number; limit: number };
+export type GameKey = 'footballGuess' | 'penalty' | 'headToHead';
+export function playsLeft(count: PlayCount) {
+  return Math.max(0, count.limit - count.used);
+}
 export type GameState = {
-  hearts: number;
-  maxHearts: 3;
-  nextHeartAt: string | null;
+  plays: Record<GameKey, PlayCount>;
+  nextResetAt: string;
+  // A rating season is running: correct answers and goals earn points.
+  ratingActive: boolean;
   serverTime: string;
-  rewardEligible: boolean;
   stats: {
     played: number;
     wins: number;
     bestScore: number;
-    earnedCredits: number;
+    seasonPoints: number;
   };
   run: GameRun | null;
   penalty: PenaltyMatch | null;

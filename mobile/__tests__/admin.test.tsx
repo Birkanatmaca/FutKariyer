@@ -654,7 +654,7 @@ describe('admin form rules', () => {
   });
   test('gift validity is 1–365 days and single-account gifts need an email', () => {
     const gift = {
-      kind: 'heart_one' as const,
+      kind: 'application_right' as const,
       title: 'Hoş geldin',
       message: '',
       audience: 'all' as const,

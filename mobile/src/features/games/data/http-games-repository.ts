@@ -8,6 +8,7 @@ import type {
   GameState,
   GamesRepository,
   PenaltyMatch,
+  PlayCount,
   Side,
 } from '../domain/models';
 const id = (v: unknown) => typeof v === 'string' && /^[a-f0-9]{32}$/.test(v);
@@ -65,8 +66,6 @@ function run(v: unknown): v is GameRun {
     r.score <= r.answered &&
     typeof r.passed === 'boolean' &&
     r.passed === (r.status === 'finished' && r.score >= passingScore) &&
-    typeof r.rewardGranted === 'boolean' &&
-    (!r.rewardGranted || r.passed) &&
     (r.status === 'active'
       ? r.answered < questionCount && question(r.question)
       : r.answered === questionCount && r.question === null) &&
@@ -95,33 +94,37 @@ function penalty(v: unknown): v is PenaltyMatch {
     count(m.goals.user) &&
     count(m.goals.cpu) &&
     (m.winner === null || m.winner === 'user' || m.winner === 'cpu') &&
-    typeof m.rewardGranted === 'boolean' &&
-    (!m.rewardGranted || m.winner === 'user') &&
     (m.status === 'active' ? m.winner === null : m.winner !== null) &&
     ['shooter', 'keeper', ''].includes(m.nextRole)
   );
 }
+const plays = (v: unknown): v is PlayCount => {
+  const p = v as PlayCount;
+  return (
+    !!p && count(p.used) && count(p.limit) && p.limit > 0 && p.used <= p.limit
+  );
+};
 function checked(value: unknown): GameState {
   const s = value as GameState;
   if (
     !s ||
-    !count(s.hearts) ||
-    s.hearts > 3 ||
-    s.maxHearts !== 3 ||
+    !s.plays ||
+    !plays(s.plays.footballGuess) ||
+    !plays(s.plays.penalty) ||
+    !plays(s.plays.headToHead) ||
     !date(s.serverTime) ||
-    (s.hearts === 3 ? s.nextHeartAt !== null : !date(s.nextHeartAt)) ||
-    typeof s.rewardEligible !== 'boolean' ||
+    !date(s.nextResetAt) ||
+    typeof s.ratingActive !== 'boolean' ||
     !s.stats ||
     ![
       s.stats.played,
       s.stats.wins,
       s.stats.bestScore,
-      s.stats.earnedCredits,
+      s.stats.seasonPoints,
     ].every(count) ||
     s.stats.wins > s.stats.played ||
     s.stats.bestScore > 10 ||
     (s.run !== null && !run(s.run)) ||
-    (s.run?.rewardGranted && !s.rewardEligible) ||
     (s.penalty !== null && !penalty(s.penalty))
   )
     throw new ApiError(copy.form.unexpected);

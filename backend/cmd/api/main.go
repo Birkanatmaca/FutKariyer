@@ -66,6 +66,9 @@ import (
 	proapplication "futcareer/backend/internal/pro/application"
 	prodata "futcareer/backend/internal/pro/data"
 	protransport "futcareer/backend/internal/pro/transport"
+	ratingapplication "futcareer/backend/internal/rating/application"
+	ratingdata "futcareer/backend/internal/rating/data"
+	ratingtransport "futcareer/backend/internal/rating/transport"
 	registrationdata "futcareer/backend/internal/registrations/data"
 	registrationtransport "futcareer/backend/internal/registrations/transport"
 	socialapplication "futcareer/backend/internal/social/application"
@@ -149,6 +152,10 @@ func run() error {
 	routes.Handle("/v1/football/", footballtransport.New(authService, footballService))
 	// Kafa Kafaya builds its rounds from the same cached major league standings.
 	routes.Handle("/v1/games/", gametransport.New(authService, gameapplication.New(gamedata.New(db), gameBank, footballService)))
+	ratingService := ratingapplication.New(ratingdata.New(db))
+	ratingHandler := ratingtransport.New(authService, ratingService)
+	routes.Handle("/v1/rating", ratingHandler)
+	routes.Handle("/v1/rating/", ratingHandler)
 	giftService := giftapplication.New(giftdata.New(db))
 	playerGifts := gifttransport.NewPlayer(authService, giftService)
 	routes.Handle("/v1/gifts", playerGifts)
@@ -178,6 +185,7 @@ func run() error {
 	adminFeatures.Handle("/v1/admin/leagues", leagueAdminHandler)
 	adminFeatures.Handle("/v1/admin/leagues/", leagueAdminHandler)
 	adminFeatures.Handle("/v1/admin/gifts", gifttransport.NewAdmin(giftService))
+	adminFeatures.Handle("/v1/admin/rating/", ratingtransport.NewAdmin(ratingService))
 	applicationAdmin := registrationtransport.NewAdmin(registrationdata.New(db))
 	adminFeatures.Handle("/v1/admin/applications", applicationAdmin)
 	adminFeatures.Handle("/v1/admin/applications/", applicationAdmin)

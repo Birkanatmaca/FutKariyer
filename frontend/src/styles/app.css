@@ -1248,6 +1248,54 @@ select {
   }
 }
 
+/* Global rating: sezon durumu, ödüller ve görev satırları. */
+.rating-status {
+  display: inline-block;
+  padding: 2px var(--space-sm);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--raised);
+  color: var(--secondary);
+}
+.rating-status.active {
+  background: var(--brand-wash);
+  color: var(--brand);
+}
+.rating-status.upcoming {
+  color: var(--info);
+}
+.rating-prizes {
+  max-width: 280px;
+  color: var(--secondary);
+}
+.rating-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+.rating-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-height: 48px;
+  color: var(--text);
+  font-weight: 700;
+}
+.rating-prize-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-lg);
+}
+.rating-number {
+  width: 88px;
+}
+@media (max-width: 600px) {
+  .rating-prize-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Duyurular: metin özeti tablo hücresinde okunur kalır. */
 .announcement-body {
   max-width: 360px;

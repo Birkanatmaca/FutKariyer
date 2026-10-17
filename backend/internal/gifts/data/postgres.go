@@ -7,7 +7,6 @@ import (
 	"time"
 
 	auth "futcareer/backend/internal/auth/application"
-	gamedomain "futcareer/backend/internal/games/domain"
 	"futcareer/backend/internal/gifts/domain"
 )
 
@@ -111,7 +110,7 @@ func (r *Postgres) MyGifts(ctx context.Context, userID string) ([]domain.MyGift,
 	}
 	rows, err := r.db.QueryContext(ctx, `SELECT ug.id,g.kind,g.title,g.message,ug.created_at,ug.expires_at,ug.claimed_at
 		FROM user_gifts ug JOIN gifts g ON g.id=ug.gift_id
-		WHERE ug.user_id=$1
+		WHERE ug.user_id=$1 AND g.kind NOT IN ('heart_one','heart_full')
 		ORDER BY ug.created_at DESC,ug.id DESC
 		LIMIT 100`, userID)
 	if err != nil {
@@ -136,8 +135,8 @@ func (r *Postgres) MyGifts(ctx context.Context, userID string) ([]domain.MyGift,
 	return out, now.UTC(), rows.Err()
 }
 
-// Claim locks the account first, then the wallet, the same order games use,
-// so a gift and a game action cannot both change the heart state at once.
+// Claim locks the account first, the same lock games and team applications
+// take, so a claimed right is immediately and safely spendable.
 func (r *Postgres) Claim(ctx context.Context, userID, userGiftID string) (domain.ClaimResult, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -180,10 +179,6 @@ func (r *Postgres) Claim(ctx context.Context, userID, userGiftID string) (domain
 		return domain.ClaimResult{}, domain.ErrExpired
 	}
 	switch g.Kind {
-	case domain.KindHeartOne:
-		err = grantHearts(ctx, tx, userID, 1, now)
-	case domain.KindHeartFull:
-		err = grantHearts(ctx, tx, userID, gamedomain.MaxHearts, now)
 	case domain.KindApplicationRight:
 		if role != "player" {
 			return domain.ClaimResult{}, domain.ErrKindRole
@@ -200,22 +195,4 @@ func (r *Postgres) Claim(ctx context.Context, userID, userGiftID string) (domain
 	}
 	g.ClaimedAt = &now
 	return domain.ClaimResult{Gift: g}, tx.Commit()
-}
-
-func grantHearts(ctx context.Context, tx *sql.Tx, userID string, hearts int, now time.Time) error {
-	if _, err := tx.ExecContext(ctx, `INSERT INTO game_wallets(user_id) VALUES($1) ON CONFLICT(user_id) DO NOTHING`, userID); err != nil {
-		return err
-	}
-	var wallet gamedomain.Wallet
-	var anchor sql.NullTime
-	if err := tx.QueryRowContext(ctx, `SELECT hearts,refill_anchor FROM game_wallets WHERE user_id=$1 FOR UPDATE`, userID).Scan(&wallet.Hearts, &anchor); err != nil {
-		return err
-	}
-	if anchor.Valid {
-		at := anchor.Time.UTC()
-		wallet.RefillAnchor = &at
-	}
-	wallet = wallet.Grant(hearts, now)
-	_, err := tx.ExecContext(ctx, `UPDATE game_wallets SET hearts=$2,refill_anchor=$3 WHERE user_id=$1`, userID, wallet.Hearts, wallet.RefillAnchor)
-	return err
 }

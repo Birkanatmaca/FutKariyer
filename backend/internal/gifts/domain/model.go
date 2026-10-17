@@ -14,9 +14,9 @@ var (
 	ErrKindRole    = errors.New("gift kind does not match account role")
 )
 
+// Heart gifts (heart_one, heart_full) were retired with hearts on 17 Oct 2026;
+// old rows stay in the history but are hidden from inboxes and cannot be claimed.
 const (
-	KindHeartOne         = "heart_one"
-	KindHeartFull        = "heart_full"
 	KindApplicationRight = "application_right"
 	AudienceAll          = "all"
 	AudienceAccount      = "account"
@@ -27,7 +27,7 @@ const (
 )
 
 func ValidKind(kind string) bool {
-	return kind == KindHeartOne || kind == KindHeartFull || kind == KindApplicationRight
+	return kind == KindApplicationRight
 }
 
 // Gift is a campaign created by an administrator. Each recipient gets a UserGift row.

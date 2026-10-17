@@ -39,6 +39,7 @@ export function AdminLayout({
               'leagues',
               'payments',
               'gifts',
+              'rating',
               'announcements',
             ] as const
           ).map(value => (
@@ -72,6 +73,8 @@ export function AdminLayout({
                   ? '₺'
                   : value === 'gifts'
                   ? '🎁'
+                  : value === 'rating'
+                  ? '🏅'
                   : value === 'announcements'
                   ? '📣'
                   : value === 'applications'

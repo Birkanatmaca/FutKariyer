@@ -20,7 +20,7 @@ import { usePenaltyShootout } from '../application/usePenaltyShootout';
 import type { PenaltyKick, Side } from '../domain/models';
 import { penaltySides as sides } from '../domain/penalty';
 import { GoalkeeperArt } from './GoalkeeperArt';
-import { HeartWallet } from './HeartWallet';
+import { PlaysMeter } from './PlaysMeter';
 
 const text = copy.games.penalty;
 const ratio: Record<Side, number> = {
@@ -95,10 +95,10 @@ export function PenaltyShootout({
   const suddenDeath = kickNumber > 10;
   const userChoice = lastKick?.userSide;
   const goals = match?.goals ?? { user: 0, cpu: 0 };
-  const remaining = game.nextHeartAt
+  const remaining = game.nextResetAt
     ? Math.max(
         0,
-        Math.round((Date.parse(game.nextHeartAt) - Date.now()) / 1000),
+        Math.round((Date.parse(game.nextResetAt) - Date.now()) / 1000),
       )
     : 0;
   const noMatch = !match;
@@ -144,7 +144,9 @@ export function PenaltyShootout({
             </Text>
             <Text style={styles.role}>{text.tagline}</Text>
           </View>
-          <HeartWallet hearts={game.hearts} remaining={remaining} />
+          {game.plays ? (
+            <PlaysMeter plays={game.plays} remaining={remaining} />
+          ) : null}
           <View style={styles.rules}>
             <Text style={styles.rulesTitle}>{text.rulesTitle}</Text>
             {text.rules.map((rule, i) => (
@@ -164,7 +166,7 @@ export function PenaltyShootout({
             onPress={game.start}
           />
           <Text style={styles.noStakes}>
-            {game.hearts > 0 ? text.cost : copy.games.wait}
+            {game.canStart ? text.cost : copy.games.wait}
           </Text>
         </>
       ) : (
@@ -293,12 +295,14 @@ export function PenaltyShootout({
                 {text.finalScore(goals.user, goals.cpu)}
               </Text>
               <Text style={styles.noStakes}>
-                {match.rewardGranted
-                  ? copy.games.rewardGranted
-                  : text.lossReward}
+                {game.ratingActive
+                  ? copy.games.pointsEarned(goals.user)
+                  : copy.games.pointsOff}
               </Text>
               <ErrorBanner message={game.error} />
-              <HeartWallet hearts={game.hearts} remaining={remaining} />
+              {game.plays ? (
+                <PlaysMeter plays={game.plays} remaining={remaining} />
+              ) : null}
               <Button
                 label={text.playAgain}
                 loading={game.busy}

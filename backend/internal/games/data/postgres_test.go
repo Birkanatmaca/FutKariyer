@@ -15,8 +15,6 @@ import (
 	"futcareer/backend/internal/games/catalog"
 	"futcareer/backend/internal/games/data"
 	"futcareer/backend/internal/games/domain"
-	teams "futcareer/backend/internal/teams/data"
-	teamdomain "futcareer/backend/internal/teams/domain"
 	"futcareer/backend/internal/testsupport/testpostgres"
 )
 
@@ -75,26 +73,49 @@ func finishRun(t *testing.T, s *application.Service, db *sql.DB, user string, st
 	}
 	return last
 }
-func TestRewardIsAtomicUniqueAndSpendableWithOtherCredits(t *testing.T) {
+
+// openSeason publishes a rating season running now, so game events earn points.
+func openSeason(t *testing.T, db *sql.DB) string {
+	t.Helper()
+	id := fmt.Sprintf("%032x", 9001)
+	if _, err := db.Exec(`INSERT INTO rating_seasons(id,title,starts_at,ends_at,published) VALUES($1,'Ekim Sezonu',now()-interval '1 day',now()+interval '29 days',true)`, id); err != nil {
+		t.Fatal(err)
+	}
+	return id
+}
+
+func gameRewards(t *testing.T, db *sql.DB) int {
+	t.Helper()
+	var n int
+	if err := db.QueryRow(`SELECT (SELECT count(*) FROM team_request_game_rewards)+(SELECT count(*) FROM team_request_penalty_rewards)`).Scan(&n); err != nil {
+		t.Fatal(err)
+	}
+	return n
+}
+
+func TestDailyPlaysLimitStartsAndCorrectAnswersEarnPoints(t *testing.T) {
 	db := testpostgres.New(t).DB
 	s := service(t, db)
 	ctx := context.Background()
 	user := actor(t, db, 1, "player")
 	other := actor(t, db, 2, "player")
 	initial, err := s.State(ctx, user)
-	if err != nil || initial.Hearts != 3 || initial.NextHeartAt != nil {
-		t.Fatalf("initial wallet: %+v %v", initial, err)
+	if err != nil || initial.Plays.FootballGuess != (application.PlayCount{Used: 0, Limit: domain.DailyPlays}) || initial.RatingActive || !initial.NextResetAt.After(initial.ServerTime) {
+		t.Fatalf("initial state: %+v %v", initial, err)
+	}
+	if initial.NextResetAt.Sub(initial.ServerTime) > 24*time.Hour {
+		t.Fatal("daily reset must be within a day")
 	}
 	start, err := s.Start(ctx, user)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if start.Hearts != 2 || start.NextHeartAt == nil || start.Run.Answered != 0 || start.Run.Feedback != nil {
+	if start.Plays.FootballGuess.Used != 1 || start.Run.Answered != 0 || start.Run.Feedback != nil {
 		t.Fatal("invalid start")
 	}
 	encoded, _ := json.Marshal(start)
-	if strings.Contains(string(encoded), "correctOptionId") || strings.Contains(string(encoded), "questions") {
-		t.Fatal("future questions or answer leaked")
+	if strings.Contains(string(encoded), "correctOptionId") || strings.Contains(string(encoded), "questions") || strings.Contains(string(encoded), "hearts") {
+		t.Fatal("future questions, answer or hearts leaked")
 	}
 	qs := questions(t, db, start.Run.ID)
 	for i, q := range qs {
@@ -110,8 +131,8 @@ func TestRewardIsAtomicUniqueAndSpendableWithOtherCredits(t *testing.T) {
 		}
 	}
 	again, err := s.Start(ctx, user)
-	if err != nil || again.Run.ID != start.Run.ID || again.Hearts != 2 {
-		t.Fatal("retry spent another heart")
+	if err != nil || again.Run.ID != start.Run.ID || again.Plays.FootballGuess.Used != 1 {
+		t.Fatal("resuming used another play")
 	}
 	if _, err = s.Answer(ctx, user, start.Run.ID, qs[1].ID, qs[1].CorrectOptionID); !errors.Is(err, domain.ErrQuestionOrder) {
 		t.Fatal("future answer accepted")
@@ -119,58 +140,58 @@ func TestRewardIsAtomicUniqueAndSpendableWithOtherCredits(t *testing.T) {
 	if _, err = s.Answer(ctx, other, start.Run.ID, qs[0].ID, qs[0].CorrectOptionID); !errors.Is(err, domain.ErrNotFound) {
 		t.Fatal("other account answered game")
 	}
+	// Without a season the game works but earns nothing.
 	result := finishRun(t, s, db, user, start, 7)
-	if !result.Run.Passed || !result.Run.RewardGranted || result.Stats.EarnedCredits != 1 {
-		t.Fatal("passing game didn't grant exactly one credit")
+	if !result.Run.Passed || result.Stats.SeasonPoints != 0 || result.RatingActive {
+		t.Fatalf("no-season result: %+v", result)
 	}
-	last := result.Run.Feedback
-	for i := 0; i < 5; i++ {
-		retry, err := s.Answer(ctx, user, start.Run.ID, last.QuestionID, last.SelectedOptionID)
-		if err != nil || retry.Stats.EarnedCredits != 1 {
-			t.Fatal("completion retry duplicated reward")
+	openSeason(t, db)
+	next, err := s.Start(ctx, user)
+	if err != nil || !next.RatingActive || next.Plays.FootballGuess.Used != 2 {
+		t.Fatalf("second start: %+v %v", next, err)
+	}
+	scored := finishRun(t, s, db, user, next, 6)
+	if scored.Stats.SeasonPoints != 6 {
+		t.Fatalf("six correct answers must be six points, got %d", scored.Stats.SeasonPoints)
+	}
+	last := scored.Run.Feedback
+	for i := 0; i < 3; i++ {
+		retry, err := s.Answer(ctx, user, next.Run.ID, last.QuestionID, last.SelectedOptionID)
+		if err != nil || retry.Stats.SeasonPoints != 6 {
+			t.Fatal("answer retry changed the points")
 		}
 	}
-	quota, err := teams.New(db).Quota(ctx, user)
-	if err != nil || quota.Earned != 1 || quota.Limit != 4 {
-		t.Fatalf("earned quota: %+v %v", quota, err)
+	if gameRewards(t, db) != 0 {
+		t.Fatal("games must not grant application rights any more")
 	}
-	for i := 0; i < 4; i++ {
-		club := actor(t, db, 20+i, "club")
-		_, q, err := teams.New(db).CreateRequest(ctx, user, club, fmt.Sprintf("%032x", 100+i), "")
-		if err != nil || q.Remaining != 3-i {
-			t.Fatalf("earned credit was not spendable: %+v %v", q, err)
+	for i := 3; i <= domain.DailyPlays; i++ {
+		run, err := s.Start(ctx, user)
+		if err != nil || run.Plays.FootballGuess.Used != i {
+			t.Fatalf("start %d: %+v %v", i, run.Plays, err)
 		}
+		finishRun(t, s, db, user, run, 0)
 	}
-	club := actor(t, db, 30, "club")
-	if _, _, err := teams.New(db).CreateRequest(ctx, user, club, fmt.Sprintf("%032x", 200), ""); !errors.Is(err, teamdomain.ErrQuotaExhausted) {
-		t.Fatal("quota exceeded")
+	if _, err = s.Start(ctx, user); !errors.Is(err, domain.ErrNoPlays) {
+		t.Fatal("sixth game of the day started")
 	}
-	for round := 0; round < 2; round++ {
-		next, err := s.Start(ctx, user)
-		if err != nil {
-			t.Fatal(err)
-		}
-		failed := finishRun(t, s, db, user, next, 6)
-		if failed.Run.RewardGranted || failed.Run.Passed || failed.Stats.EarnedCredits != 1 {
-			t.Fatal("failed run awarded a credit")
-		}
+	if shootout, err := s.StartShootout(ctx, user); err != nil || shootout.Plays.Penalty.Used != 1 {
+		t.Fatal("each game must have its own daily plays")
 	}
-	if _, err = s.Start(ctx, user); !errors.Is(err, domain.ErrNoHearts) {
-		t.Fatal("empty wallet started game")
-	}
-	if _, err = db.Exec(`UPDATE game_wallets SET refill_anchor=clock_timestamp()-interval '6 hours 1 second' WHERE user_id=$1`, user); err != nil {
+	if _, err = db.Exec(`UPDATE game_daily_plays SET day=day-1 WHERE user_id=$1`, user); err != nil {
 		t.Fatal(err)
 	}
-	refilled, err := s.State(ctx, user)
-	if err != nil || refilled.Hearts != 1 || refilled.NextHeartAt == nil || refilled.NextHeartAt.Sub(refilled.ServerTime) < domain.HeartInterval-5*time.Second {
-		t.Fatalf("sequential refill: %+v %v", refilled, err)
+	tomorrow, err := s.Start(ctx, user)
+	if err != nil || tomorrow.Plays.FootballGuess.Used != 1 {
+		t.Fatalf("plays did not reset the next day: %+v %v", tomorrow.Plays, err)
 	}
 }
-func TestConcurrentStartsAndCompletionDoNotDuplicateHeartsOrRewards(t *testing.T) {
+
+func TestConcurrentStartsAndAnswersDoNotDuplicatePlaysOrPoints(t *testing.T) {
 	db := testpostgres.New(t).DB
 	s := service(t, db)
 	ctx := context.Background()
 	user := actor(t, db, 1, "player")
+	openSeason(t, db)
 	var wg sync.WaitGroup
 	results := make(chan application.State, 8)
 	errs := make(chan error, 8)
@@ -191,7 +212,7 @@ func TestConcurrentStartsAndCompletionDoNotDuplicateHeartsOrRewards(t *testing.T
 		if runID == "" {
 			runID = s.Run.ID
 		}
-		if s.Hearts != 2 || s.Run.ID != runID {
+		if s.Plays.FootballGuess.Used != 1 || s.Run.ID != runID {
 			t.Fatal("concurrent start produced multiple games")
 		}
 	}
@@ -215,8 +236,8 @@ func TestConcurrentStartsAndCompletionDoNotDuplicateHeartsOrRewards(t *testing.T
 		}
 	}
 	state, err := s.State(ctx, user)
-	if err != nil || state.Stats.EarnedCredits != 1 || state.Stats.Played != 1 || state.Stats.Wins != 1 || state.Hearts != 2 {
-		t.Fatalf("concurrent reward: %+v %v", state, err)
+	if err != nil || state.Stats.SeasonPoints != 10 || state.Stats.Played != 1 || state.Stats.Wins != 1 || state.Plays.FootballGuess.Used != 1 {
+		t.Fatalf("concurrent points: %+v %v", state, err)
 	}
 	coach := actor(t, db, 2, "coach")
 	start, err := s.Start(ctx, coach)
@@ -224,8 +245,8 @@ func TestConcurrentStartsAndCompletionDoNotDuplicateHeartsOrRewards(t *testing.T
 		t.Fatal(err)
 	}
 	result := finishRun(t, s, db, coach, start, 10)
-	if result.RewardEligible || result.Run.RewardGranted || !result.Run.Passed || result.Stats.EarnedCredits != 0 {
-		t.Fatal("non-player received application rights")
+	if !result.Run.Passed || result.Stats.SeasonPoints != 10 || gameRewards(t, db) != 0 {
+		t.Fatal("every member role earns points and nobody earns application rights")
 	}
 }
 
@@ -244,9 +265,9 @@ func sources(t *testing.T, db *sql.DB, runID string) map[string]string {
 	return out
 }
 
-func refillHearts(t *testing.T, db *sql.DB, user string) {
+func resetPlays(t *testing.T, db *sql.DB, user string) {
 	t.Helper()
-	if _, err := db.Exec(`UPDATE game_wallets SET hearts=3,refill_anchor=NULL WHERE user_id=$1`, user); err != nil {
+	if _, err := db.Exec(`DELETE FROM game_daily_plays WHERE user_id=$1`, user); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -262,7 +283,7 @@ func TestRunsPreferUnseenPlayersThenLeastRecentlySeen(t *testing.T) {
 	}
 	shown := map[string]bool{}
 	for run := 0; run < 6; run++ {
-		refillHearts(t, db, user)
+		resetPlays(t, db, user)
 		start, err := s.Start(ctx, user)
 		if err != nil {
 			t.Fatal(err)
@@ -294,7 +315,7 @@ func TestRunsPreferUnseenPlayersThenLeastRecentlySeen(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	refillHearts(t, db, user)
+	resetPlays(t, db, user)
 	start, err := s.Start(ctx, user)
 	if err != nil {
 		t.Fatal(err)

@@ -30,12 +30,15 @@ jest.mock('@react-navigation/native', () => ({
 
 const optionId = 'a'.repeat(32);
 const active: GameState = {
-  hearts: 2,
-  maxHearts: 3,
-  nextHeartAt: '2026-10-12T13:00:00Z',
+  plays: {
+    footballGuess: { used: 1, limit: 5 },
+    penalty: { used: 0, limit: 5 },
+    headToHead: { used: 0, limit: 5 },
+  },
+  nextResetAt: '2026-10-12T21:00:00Z',
+  ratingActive: true,
   serverTime: '2026-10-12T10:00:00Z',
-  rewardEligible: true,
-  stats: { played: 0, wins: 0, bestScore: 0, earnedCredits: 0 },
+  stats: { played: 0, wins: 0, bestScore: 0, seasonPoints: 0 },
   penalty: null,
   run: {
     id: 'f'.repeat(32),
@@ -43,7 +46,6 @@ const active: GameState = {
     answered: 0,
     score: 0,
     passed: false,
-    rewardGranted: false,
     feedback: null,
     question: {
       id: 'e'.repeat(32),
@@ -83,12 +85,13 @@ const answered: GameState = {
 };
 beforeEach(() => jest.clearAllMocks());
 
-test('the API boundary rejects malformed choices, missing stats and premature rewards', async () => {
+test('the API boundary rejects malformed choices, stats and daily plays', async () => {
   for (const value of [
     { ...active, stats: { played: 0 } },
-    { ...active, hearts: 4 },
-    { ...active, nextHeartAt: null },
-    { ...active, run: { ...active.run, rewardGranted: true } },
+    { ...active, plays: { ...active.plays, penalty: { used: 6, limit: 5 } } },
+    { ...active, plays: undefined },
+    { ...active, nextResetAt: null },
+    { ...active, ratingActive: 'yes' },
     {
       ...active,
       run: {
@@ -212,7 +215,8 @@ test('a lost answer response keeps the choice fixed; retry shows feedback before
     renderer = create(<Probe />);
   });
   await act(async () => game.start());
-  expect(game.remaining).toBe(10800);
+  // Server time 10:00, daily reset at 21:00.
+  expect(game.remaining).toBe(39600);
   await act(async () => game.answer(optionId));
   expect(game.selected).toBe(optionId);
   expect(game.error).toBe('Connection lost');
@@ -229,17 +233,16 @@ test('a lost answer response keeps the choice fixed; retry shows feedback before
   await act(async () => renderer.unmount());
 });
 
-test('recovering a saved finish shows the reward without submitting another answer', async () => {
+test('recovering a saved finish shows the result without submitting another answer', async () => {
   const finished: GameState = {
     ...answered,
-    stats: { played: 1, wins: 1, bestScore: 7, earnedCredits: 1 },
+    stats: { played: 1, wins: 1, bestScore: 7, seasonPoints: 7 },
     run: {
       ...answered.run!,
       status: 'finished',
       answered: 10,
       score: 7,
       passed: true,
-      rewardGranted: true,
       question: null,
     },
   };
@@ -263,27 +266,27 @@ test('recovering a saved finish shows the reward without submitting another answ
   await act(async () => game.answer(optionId));
   await act(async () => game.recover());
   expect(game.mode).toBe('result');
-  expect(game.data?.run?.rewardGranted).toBe(true);
+  expect(game.data?.stats.seasonPoints).toBe(7);
   expect(game.error).toBe('');
   expect(service.answer).toHaveBeenCalledTimes(1);
   await act(async () => renderer.unmount());
 });
 
-test('a heart refill uses server time and retries after a temporary connection failure', async () => {
+test('the daily reset uses server time and retries after a temporary connection failure', async () => {
   jest.useFakeTimers();
   jest.setSystemTime(new Date('2035-01-01T00:00:00Z'));
   const waiting: GameState = {
     ...active,
-    hearts: 0,
+    plays: { ...active.plays, footballGuess: { used: 5, limit: 5 } },
     run: null,
     penalty: null,
-    nextHeartAt: '2026-10-12T10:00:01Z',
+    nextResetAt: '2026-10-12T10:00:01Z',
   };
   const refilled: GameState = {
     ...waiting,
-    hearts: 1,
+    plays: { ...active.plays, footballGuess: { used: 0, limit: 5 } },
     serverTime: '2026-10-12T10:00:32Z',
-    nextHeartAt: '2026-10-12T13:00:01Z',
+    nextResetAt: '2026-10-13T10:00:01Z',
   };
   const service: GamesService = {
     state: jest
@@ -309,10 +312,10 @@ test('a heart refill uses server time and retries after a temporary connection f
     expect(game.remaining).toBe(1);
     await act(async () => jest.advanceTimersByTime(1000));
     expect(service.state).toHaveBeenCalledTimes(2);
-    expect(game.data?.hearts).toBe(0);
+    expect(game.data?.plays.footballGuess.used).toBe(5);
     await act(async () => jest.advanceTimersByTime(30000));
     expect(service.state).toHaveBeenCalledTimes(3);
-    expect(game.data?.hearts).toBe(1);
+    expect(game.data?.plays.footballGuess.used).toBe(0);
     expect(game.error).toBe('');
   } finally {
     await act(async () => renderer.unmount());

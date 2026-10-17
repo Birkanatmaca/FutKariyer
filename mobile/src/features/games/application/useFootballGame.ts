@@ -82,11 +82,12 @@ export function useFootballGame(service: GamesService, token: string) {
       };
     }, [refresh]),
   );
-  const remaining = data?.nextHeartAt
+  // Seconds until today's plays reset (midnight, Istanbul).
+  const remaining = data?.nextResetAt
     ? Math.max(
         0,
         Math.ceil(
-          (Date.parse(data.nextHeartAt) -
+          (Date.parse(data.nextResetAt) -
             received.current.server -
             (clock - received.current.local)) /
             1000,
@@ -96,16 +97,16 @@ export function useFootballGame(service: GamesService, token: string) {
   const attemptedRefill = useRef({ at: '', local: 0 });
   useEffect(() => {
     if (
-      data?.nextHeartAt &&
+      data?.nextResetAt &&
       remaining === 0 &&
       !busy &&
-      (attemptedRefill.current.at !== data.nextHeartAt ||
+      (attemptedRefill.current.at !== data.nextResetAt ||
         clock - attemptedRefill.current.local >= 30000)
     ) {
-      attemptedRefill.current = { at: data.nextHeartAt, local: clock };
+      attemptedRefill.current = { at: data.nextResetAt, local: clock };
       refresh();
     }
-  }, [data?.nextHeartAt, remaining, busy, clock, refresh]);
+  }, [data?.nextResetAt, remaining, busy, clock, refresh]);
   async function start() {
     if (pending.current) return;
     pending.current = true;

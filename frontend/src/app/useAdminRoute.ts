@@ -9,6 +9,7 @@ export type PanelSection =
   | 'leagues'
   | 'payments'
   | 'gifts'
+  | 'rating'
   | 'announcements';
 type Route = 'login' | PanelSection | 'club-overview' | 'missing';
 type Location = { route: Route; clubId: string | null };
@@ -31,6 +32,7 @@ function currentRoute(): Route {
   if (path === '/securityadmin/leagues') return 'leagues';
   if (path === '/securityadmin/payments') return 'payments';
   if (path === '/securityadmin/gifts') return 'gifts';
+  if (path === '/securityadmin/rating') return 'rating';
   if (path === '/securityadmin/announcements') return 'announcements';
   return 'missing';
 }

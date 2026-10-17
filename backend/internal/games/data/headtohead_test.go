@@ -186,9 +186,9 @@ func TestHeadToHeadRunIsServerSideIdempotentAndEndsOnMiss(t *testing.T) {
 	if err = db.QueryRow(`SELECT (SELECT count(*) FROM team_request_game_rewards)+(SELECT count(*) FROM team_request_penalty_rewards)`).Scan(&earned); err != nil || earned != 0 {
 		t.Fatal("Kafa Kafaya must not grant application rights")
 	}
-	var hearts int
-	if err = db.QueryRow(`SELECT COALESCE((SELECT hearts FROM game_wallets WHERE user_id=$1),3)`, user).Scan(&hearts); err != nil || hearts != 3 {
-		t.Fatal("Kafa Kafaya must not cost hearts")
+	var plays int
+	if err = db.QueryRow(`SELECT COALESCE(sum(plays),0) FROM game_daily_plays WHERE user_id=$1 AND game='head_to_head'`, user).Scan(&plays); err != nil || plays != 2 {
+		t.Fatalf("each new Kafa Kafaya run uses one daily play, got %d", plays)
 	}
 }
 

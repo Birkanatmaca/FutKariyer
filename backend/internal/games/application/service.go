@@ -42,44 +42,59 @@ type Feedback struct {
 	Correct          bool   `json:"correct"`
 }
 type Run struct {
-	ID            string    `json:"id"`
-	Status        string    `json:"status"`
-	Answered      int       `json:"answered"`
-	Score         int       `json:"score"`
-	Passed        bool      `json:"passed"`
-	RewardGranted bool      `json:"rewardGranted"`
-	Question      *Question `json:"question"`
-	Feedback      *Feedback `json:"feedback"`
+	ID       string    `json:"id"`
+	Status   string    `json:"status"`
+	Answered int       `json:"answered"`
+	Score    int       `json:"score"`
+	Passed   bool      `json:"passed"`
+	Question *Question `json:"question"`
+	Feedback *Feedback `json:"feedback"`
 }
 type PenaltyView struct {
-	ID            string               `json:"id"`
-	Status        string               `json:"status"`
-	Kicks         []domain.PenaltyKick `json:"kicks"`
-	Goals         PenaltyGoals         `json:"goals"`
-	Winner        *string              `json:"winner"`
-	RewardGranted bool                 `json:"rewardGranted"`
-	NextRole      string               `json:"nextRole"`
+	ID       string               `json:"id"`
+	Status   string               `json:"status"`
+	Kicks    []domain.PenaltyKick `json:"kicks"`
+	Goals    PenaltyGoals         `json:"goals"`
+	Winner   *string              `json:"winner"`
+	NextRole string               `json:"nextRole"`
 }
 type PenaltyGoals struct {
 	User int `json:"user"`
 	CPU  int `json:"cpu"`
 }
+
+// PlayCount is one game's daily usage.
+type PlayCount struct {
+	Used  int `json:"used"`
+	Limit int `json:"limit"`
+}
+type Plays struct {
+	FootballGuess PlayCount `json:"footballGuess"`
+	Penalty       PlayCount `json:"penalty"`
+	HeadToHead    PlayCount `json:"headToHead"`
+}
 type State struct {
-	Hearts         int          `json:"hearts"`
-	MaxHearts      int          `json:"maxHearts"`
-	NextHeartAt    *time.Time   `json:"nextHeartAt"`
-	ServerTime     time.Time    `json:"serverTime"`
-	RewardEligible bool         `json:"rewardEligible"`
-	Stats          domain.Stats `json:"stats"`
-	Run            *Run         `json:"run"`
-	Penalty        *PenaltyView `json:"penalty"`
+	Plays        Plays        `json:"plays"`
+	NextResetAt  time.Time    `json:"nextResetAt"`
+	RatingActive bool         `json:"ratingActive"`
+	ServerTime   time.Time    `json:"serverTime"`
+	Stats        domain.Stats `json:"stats"`
+	Run          *Run         `json:"run"`
+	Penalty      *PenaltyView `json:"penalty"`
+}
+
+func count(plays domain.Plays, game string) PlayCount {
+	return PlayCount{Used: min(plays[game], domain.DailyPlays), Limit: domain.DailyPlays}
 }
 
 func public(value domain.State) State {
-	s := State{Hearts: value.Wallet.Hearts, MaxHearts: domain.MaxHearts, ServerTime: value.ServerTime, RewardEligible: value.RewardEligible, Stats: value.Stats}
-	if value.Wallet.RefillAnchor != nil {
-		next := value.Wallet.RefillAnchor.Add(domain.HeartInterval)
-		s.NextHeartAt = &next
+	s := State{
+		Plays: Plays{
+			FootballGuess: count(value.Plays, domain.GameFootballGuess),
+			Penalty:       count(value.Plays, domain.GamePenalty),
+			HeadToHead:    count(value.Plays, domain.GameHeadToHead),
+		},
+		NextResetAt: value.NextResetAt, RatingActive: value.RatingActive, ServerTime: value.ServerTime, Stats: value.Stats,
 	}
 	if value.Shootout != nil {
 		s.Penalty = penaltyView(value.Shootout)
@@ -88,7 +103,7 @@ func public(value domain.State) State {
 		return s
 	}
 	r := value.Run
-	s.Run = &Run{ID: r.ID, Status: r.Status, Answered: len(r.Answers), Score: r.Score, Passed: r.Status == "finished" && r.Score >= domain.PassingScore, RewardGranted: r.RewardGranted}
+	s.Run = &Run{ID: r.ID, Status: r.Status, Answered: len(r.Answers), Score: r.Score, Passed: r.Status == "finished" && r.Score >= domain.PassingScore}
 	if r.Status == "active" && len(r.Answers) < len(r.Questions) {
 		q := r.Questions[len(r.Answers)]
 		s.Run.Question = &Question{ID: q.ID, Difficulty: q.Difficulty, Clubs: clues(q.Clubs), Options: q.Options}
@@ -283,7 +298,7 @@ func penaltyView(sh *domain.Shootout) *PenaltyView {
 	if kicks == nil {
 		kicks = []domain.PenaltyKick{}
 	}
-	v := &PenaltyView{ID: sh.ID, Status: sh.Status, Kicks: kicks, Goals: PenaltyGoals{User: user, CPU: cpu}, RewardGranted: sh.RewardGranted, NextRole: sh.NextRole()}
+	v := &PenaltyView{ID: sh.ID, Status: sh.Status, Kicks: kicks, Goals: PenaltyGoals{User: user, CPU: cpu}, NextRole: sh.NextRole()}
 	if sh.Winner != "" {
 		winner := sh.Winner
 		v.Winner = &winner

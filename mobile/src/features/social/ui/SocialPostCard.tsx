@@ -9,7 +9,6 @@ import {
 import {
   BadgeCheck,
   Ellipsis,
-  Heart,
   MessageCircle,
   Trash2,
 } from 'lucide-react-native';
@@ -17,6 +16,8 @@ import { ProBadge } from '../../../shared/ui/ProBadge';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import { PostMedia } from './PostMedia';
+import { LikeButton } from './LikeButton';
+import { CommentPreview } from './CommentPreview';
 import type { SocialService } from '../application/social-service';
 import type { SocialPost, SocialReply } from '../domain/models';
 
@@ -30,6 +31,7 @@ export function SocialPostCard({
   onMore,
   token,
   service,
+  framed,
 }: {
   item: SocialPost | SocialReply;
   busy?: boolean;
@@ -41,6 +43,8 @@ export function SocialPostCard({
   onMore?(): void;
   token: string;
   service: SocialService;
+  // Feed cards: rounded surface card with a one-comment preview.
+  framed?: boolean;
 }) {
   const post = 'likeCount' in item ? item : null;
   const [first, second] = item.author.fullName.trim().split(/\s+/);
@@ -50,7 +54,7 @@ export function SocialPostCard({
     .join('')
     .toLocaleUpperCase('tr-TR');
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, framed && styles.framed]}>
       <View style={styles.row}>
         <View
           style={[
@@ -153,28 +157,12 @@ export function SocialPostCard({
       ) : null}
       {post && (
         <View style={styles.actions}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={copy.social.likeLabel(
-              post.likeCount,
-              post.liked,
-            )}
-            accessibilityState={{ selected: post.liked, disabled: !!busy }}
-            aria-pressed={post.liked}
-            aria-disabled={!!busy}
+          <LikeButton
+            liked={post.liked}
+            count={post.likeCount}
             disabled={busy}
             onPress={onLike}
-            style={styles.action}
-          >
-            <Heart
-              size={19}
-              color={post.liked ? colors.danger : colors.muted}
-              fill={post.liked ? colors.danger : colors.transparent}
-            />
-            <Text style={[styles.actionText, post.liked && styles.liked]}>
-              {post.likeCount}
-            </Text>
-          </Pressable>
+          />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={copy.social.replyLabel(post.replyCount)}
@@ -189,10 +177,29 @@ export function SocialPostCard({
           {busy && <ActivityIndicator size="small" color={colors.brand} />}
         </View>
       )}
+      {framed && post ? (
+        <CommentPreview
+          token={token}
+          service={service}
+          postId={post.id}
+          replyCount={post.replyCount}
+          onPress={onReplies}
+        />
+      ) : null}
     </View>
   );
 }
 const styles = StyleSheet.create({
+  framed: {
+    paddingVertical: space.lg,
+    paddingHorizontal: space.lg,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.hairline,
+  },
   card: {
     paddingVertical: space.lg,
     gap: space.md,

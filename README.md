@@ -60,7 +60,7 @@ Kullanıcı kararıyla oyunların görünen adları değişti: Futbolcuyu Bul ar
 
 Kullanıcı kararıyla (14 Ekim 2026) Arma İzi havuzu büyütüldü ve döngüsel tekrar kaldırıldı. Katalog Wikidata'dan (CC0) çevrimdışı üretilir: 819 futbolcu (185 kolay, 242 orta, 392 zor), 778 kulüp, bunlardan 427'sinin 128 px ESPN arması API'ye gömülüdür; 183 soruda Galatasaray, Fenerbahçe, Beşiktaş veya Trabzonspor durağı vardır. Şıklar oyun başında aynı zorluktan, benzer yaş/mevki öncelikli seçilir. `00025_football_guess_history.sql` ile eklenen football_guess_seen tablosu kullanıcının gördüğü futbolcuları ve zamanını tutar; yeni oyun önce görülmemiş, sonra en eski görülmüş futbolcuları seçer ve geçmiş oyun oluşturma transaction'ında yazılır. Soru yükündeki her kulüp `{ id, name, hasCrest }` içerir; arması olmayan kulüp mobilde baş harfli kalkan rozetiyle gösterilir. Mevcut API'yi güncellemeden önce `go run ./cmd/migrate up` çalıştırılmalıdır.
 
-Üçüncü oyun **Kafa Kafaya**: altı büyük ligden (Süper Lig, Premier League, La Liga, Serie A, Bundesliga, Ligue 1) her turda rastgele biri seçilir, aynı ligden iki gerçek kulüp ve tek bir soru gösterilir (puan, atılan gol, yenen gol, sıra, galibiyet veya averaj; yenen gol ve sırada küçük olan kazanır). Değerleri eşit olan çiftler sorulmaz ve bir seride aynı çift tekrarlanmaz. Doğru seçim seriyi bir artırır ve yeni tur getirir; yanlış seçim oyunu bitirir ve iki kulübün gerçek değerlerini gösterir. Oyun kalp harcamaz, ödül vermez; kullanıcı başına en iyi seri ve oynama sayısı tutulur. Turlar sunucunun 10 dakikalık ESPN puan durumu önbelleğinden üretilir; kaynak alınamazsa API 502 `upstream_unavailable` döner ve uygulama yeniden deneme durumu gösterir.
+Üçüncü oyun **Kafa Kafaya**: altı büyük ligden (Süper Lig, Premier League, La Liga, Serie A, Bundesliga, Ligue 1) her turda rastgele biri seçilir, aynı ligden iki gerçek kulüp ve tek bir soru gösterilir (puan, atılan gol, yenen gol, sıra, galibiyet veya averaj; yenen gol ve sırada küçük olan kazanır). Değerleri eşit olan çiftler sorulmaz ve bir seride aynı çift tekrarlanmaz. Doğru seçim seriyi bir artırır ve yeni tur getirir; yanlış seçim oyunu bitirir ve iki kulübün gerçek değerlerini gösterir. 17 Ekim 2026'dan itibaren her yeni seri Kafa Kafaya'nın günlük haklarından birini kullanır ve her doğru tahmin global ratingde 1 puandır; kullanıcı başına en iyi seri ve oynama sayısı tutulur. Turlar sunucunun 10 dakikalık ESPN puan durumu önbelleğinden üretilir; kaynak alınamazsa API 502 `upstream_unavailable` döner ve uygulama yeniden deneme durumu gösterir.
 
 | Yöntem / adres | İşlem |
 |---|---|
@@ -80,13 +80,15 @@ TFF Ankara Puan durumu sekmesindeki çip satırları sırayla seçilen üç aç�
 
 Sosyal üst menüsünde Keşfet, Takip ettiklerin ve Oyunlar bulunur. Arma İzi (eski adıyla Futbolcuyu Bul), 20 futbolculuk havuzdan rastgele 4 kolay, 3 orta ve 3 zor soru seçer; her soruda kronolojik takım armaları ve rastgele sıralanmış dört şık gösterir. Kariyer ve arma kaynakları [oyun kaynakları](backend/internal/games/catalog/SOURCES.md) dosyasında tutulur. Armalar API binary'sine gömülüdür; çalışma sırasında dış CDN gerekmez. En az 7 doğruyla bitiren sporcuya 1 takım başvurusu hakkı verilir. Kulüp/antrenör hesapları oynayıp istatistik biriktirebilir; sporcu başvuru hakkı kazanmaz.
 
-Başlangıçta 3 oyun kalbi vardır. Yeni oyun 1 kalp tüketir; eksik kalpler 3 saatte sırayla yenilenir ve en fazla 3 olur. Yanlış cevap ve yarım oyuna devam kalp harcamaz. Sunucu saatiyle geri sayım, bağlantı sonrası aynı seçimi yeniden gönderme, kaydedilen ilerlemeyi yükleme, doğru/yanlış geri bildirimi ve sonuç ekranı bağlıdır. Soru, puan, kalp ve ödül PostgreSQL transaction'ında doğrulanır; yalnızca mevcut soru gönderilir. Bir oyun için ödül yalnızca bir kez kaydedilir. Kazanılan haklar başvuru kotasında satın alınan haklardan ayrı görünür ve kullanılabilir toplamına katılır.
+17 Ekim 2026'dan itibaren kalp yoktur: her oyunun Türkiye saatiyle gece yarısı yenilenen günlük 5 başlatma hakkı vardır (`00031_global_rating.sql`, `game_daily_plays`). Yarım oyuna devam hak harcamaz. Oyunlar başvuru hakkı vermez; doğru cevap, gol ve doğru tahmin global rating sezonuna 1 puan yazar (bkz. PROJECT.md › Global rating). Sunucu saatiyle geri sayım, bağlantı sonrası aynı seçimi yeniden gönderme, kaydedilen ilerlemeyi yükleme, doğru/yanlış geri bildirimi ve sonuç ekranı bağlıdır. Soru, puan, kalp ve ödül PostgreSQL transaction'ında doğrulanır; yalnızca mevcut soru gönderilir. Bir oyun için ödül yalnızca bir kez kaydedilir. Kazanılan haklar başvuru kotasında satın alınan haklardan ayrı görünür ve kullanılabilir toplamına katılır.
 
 Oyun API'si aktif mobil Bearer oturumu ister:
 
 | Yöntem / adres | İşlem |
 |---|---|
-| GET /v1/games/football-guess | Kalp, sayaçlar ve son/kayıtlı oyun |
+| GET /v1/games/football-guess | Günlük haklar, sezon puanı, sayaçlar ve son/kayıtlı oyun |
+| GET /v1/rating | Görünen sezon, sıralama (ilk 50), hesabın sırası ve görevler |
+| POST /v1/rating/tasks/{kind}/claim | Tamamlanan görevin puanını sezonda bir kez alır |
 | POST /v1/games/football-guess/runs | Yeni oyun veya mevcut oyuna devam; gövde boş |
 | POST /v1/games/football-guess/runs/{id}/answers | Mevcut soruya `{ "questionId", "optionId" }` yanıtı |
 | GET /v1/games/logos/{id} | Gömülü PNG arma; herkese açık, yalnızca bilinen dosyalar |

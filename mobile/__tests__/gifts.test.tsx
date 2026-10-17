@@ -18,9 +18,9 @@ jest.mock('@react-navigation/native', () => ({
 
 const available: Gift = {
   id: 'gift_one',
-  kind: 'heart_one',
-  title: 'Kalp hediyesi',
-  message: 'Yeni bir oyun için kalp.',
+  kind: 'application_right',
+  title: 'Başvuru hakkı',
+  message: 'Yeni bir takım için hak.',
   status: 'available',
   createdAt: '2026-10-10T10:00:00Z',
   expiresAt: '2026-10-20T10:00:00Z',

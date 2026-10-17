@@ -88,6 +88,9 @@ func (r *Postgres) StartHeadToHead(ctx context.Context, userID string, run domai
 	if current != nil && len(current.Rounds) == 1 && !current.Rounds[0].Answered {
 		run = *current
 	} else {
+		if err = usePlay(ctx, tx, userID, domain.GameHeadToHead, now); err != nil {
+			return domain.H2HRun{}, domain.H2HRecord{}, err
+		}
 		if current != nil {
 			if _, err = tx.ExecContext(ctx, `UPDATE head_to_head_runs SET status='finished',finished_at=$2 WHERE id=$1`, current.ID, now); err != nil {
 				return domain.H2HRun{}, domain.H2HRecord{}, err
@@ -124,6 +127,12 @@ func (r *Postgres) AnswerHeadToHead(ctx context.Context, userID, runID, roundID 
 		return domain.H2HRun{}, 0, domain.H2HRecord{}, err
 	}
 	if changed {
+		// Each correct round is one rating point.
+		if round := run.Rounds[index]; round.Correct {
+			if err = award(ctx, tx, userID, domain.GameHeadToHead, run.ID+":"+round.ID, now); err != nil {
+				return domain.H2HRun{}, 0, domain.H2HRecord{}, err
+			}
+		}
 		rounds, err := json.Marshal(run.Rounds)
 		if err != nil {
 			return domain.H2HRun{}, 0, domain.H2HRecord{}, err

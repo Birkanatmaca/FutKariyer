@@ -12,7 +12,8 @@ import {
 } from '../application/gifts-service';
 import type { GiftService } from '../application/gifts-service';
 
-const kinds: GiftKind[] = ['heart_one', 'heart_full', 'application_right'];
+// Heart gifts were retired with hearts (17 Oct 2026).
+const kinds: GiftKind[] = ['application_right'];
 
 type FormState = {
   kind: GiftKind;
@@ -24,7 +25,7 @@ type FormState = {
 };
 
 const initialForm: FormState = {
-  kind: 'heart_one',
+  kind: 'application_right',
   title: '',
   message: '',
   audience: 'all',

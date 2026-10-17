@@ -32,6 +32,11 @@ import {
   giftsRepository,
 } from '../features/gifts';
 import {
+  RatingPanel,
+  createRatingService,
+  ratingRepository,
+} from '../features/rating';
+import {
   AnnouncementsPanel,
   createAnnouncementService,
   announcementsRepository,
@@ -57,6 +62,7 @@ const contentService = createContentService(contentRepository);
 const leagueService = createLeagueService(leagueRepository);
 const paymentService = createPaymentService(paymentsRepository);
 const giftService = createGiftService(giftsRepository);
+const ratingService = createRatingService(ratingRepository);
 const announcementService = createAnnouncementService(announcementsRepository);
 const applicationService = createApplicationService(applicationsRepository);
 const reportsService = createReportsService(reportsRepository);
@@ -162,6 +168,7 @@ export function App() {
     route === 'leagues' ||
     route === 'payments' ||
     route === 'gifts' ||
+    route === 'rating' ||
     route === 'announcements'
       ? route === 'club-overview'
         ? 'clubs'
@@ -203,6 +210,8 @@ export function App() {
         <PaymentsPanel service={paymentService} />
       ) : section === 'gifts' ? (
         <GiftsPanel service={giftService} />
+      ) : section === 'rating' ? (
+        <RatingPanel service={ratingService} />
       ) : section === 'announcements' ? (
         <AnnouncementsPanel service={announcementService} />
       ) : (

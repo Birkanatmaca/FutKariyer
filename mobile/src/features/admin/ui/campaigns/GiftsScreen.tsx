@@ -32,7 +32,7 @@ import { confirm } from '../parts/confirm';
 
 const text = copy.admin.gifts;
 const initial = {
-  kind: 'heart_one' as GiftKind,
+  kind: 'application_right' as GiftKind,
   title: '',
   message: '',
   audience: 'all' as GiftAudience,
@@ -122,9 +122,11 @@ export function GiftsScreen({
                     : undefined
                 }
                 disabled={busy}
-                options={(
-                  ['heart_one', 'heart_full', 'application_right'] as const
-                ).map(value => ({ value, label: text.kinds[value] }))}
+                // Heart gifts were retired with hearts (17 Oct 2026).
+                options={(['application_right'] as const).map(value => ({
+                  value,
+                  label: text.kinds[value],
+                }))}
               />
               <Field
                 label={text.giftTitle}

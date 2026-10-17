@@ -1,18 +1,20 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  LayoutAnimation,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
+  UIManager,
   View,
 } from 'react-native';
-import { Plus, Users } from 'lucide-react-native';
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { ImagePlus, Users } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { EmptyState } from '../../../shared/ui/EmptyState';
@@ -23,13 +25,20 @@ import type { SocialService } from '../application/social-service';
 import { useSocialList } from '../application/useSocialList';
 import { SocialPostCard } from './SocialPostCard';
 import { DeleteContentPrompt } from './DeleteContentPrompt';
-import { Brand } from '../../../shared/ui/Brand';
+import { useAuth } from '../../auth';
+import { Wordmark } from '../../../shared/ui/Wordmark';
 import { GamesScreen } from '../../games';
 import {
   ModerationSheet,
   moderationService,
   type ModerationTarget,
 } from '../../moderation';
+
+// Posts appear ten at a time: the server page (20) is revealed in steps.
+const STEP = 10;
+if (Platform.OS === 'android') {
+  UIManager.setLayoutAnimationEnabledExperimental?.(true);
+}
 
 export function SocialFeedScreen({
   token,
@@ -45,7 +54,11 @@ export function SocialFeedScreen({
   onCompose(): void;
 }) {
   const [scope, setScope] = useState<FeedScope | 'games'>('explore');
-  const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const [visible, setVisible] = useState(STEP);
+  const [revealing, setRevealing] = useState(false);
+  const [tabsShown, setTabsShown] = useState(true);
+  const lastOffset = useRef(0);
   const feed = useSocialList(
     useCallback(
       (cursor: string) =>
@@ -59,6 +72,11 @@ export function SocialFeedScreen({
   const [moderating, setModerating] = useState<ModerationTarget | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  useEffect(() => {
+    setVisible(STEP);
+    setTabsShown(true);
+    lastOffset.current = 0;
+  }, [scope]);
   useEffect(() => {
     if (publishedAt) {
       setScope('explore');
@@ -116,50 +134,106 @@ export function SocialFeedScreen({
       setDeleting('');
     }
   }
+  // Scrolling down (content moving up) tucks the tabs away; scrolling back
+  // up, or being at the top, brings them back.
+  function onScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const offset = Math.max(0, event.nativeEvent.contentOffset.y);
+    const delta = offset - lastOffset.current;
+    if (offset <= 8 || delta < -12) {
+      if (!tabsShown) {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setTabsShown(true);
+      }
+      lastOffset.current = offset;
+    } else if (delta > 12 && offset > 60) {
+      if (tabsShown) {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        setTabsShown(false);
+      }
+      lastOffset.current = offset;
+    }
+  }
+  function showMore() {
+    if (revealing) return;
+    if (visible < feed.items.length) {
+      setRevealing(true);
+      setTimeout(() => {
+        setVisible(value => value + STEP);
+        setRevealing(false);
+      }, 450);
+    } else if (feed.hasMore && !feed.loadingMore) {
+      setRevealing(true);
+      feed.loadMore();
+    }
+  }
+  useEffect(() => {
+    // New server items arrived while waiting at the end of the list.
+    if (revealing && !feed.loadingMore && visible < feed.items.length) {
+      setVisible(value => value + STEP);
+      setRevealing(false);
+    } else if (revealing && !feed.loadingMore && !feed.hasMore) {
+      setRevealing(false);
+    }
+  }, [revealing, feed.loadingMore, feed.items.length, feed.hasMore, visible]);
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safe}>
-      <View style={styles.brand}>
-        <Brand />
+      <View
+        style={styles.brand}
+        accessible
+        accessibilityRole="header"
+        accessibilityLabel={copy.brand}
+      >
+        <Wordmark height={26} />
       </View>
-      <View style={styles.tabs}>
-        {(['explore', 'following', 'games'] as const).map(value => (
-          <Pressable
-            key={value}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: scope === value, disabled: !!busy }}
-            aria-selected={scope === value}
-            disabled={!!busy}
-            onPress={() => {
-              setScope(value);
-              setError('');
-              setNotice('');
-            }}
-            style={styles.tab}
-          >
-            <Text
-              style={[styles.tabText, scope === value && styles.selectedText]}
+      {tabsShown ? (
+        <View style={styles.tabs}>
+          {(['explore', 'following', 'games'] as const).map(value => (
+            <Pressable
+              key={value}
+              accessibilityRole="tab"
+              accessibilityState={{
+                selected: scope === value,
+                disabled: !!busy,
+              }}
+              aria-selected={scope === value}
+              disabled={!!busy}
+              onPress={() => {
+                setScope(value);
+                setError('');
+                setNotice('');
+              }}
+              style={styles.tab}
             >
-              {value === 'explore'
-                ? copy.social.explore
-                : value === 'following'
-                ? copy.social.following
-                : copy.social.games}
-            </Text>
-            <View
-              style={[
-                styles.indicator,
-                scope === value && styles.selectedIndicator,
-              ]}
-            />
-          </Pressable>
-        ))}
-      </View>
+              <Text
+                style={[styles.tabText, scope === value && styles.selectedText]}
+              >
+                {value === 'explore'
+                  ? copy.social.explore
+                  : value === 'following'
+                  ? copy.social.following
+                  : copy.social.games}
+              </Text>
+              <View
+                style={[
+                  styles.indicator,
+                  scope === value && styles.selectedIndicator,
+                ]}
+              />
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
       {scope === 'games' ? (
         <GamesScreen token={token} />
       ) : (
         <FlatList
           key={scope}
-          data={feed.items}
+          data={feed.items.slice(0, visible)}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          onEndReached={showMore}
+          onEndReachedThreshold={0.4}
+          ItemSeparatorComponent={Separator}
           keyExtractor={item => item.id}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.content}
@@ -176,6 +250,27 @@ export function SocialFeedScreen({
           }
           ListHeaderComponent={
             <View style={styles.messages}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={copy.social.compose}
+                onPress={onCompose}
+                style={({ pressed }) => [
+                  styles.composer,
+                  pressed && styles.composerPressed,
+                ]}
+              >
+                <View style={styles.composerAvatar}>
+                  <Text style={styles.composerInitial}>
+                    {Array.from(
+                      user?.fullName.trim() ?? '',
+                    )[0]?.toLocaleUpperCase('tr-TR') ?? ''}
+                  </Text>
+                </View>
+                <Text style={styles.composerText}>
+                  {copy.social.composePrompt}
+                </Text>
+                <ImagePlus size={20} color={colors.brand} />
+              </Pressable>
               {notice ? (
                 <Text accessibilityRole="alert" style={styles.notice}>
                   {notice}
@@ -195,6 +290,7 @@ export function SocialFeedScreen({
           }
           renderItem={({ item }) => (
             <SocialPostCard
+              framed
               item={item}
               token={token}
               service={service}
@@ -242,33 +338,17 @@ export function SocialFeedScreen({
             ) : null
           }
           ListFooterComponent={
-            feed.hasMore && !feed.loading ? (
+            feed.items.length && (revealing || feed.loadingMore) ? (
               <View style={styles.more}>
-                <Button
-                  label={copy.social.loadMore}
-                  secondary
-                  loading={feed.loadingMore}
-                  disabled={!!busy || feed.refreshing}
-                  onPress={feed.loadMore}
-                />
+                <ActivityIndicator color={colors.brand} />
+                <Text style={styles.loadingText}>
+                  {copy.social.loadingMore}
+                </Text>
               </View>
             ) : null
           }
         />
       )}
-      {scope !== 'games' ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.social.compose}
-          onPress={onCompose}
-          style={[
-            styles.fab,
-            { bottom: 116 + Math.max(insets.bottom, space.md) },
-          ]}
-        >
-          <Plus size={30} strokeWidth={2.5} color={colors.brandInk} />
-        </Pressable>
-      ) : null}
       <DeleteContentPrompt
         visible={!!deleting}
         busy={!!busy}
@@ -285,12 +365,18 @@ export function SocialFeedScreen({
     </SafeAreaView>
   );
 }
+function Separator() {
+  return <View style={styles.separator} />;
+}
 const styles = StyleSheet.create({
   brand: {
+    alignItems: 'center',
     paddingHorizontal: space.xl,
     paddingTop: space.md,
-    paddingBottom: space.sm,
+    paddingBottom: space.md,
   },
+  separator: { height: space.md },
+  loadingText: { color: colors.muted, fontSize: 12 },
   safe: { flex: 1, backgroundColor: colors.bg },
   tabs: {
     width: '100%',
@@ -323,26 +409,33 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     alignSelf: 'center',
     paddingHorizontal: space.lg,
-    paddingBottom: 210,
+    paddingTop: space.md,
+    paddingBottom: 150,
     flexGrow: 1,
   },
-  messages: { gap: space.md },
+  messages: { gap: space.md, paddingBottom: space.md },
+  composer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+  },
+  composerPressed: { opacity: 0.85 },
+  composerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.raised,
+  },
+  composerInitial: { color: colors.text, fontSize: 15, fontWeight: '800' },
+  composerText: { flex: 1, color: colors.muted, fontSize: 14 },
   notice: { color: colors.success, fontSize: 12, paddingTop: space.lg },
   loader: { padding: space.xl },
-  more: { paddingTop: space.xl },
-  fab: {
-    position: 'absolute',
-    right: space.xl,
-    width: 60,
-    height: 60,
-    borderRadius: radius.pill,
-    backgroundColor: colors.brand,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.bg,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 10,
-    elevation: 6,
-  },
+  more: { paddingTop: space.xl, alignItems: 'center', gap: space.sm },
 });

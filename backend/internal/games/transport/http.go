@@ -54,8 +54,8 @@ func failure(w http.ResponseWriter, err error) {
 		status, code, message = 403, "forbidden", "Bu hesap oyunlara erişemiyor."
 	case errors.Is(err, domain.ErrNotFound):
 		status, code, message = 404, "not_found", "Oyun bulunamadı. Oyunlar ekranını yenile."
-	case errors.Is(err, domain.ErrNoHearts):
-		status, code, message = 409, "no_hearts", "Kalbin kalmadı. Bir kalp 6 saatte yenilenir."
+	case errors.Is(err, domain.ErrNoPlays):
+		status, code, message = 409, "no_plays", "Bugünkü oyun hakların bitti. Hakların gece yarısı yenilenir."
 	case errors.Is(err, domain.ErrAnswerLocked):
 		status, code, message = 409, "answer_locked", "Bu sorunun yanıtı daha önce kaydedildi. Oyunu yenileyip devam et."
 	case errors.Is(err, domain.ErrQuestionOrder):

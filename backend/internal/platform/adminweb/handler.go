@@ -5,8 +5,17 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
+
+// Panel routes that load the single-page app directly (same list as
+// frontend/src/app/useAdminRoute.ts).
+var sections = map[string]bool{
+	"users": true, "clubs": true, "applications": true, "reports": true, "ads": true, "news": true,
+	"leagues": true, "payments": true, "gifts": true, "rating": true, "announcements": true,
+}
+var clubOverview = regexp.MustCompile(`^/securityadmin/clubs/[0-9a-f]{32}$`)
 
 // New serves only the admin app's entry routes and built public assets.
 func New(directory string) (http.Handler, error) {
@@ -28,12 +37,11 @@ func New(directory string) (http.Handler, error) {
 			assets.ServeHTTP(w, r)
 			return
 		}
-		switch r.URL.Path {
-		case "/securityadmin", "/securityadmin/", "/securityadmin/users", "/securityadmin/clubs":
+		if r.URL.Path == "/securityadmin" || r.URL.Path == "/securityadmin/" || sections[strings.TrimPrefix(r.URL.Path, "/securityadmin/")] || clubOverview.MatchString(r.URL.Path) {
 			w.Header().Set("Cache-Control", "no-store")
 			http.ServeFile(w, r, index)
-		default:
-			http.NotFound(w, r)
+			return
 		}
+		http.NotFound(w, r)
 	}), nil
 }
