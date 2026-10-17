@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LockKeyhole, Mail, UserRound } from 'lucide-react-native';
 import { AuthFrame } from './AuthFrame';
-import { Choice } from './Choice';
+import { FootballTypePicker, LicenseCheck } from './FootballChoices';
 import { Field } from '../../../shared/ui/Field';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
@@ -32,9 +32,9 @@ export function SignUpScreen({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [footballType, setFootballType] = useState<PlayerFootballType | ''>('');
-  const [licenseStatus, setLicenseStatus] = useState<
-    DeclaredLicenseStatus | ''
-  >('');
+  // Unchecked license box means no active license, so this always has a value.
+  const [licenseStatus, setLicenseStatus] =
+    useState<DeclaredLicenseStatus>('unlicensed');
   const [fields, setFields] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -43,14 +43,6 @@ export function SignUpScreen({
     setFields(current => {
       const next = { ...current };
       delete next.footballType;
-      return next;
-    });
-  }
-  function chooseLicenseStatus(value: DeclaredLicenseStatus) {
-    setLicenseStatus(value);
-    setFields(current => {
-      const next = { ...current };
-      delete next.licenseStatus;
       return next;
     });
   }
@@ -78,7 +70,7 @@ export function SignUpScreen({
       await signUp({
         ...input,
         footballType: footballType as PlayerFootballType,
-        licenseStatus: licenseStatus as DeclaredLicenseStatus,
+        licenseStatus,
       });
     } catch (failure) {
       if (failure instanceof ApiError) {
@@ -97,13 +89,9 @@ export function SignUpScreen({
       description={copy.signUp.description}
       onBack={onBack ?? onSignIn}
       onInfo={onInfo}
-      eyebrow={copy.authStep(2, 2)}
-      compact
+      step={2}
     >
       <View style={styles.form}>
-        <Text accessibilityRole="header" style={styles.heading}>
-          {copy.signUp.formTitle}
-        </Text>
         <Field
           label={copy.signUp.name}
           icon={UserRound}
@@ -144,44 +132,19 @@ export function SignUpScreen({
           hint={copy.signUp.passwordHelp}
           editable={!busy}
         />
-        <View style={styles.choiceSection}>
-          <Text style={styles.choiceTitle}>{copy.signUp.footballType}</Text>
-          <View style={styles.options}>
-            {(['amateur', 'professional', 'halisaha'] as const).map(value => (
-              <Choice
-                key={value}
-                label={copy.football.types[value]}
-                selected={footballType === value}
-                disabled={busy}
-                onPress={() => chooseFootballType(value)}
-              />
-            ))}
-          </View>
-          {fields.footballType ? (
-            <Text accessibilityRole="alert" style={styles.fieldError}>
-              {fields.footballType}
-            </Text>
-          ) : null}
-        </View>
-        <View style={styles.choiceSection}>
-          <Text style={styles.choiceTitle}>{copy.signUp.licenseStatus}</Text>
-          <View style={styles.options}>
-            {(['licensed', 'unlicensed'] as const).map(value => (
-              <Choice
-                key={value}
-                label={copy.football.licenseStatuses[value]}
-                selected={licenseStatus === value}
-                disabled={busy}
-                onPress={() => chooseLicenseStatus(value)}
-              />
-            ))}
-          </View>
-          {fields.licenseStatus ? (
-            <Text accessibilityRole="alert" style={styles.fieldError}>
-              {fields.licenseStatus}
-            </Text>
-          ) : null}
-        </View>
+        <FootballTypePicker
+          value={footballType}
+          error={fields.footballType}
+          disabled={busy}
+          onChange={chooseFootballType}
+        />
+        <LicenseCheck
+          checked={licenseStatus === 'licensed'}
+          disabled={busy}
+          onChange={checked =>
+            setLicenseStatus(checked ? 'licensed' : 'unlicensed')
+          }
+        />
         <Text style={styles.privacy}>{copy.signUp.privacy}</Text>
         <ErrorBanner message={error} />
         <Button label={copy.signUp.button} onPress={submit} loading={busy} />
@@ -202,16 +165,6 @@ export function SignUpScreen({
 }
 const styles = StyleSheet.create({
   form: { gap: space.lg },
-  choiceSection: { gap: space.sm },
-  choiceTitle: { color: colors.text, fontSize: 14, fontWeight: '700' },
-  options: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  fieldError: { color: colors.danger, fontSize: 12 },
-  heading: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    letterSpacing: -0.4,
-  },
   privacy: { color: colors.secondary, fontSize: 12, lineHeight: 19 },
   switch: {
     flexDirection: 'row',

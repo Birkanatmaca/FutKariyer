@@ -29,9 +29,12 @@ const service = createTeamsService(teamsRepository);
 
 export function TeamsScreen({
   onOpenRights,
+  open,
 }: {
   // Opens the team application rights screen from the header badge (players only).
   onOpenRights?(): void;
+  // Opens one team's page, e.g. from a search result; `at` makes a repeat open of the same team count.
+  open?: { id: string; at: number };
 } = {}) {
   const { token, user } = useAuth();
   const balance = useRightsBalance(
@@ -43,6 +46,10 @@ export function TeamsScreen({
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<Team | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  useEffect(() => {
+    if (open) setOpenId(open.id);
+  }, [open]);
   useEffect(() => {
     const timer = setTimeout(() => setQuery(search.trim()), 250);
     return () => clearTimeout(timer);
@@ -55,12 +62,15 @@ export function TeamsScreen({
     [token, page, query],
   );
   const state = useFocusedResource(load);
-  if (selected && token)
+  if ((openId || selected) && token)
     return (
       <TeamDetailScreen
         token={token}
-        id={selected.id}
-        onBack={() => setSelected(null)}
+        id={openId ?? selected?.id ?? ''}
+        onBack={() => {
+          setOpenId(null);
+          setSelected(null);
+        }}
       />
     );
   return (

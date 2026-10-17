@@ -165,9 +165,7 @@ describe('OnboardingScreen', () => {
     }
     const last = onboardingSlides[onboardingSlides.length - 1];
     expect(texts(root)).toContain(text.slides[last].title);
-    expect(texts(root)).toContain(
-      text.step(onboardingSlides.length, onboardingSlides.length),
-    );
+    expect(texts(root)).toContain(text.slides[last].eyebrow);
     press(root, text.signUp);
     expect(onSignUp).toHaveBeenCalledTimes(1);
     press(root, text.signIn);

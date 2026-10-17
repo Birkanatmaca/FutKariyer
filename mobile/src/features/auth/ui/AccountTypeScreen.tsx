@@ -54,13 +54,9 @@ export function AccountTypeScreen({
       description={copy.accountType.description}
       onBack={onBack}
       onInfo={onInfo}
-      eyebrow={copy.authStep(1, 2)}
-      compact
+      step={1}
     >
       <View style={styles.list}>
-        <Text accessibilityRole="header" style={styles.heading}>
-          {copy.accountType.heading}
-        </Text>
         {options.map(({ kind, icon: Icon, title, description }) => (
           <Pressable
             key={kind}
@@ -85,13 +81,6 @@ export function AccountTypeScreen({
 }
 const styles = StyleSheet.create({
   list: { gap: space.md },
-  heading: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: colors.text,
-    letterSpacing: -0.4,
-    marginBottom: space.xs,
-  },
   card: {
     flexDirection: 'row',
     alignItems: 'center',

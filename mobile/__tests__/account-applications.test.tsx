@@ -285,7 +285,7 @@ describe('sign-up screens', () => {
       makeRepository(),
     );
     const shown = texts(root);
-    expect(shown).toContain(copy.accountType.heading);
+    expect(shown).toContain(copy.accountType.title);
     expect(shown).toEqual(
       expect.arrayContaining([
         copy.accountType.player,

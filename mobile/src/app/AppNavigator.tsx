@@ -13,7 +13,10 @@ import {
   type NativeStackNavigationProp,
 } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type {
+  BottomTabBarProps,
+  BottomTabNavigationProp,
+} from '@react-navigation/bottom-tabs';
 import { AccountScreen, useAuth } from '../features/auth';
 import { BlockedUsersScreen, moderationService } from '../features/moderation';
 import {
@@ -131,6 +134,7 @@ import { copy } from '../shared/lib/copy';
 import { colors, space } from '../styles/tokens';
 import { HomeScreen } from './HomeScreen';
 import { LeaguesHomeScreen } from './LeaguesHomeScreen';
+import { LeaguesSearchScreen } from './LeaguesSearchScreen';
 import { FutTabBar } from './FutTabBar';
 import { MoreScreen } from './MoreScreen';
 import { AdminNavigator } from './AdminNavigator';
@@ -140,7 +144,7 @@ type MainRoutes = {
   Home: undefined;
   Leagues: NavigatorScreenParams<LeaguesRoutes> | undefined;
   Social: NavigatorScreenParams<SocialRoutes> | undefined;
-  Teams: undefined;
+  Teams: { open?: { id: string; at: number } } | undefined;
   More: NavigatorScreenParams<MoreRoutes> | undefined;
 };
 type ProfileRoutes = {
@@ -184,6 +188,7 @@ type LeaguesRoutes = {
   Competition: { competition: Competition };
   Ankara: undefined;
   LeagueDetail: { id: string };
+  Search: undefined;
 };
 type NewsRoutes = { NewsList: undefined; NewsDetail: { id: string } };
 type SocialRoutes = {
@@ -354,6 +359,27 @@ function MainTabs() {
               contentService={contentService}
               discoveryService={discoveryService}
               giftsService={giftsService}
+              notificationsService={notificationsService}
+              onTeams={() => navigation.navigate('Teams')}
+              onLeagues={() => navigation.navigate('Leagues')}
+              onDiscover={() =>
+                navigation.navigate('More', {
+                  screen: 'Discover',
+                  initial: false,
+                })
+              }
+              onRights={() =>
+                navigation.navigate('More', {
+                  screen: 'TeamRights',
+                  initial: false,
+                })
+              }
+              onNotifications={() =>
+                navigation.navigate('More', {
+                  screen: 'Notifications',
+                  initial: false,
+                })
+              }
               onProfile={() =>
                 navigation.navigate('More', {
                   screen: 'Profile',
@@ -388,8 +414,9 @@ function MainTabs() {
         options={{ popToTopOnBlur: true }}
       />
       <Tabs.Screen name="Teams">
-        {({ navigation }) => (
+        {({ navigation, route }) => (
           <TeamsScreen
+            open={route.params?.open}
             onOpenRights={() =>
               navigation.navigate('More', {
                 screen: 'TeamRights',
@@ -1013,6 +1040,45 @@ function LeaguesNavigator() {
             onOpenAnkara={() => navigation.navigate('Ankara')}
             onOpenLeague={league =>
               navigation.navigate('LeagueDetail', { id: league.id })
+            }
+            onSearch={() => navigation.navigate('Search')}
+          />
+        )}
+      </LeaguesStack.Screen>
+      <LeaguesStack.Screen name="Search">
+        {({ navigation }) => (
+          <LeaguesSearchScreen
+            token={token}
+            footballService={footballService}
+            discoveryService={discoveryService}
+            onBack={() => navigation.goBack()}
+            onOpenCompetition={competition =>
+              navigation.navigate('Competition', { competition })
+            }
+            onOpenAnkara={() => navigation.navigate('Ankara')}
+            onOpenLeague={league =>
+              navigation.navigate('LeagueDetail', { id: league.id })
+            }
+            onOpenTeam={id =>
+              (
+                navigation.getParent() as
+                  | BottomTabNavigationProp<MainRoutes>
+                  | undefined
+              )?.navigate('Teams', { open: { id, at: Date.now() } })
+            }
+            onOpenPlayer={id =>
+              (
+                navigation.getParent() as
+                  | BottomTabNavigationProp<MainRoutes>
+                  | undefined
+              )?.navigate('More', {
+                screen: 'Discover',
+                params: {
+                  screen: 'DiscoveryProfile',
+                  params: { kind: 'players', id },
+                },
+                initial: false,
+              })
             }
           />
         )}

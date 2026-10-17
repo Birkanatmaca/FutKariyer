@@ -197,7 +197,7 @@ export function PlayerProfileScreen({ token, onBack }: Props) {
               </View>
             </View>
             <View style={styles.field}>
-              <Text style={styles.label}>{copy.signUp.licenseStatus}</Text>
+              <Text style={styles.label}>{copy.playerProfile.licenseStatus}</Text>
               <View style={styles.choices}>
                 {(['licensed', 'unlicensed'] as const).map(value => (
                   <Choice

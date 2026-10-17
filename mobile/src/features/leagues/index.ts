@@ -1,4 +1,4 @@
-export { LeagueList } from './ui/LeagueList';
+export { LeagueRail } from './ui/LeagueRail';
 export { LeagueDetailScreen } from './ui/LeagueDetailScreen';
 export { createLeagueService } from './application/league-service';
 export { leagueRepository } from './data/http-league-repository';

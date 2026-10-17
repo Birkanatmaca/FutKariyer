@@ -1,36 +1,16 @@
 import React, { useCallback } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ArrowRight, CalendarDays, MapPin } from 'lucide-react-native';
 import { copy } from '../../../shared/lib/copy';
-import { colors, radius, shadow, space, type } from '../../../styles/tokens';
+import { colors, radius, space, type } from '../../../styles/tokens';
 import type { FootballService } from '../application/football-service';
 import { useFootballResource } from '../application/useFootballResource';
 import type { Competition } from '../domain/models';
-import {
-  competitionCardWidth,
-  countMatches,
-  gridColumns,
-} from '../domain/rules';
+import { countMatches } from '../domain/rules';
 import { ErrorBlock, LoadingBlock, SectionTitle } from './FootballStates';
 import { RemoteLogo } from '../../../shared/ui/RemoteLogo';
 
 const text = copy.footballData;
-
-// Rows of three with flexible cards, so the grid holds three per row whatever
-// padding the parent screen adds; the computed width only sizes the logo.
-function rows<T>(items: T[]): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += gridColumns) {
-    out.push(items.slice(i, i + gridColumns));
-  }
-  return out;
-}
 
 export function FootballLeaguesSection({
   token,
@@ -45,8 +25,6 @@ export function FootballLeaguesSection({
 }) {
   const load = useCallback(() => service.competitions(token), [service, token]);
   const { data, error, loading, retry } = useFootballResource(load);
-  const { width } = useWindowDimensions();
-  const cardWidth = competitionCardWidth(width, space.md, space.xl);
   // The bulletin is cached on the server; a failure just hides the badge.
   const loadBulletin = useCallback(
     () => service.ankaraBulletin(token),
@@ -67,11 +45,7 @@ export function FootballLeaguesSection({
       ) : error ? (
         <ErrorBlock error={error} onRetry={retry} />
       ) : data ? (
-        <CompetitionGrid
-          items={data.competitions}
-          width={cardWidth}
-          onOpen={onOpenCompetition}
-        />
+        <CompetitionRail items={data.competitions} onOpen={onOpenCompetition} />
       ) : null}
       {data && data.cups.length ? (
         <>
@@ -79,11 +53,7 @@ export function FootballLeaguesSection({
             title={text.cupsTitle}
             description={text.cupsDescription}
           />
-          <CompetitionGrid
-            items={data.cups}
-            width={cardWidth}
-            onOpen={onOpenCompetition}
-          />
+          <CompetitionRail items={data.cups} onOpen={onOpenCompetition} />
         </>
       ) : null}
       <AnkaraCard
@@ -96,46 +66,42 @@ export function FootballLeaguesSection({
   );
 }
 
-function CompetitionGrid({
+// One swipeable row of compact cards; the screen's side padding is cancelled
+// so cards slide to the screen edge.
+function CompetitionRail({
   items,
-  width,
   onOpen,
 }: {
   items: Competition[];
-  width: number;
   onOpen(competition: Competition): void;
 }) {
   return (
-    <View style={styles.grid}>
-      {rows(items).map(row => (
-        <View key={row[0].slug} style={styles.row}>
-          {row.map(item => (
-            <CompetitionCard
-              key={item.slug}
-              competition={item}
-              width={width}
-              onPress={() => onOpen(item)}
-            />
-          ))}
-          {Array.from({ length: gridColumns - row.length }, (_, i) => (
-            <View key={'spacer' + i} style={styles.spacer} />
-          ))}
-        </View>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      decelerationRate="fast"
+      snapToInterval={CARD_WIDTH + space.md}
+      contentContainerStyle={styles.rail}
+      style={styles.railBleed}
+    >
+      {items.map(item => (
+        <CompetitionCard
+          key={item.slug}
+          competition={item}
+          onPress={() => onOpen(item)}
+        />
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
 function CompetitionCard({
   competition,
-  width,
   onPress,
 }: {
   competition: Competition;
-  width: number;
   onPress(): void;
 }) {
-  const logo = Math.max(28, Math.min(40, Math.round(width * 0.34)));
   return (
     <Pressable
       accessibilityRole="button"
@@ -143,12 +109,11 @@ function CompetitionCard({
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      <View style={styles.cardGlow} pointerEvents="none" />
-      <View style={[styles.badge, { width: logo + 22, height: logo + 22 }]}>
+      <View style={styles.badge}>
         <RemoteLogo
           uri={competition.logoUrl}
           name={competition.name}
-          size={logo}
+          size={28}
         />
       </View>
       <Text numberOfLines={2} style={styles.cardName}>
@@ -204,61 +169,39 @@ function AnkaraCard({
   );
 }
 
+export const CARD_WIDTH = 112;
 const styles = StyleSheet.create({
-  grid: { gap: space.md },
-  row: { flexDirection: 'row', gap: space.md },
-  spacer: { flex: 1 },
+  railBleed: { marginHorizontal: -space.xl },
+  rail: { gap: space.md, paddingHorizontal: space.xl },
   card: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 136,
-    borderRadius: radius.lg,
+    width: CARD_WIDTH,
+    minHeight: 112,
+    borderRadius: radius.md,
     backgroundColor: colors.surface,
     borderColor: colors.hairline,
     borderWidth: 1,
-    paddingHorizontal: space.sm,
-    paddingTop: space.lg,
-    paddingBottom: space.md,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    gap: space.xs,
-    overflow: 'hidden',
+    padding: space.md,
+    alignItems: 'flex-start',
+    gap: 2,
   },
-  // A floodlight cone over each badge.
-  cardGlow: {
-    position: 'absolute',
-    top: -40,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: colors.brandWash,
-  },
-  // League logos are often dark; a lit badge keeps them readable on the night background.
+  // League logos are often dark; a light badge keeps them readable on the night background.
   badge: {
-    borderRadius: radius.pill,
+    width: 40,
+    height: 40,
+    borderRadius: radius.sm,
     backgroundColor: colors.text,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: colors.brandSoft,
-    ...shadow.glow,
-    shadowOpacity: 0.2,
+    marginBottom: space.sm,
   },
   cardName: {
     color: colors.text,
-    fontSize: 12,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 16,
     fontWeight: '800',
     letterSpacing: -0.2,
-    textAlign: 'center',
-    marginTop: space.sm,
   },
-  cardCountry: {
-    ...type.caption,
-    fontSize: 11,
-    color: colors.muted,
-    textAlign: 'center',
-  },
+  cardCountry: { ...type.caption, fontSize: 11, color: colors.muted },
   wide: {
     borderRadius: radius.lg,
     backgroundColor: colors.surface,

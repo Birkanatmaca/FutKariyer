@@ -61,9 +61,6 @@ export function SignInScreen({ onSignUp }: { onSignUp(): void }) {
   return (
     <AuthFrame title={copy.signIn.title} description={copy.signIn.description}>
       <View style={styles.form}>
-        <Text accessibilityRole="header" style={styles.heading}>
-          {copy.signIn.formTitle}
-        </Text>
         <Field
           label={copy.form.identifier}
           icon={UserRound}
@@ -114,7 +111,6 @@ export function SignInScreen({ onSignUp }: { onSignUp(): void }) {
 }
 const styles = StyleSheet.create({
   form: { gap: space.lg },
-  heading: { ...type.headline, fontSize: 20, color: colors.text },
   divider: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   rule: { flex: 1, height: 1, backgroundColor: colors.border },
   or: { ...type.caption, color: colors.muted },

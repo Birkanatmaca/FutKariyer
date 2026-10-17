@@ -303,14 +303,14 @@ describe('role based home tab', () => {
     expect(found).toContain(copy.clubHome.profileTitle);
     expect(found).toContain(copy.clubHome.centerTitle);
     expect(found).toContain(copy.clubHome.playersTitle);
-    expect(found).not.toContain(copy.home.stats);
+    expect(found).not.toContain(copy.home.views);
     act(() => root.unmount());
   });
 
   it('keeps the player home for player accounts', () => {
     const root = mountFor('player');
     const found = texts(root);
-    expect(found).toContain(copy.home.stats);
+    expect(found).toContain(copy.home.views);
     expect(found).not.toContain(copy.clubHome.profileTitle);
     act(() => root.unmount());
   });

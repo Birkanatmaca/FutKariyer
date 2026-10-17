@@ -22,6 +22,8 @@ export const colors = {
   info: '#74AFFF',
   brandWash: '#B6F36A14',
   brandSoft: '#B6F36A29',
+  accentWash: '#55D7C41F',
+  infoWash: '#74AFFF1F',
   dangerWash: '#FF6B7215',
   pitchLine: '#B6F36A24',
   // Floodlight spill and hairlines used for depth instead of heavy borders.

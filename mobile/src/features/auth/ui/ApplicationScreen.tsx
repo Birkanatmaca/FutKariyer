@@ -102,7 +102,7 @@ export function ApplicationScreen({
   const title = club ? text.clubTitle : text.organizerTitle;
   if (submitted) {
     return (
-      <AuthFrame title={title} description={text.description} compact>
+      <AuthFrame title={title} description={text.description}>
         <View style={styles.form}>
           <View style={styles.success}>
             <CircleCheck size={28} color={colors.success} />
@@ -121,13 +121,9 @@ export function ApplicationScreen({
       title={title}
       description={text.description}
       onBack={onBack}
-      eyebrow={copy.authStep(2, 2)}
-      compact
+      step={2}
     >
       <View style={styles.form}>
-        <Text accessibilityRole="header" style={styles.heading}>
-          {club ? text.clubFormTitle : text.organizerFormTitle}
-        </Text>
         <AuthNotice message={text.notice} />
         <Field
           label={club ? text.clubName : text.organizerName}
