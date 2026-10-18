@@ -31,6 +31,11 @@ jest.mock('lucide-react-native', () => ({
   Newspaper: () => null,
   Sparkles: () => null,
   Trophy: () => null,
+  CircleCheck: () => null,
+  Medal: () => null,
+  Trash2: () => null,
+  X: () => null,
+  UserPlus: () => null,
 }));
 
 const text = copy.notifications;
@@ -128,6 +133,8 @@ function fakeService(list: AppNotification[]) {
       return 0;
     },
     markAllRead: async () => {},
+    deleteSelected: async () => 0,
+    deleteAll: async () => {},
   } as unknown as NotificationsService;
   return { service, marked };
 }
@@ -162,14 +169,13 @@ function find(root: ReactTestRenderer, role: string, label: string) {
 }
 
 describe('NotificationsScreen', () => {
-  it('shows a Turkish label per kind, including the generic fallback', async () => {
+  it('shows each notification title without kind labels', async () => {
     const { service } = fakeService(items);
     const { root } = await mount(service);
     const shown = texts(root);
-    expect(shown).toContain(text.kinds.opportunity);
-    expect(shown).toContain(text.kinds.gift);
-    expect(shown).toContain(text.kinds.game_reward);
-    expect(shown).toContain(text.kinds.other);
+    expect(shown).toContain('Yeni fırsat');
+    expect(shown).toContain('Bilinmeyen tür');
+    expect(shown).not.toContain(text.kinds.opportunity);
   });
 
   it('filters to unread items with a dedicated empty text', async () => {
@@ -195,7 +201,11 @@ describe('NotificationsScreen', () => {
     const { service, marked } = fakeService(items);
     const { root, onOpenGifts } = await mount(service);
     await act(async () => {
-      await find(root, 'button', 'Kalp hediyesi geldi').props.onPress();
+      await find(
+        root,
+        'button',
+        'Kalp hediyesi geldi, Ayrıntı',
+      ).props.onPress();
     });
     expect(onOpenGifts).toHaveBeenCalledTimes(1);
     expect(marked).toEqual([]);
@@ -205,9 +215,46 @@ describe('NotificationsScreen', () => {
     const { service, marked } = fakeService(items);
     const { root, onOpenGifts } = await mount(service);
     await act(async () => {
-      await find(root, 'button', 'Yeni fırsat').props.onPress();
+      await find(root, 'button', 'Yeni fırsat, Ayrıntı').props.onPress();
     });
     expect(marked).toEqual([id(1)]);
     expect(onOpenGifts).not.toHaveBeenCalled();
+  });
+
+  it('turns delete-all into delete-selected after a long press and confirms first', async () => {
+    const deleted: string[][] = [];
+    const { service } = fakeService(items);
+    (service as unknown as { deleteSelected: unknown }).deleteSelected = async (
+      _token: string,
+      ids: string[],
+    ) => {
+      deleted.push(ids);
+      return 0;
+    };
+    const { root } = await mount(service);
+    expect(find(root, 'button', text.deleteAll)).toBeTruthy();
+    await act(async () => {
+      find(
+        root,
+        'button',
+        items[1].title + ', ' + items[1].body,
+      ).props.onLongPress();
+    });
+    await act(async () => {
+      find(root, 'button', text.deleteSelected(1)).props.onPress();
+    });
+    expect(deleted).toEqual([]);
+    expect(texts(root)).toContain(text.confirm.deleteSelected.title);
+    await act(async () => {
+      root.root
+        .findAll(
+          n =>
+            n.props.accessibilityRole === 'button' &&
+            n.props.children?.props?.children ===
+              text.confirm.deleteSelected.action,
+        )[0]
+        .props.onPress();
+    });
+    expect(deleted).toEqual([[id(2)]]);
   });
 });

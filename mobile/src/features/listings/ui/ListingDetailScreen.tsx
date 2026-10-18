@@ -1,10 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { MapPin, Megaphone } from 'lucide-react-native';
-import { BackLink } from '../../../shared/ui/BackLink';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Screen } from '../../../shared/ui/Screen';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
 import { colors, radius, space } from '../../../styles/tokens';
@@ -58,7 +58,7 @@ export function ListingDetailScreen({
   const listing = state.data;
   return (
     <Screen>
-      <BackLink label={text.detailBack} onPress={onBack} />
+      <TopBar title={text.title} onBack={onBack} backLabel={text.detailBack} />
       {state.loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : state.error ? (
@@ -72,7 +72,6 @@ export function ListingDetailScreen({
             <View style={styles.badge}>
               <Megaphone size={26} color={colors.brand} />
             </View>
-            <Text style={styles.eyebrow}>{text.detailEyebrow}</Text>
             <Text accessibilityRole="header" style={styles.title}>
               {listing.title}
             </Text>
@@ -141,12 +140,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.raised,
-  },
-  eyebrow: {
-    color: colors.brand,
-    fontSize: 10,
-    letterSpacing: 1.6,
-    fontWeight: '800',
   },
   title: {
     color: colors.text,

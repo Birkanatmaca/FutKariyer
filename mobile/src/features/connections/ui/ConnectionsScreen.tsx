@@ -6,11 +6,11 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, Handshake, Inbox, Send } from 'lucide-react-native';
+import { Handshake, Inbox, Send } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Button } from '../../../shared/ui/Button';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
@@ -80,21 +80,7 @@ export function ConnectionsScreen({
 
   return (
     <Screen>
-      {onBack && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.form.back}
-          onPress={onBack}
-          style={styles.back}
-        >
-          <ArrowLeft size={20} color={colors.text} />
-        </Pressable>
-      )}
-      <PageHeader
-        eyebrow={text.eyebrow}
-        title={text.title}
-        hint={text.description}
-      />
+      <TopBar title={text.title} onBack={onBack} />
       <View
         accessibilityRole="tablist"
         accessibilityLabel={text.segmentsLabel}
@@ -226,14 +212,6 @@ function ConnectionItem({
 }
 
 const styles = StyleSheet.create({
-  back: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   segments: {
     flexDirection: 'row',
     padding: space.xs,

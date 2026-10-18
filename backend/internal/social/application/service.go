@@ -121,7 +121,8 @@ func (s *Service) GetPost(ctx context.Context, userID, id string) (domain.Post, 
 	}
 	return s.repo.GetPost(ctx, userID, id)
 }
-func (s *Service) CreatePost(ctx context.Context, userID, body string, data []byte) (domain.Post, error) {
+// CreatePost stores a post; showOnProfile only applies to a post with media.
+func (s *Service) CreatePost(ctx context.Context, userID, body string, data []byte, showOnProfile bool) (domain.Post, error) {
 	var media *domain.Attachment
 	var err error
 	if len(data) > 0 {
@@ -129,6 +130,7 @@ func (s *Service) CreatePost(ctx context.Context, userID, body string, data []by
 		if err != nil {
 			return domain.Post{}, err
 		}
+		media.OnProfile = showOnProfile
 	}
 	if strings.TrimSpace(body) != "" || media == nil {
 		body, err = cleanBody(body)
@@ -170,6 +172,31 @@ func (s *Service) SetLike(ctx context.Context, userID, id string, liked bool) (d
 		return domain.Post{}, domain.ErrNotFound
 	}
 	return s.repo.SetLike(ctx, userID, id, liked)
+}
+// UserPosts pages an author's posts for a profile; filter "media" keeps the
+// photo and video posts the author chose to show on their profile.
+func (s *Service) UserPosts(ctx context.Context, viewerID, authorID, rawCursor, filter string) (domain.Page[domain.Post], error) {
+	if !idPattern.MatchString(authorID) {
+		return domain.Page[domain.Post]{}, domain.ErrNotFound
+	}
+	if filter != "" && filter != "media" {
+		return domain.Page[domain.Post]{}, auth.ValidationError{"filter": "Geçerli bir gönderi filtresi seç."}
+	}
+	after, err := parseCursor(rawCursor)
+	if err != nil {
+		return domain.Page[domain.Post]{}, err
+	}
+	items, err := s.repo.UserPosts(ctx, viewerID, authorID, after, filter == "media")
+	if err != nil {
+		return domain.Page[domain.Post]{}, err
+	}
+	out := domain.Page[domain.Post]{Items: items}
+	if len(items) > domain.PageSize {
+		out.Items = items[:domain.PageSize]
+		last := out.Items[len(out.Items)-1]
+		out.NextCursor = cursor(last.ID, last.CreatedAt)
+	}
+	return out, nil
 }
 func (s *Service) Replies(ctx context.Context, userID, postID, rawCursor string) (domain.Page[domain.Reply], error) {
 	if !idPattern.MatchString(postID) {

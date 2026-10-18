@@ -4,7 +4,7 @@ import { ApiError } from '../../../shared/api/client';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Field } from '../../../shared/ui/Field';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Screen } from '../../../shared/ui/Screen';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
@@ -22,7 +22,7 @@ import {
   clubProfileFields,
   type FormErrors,
 } from '../application/validation';
-import { BackLink, SectionStatus } from './ClubPrimitives';
+import { SectionStatus } from './ClubPrimitives';
 
 export function ClubProfileEditScreen({
   token,
@@ -37,12 +37,7 @@ export function ClubProfileEditScreen({
   const state = useFocusedResource(load);
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={copy.clubProfile.eyebrow}
-        title={copy.clubProfile.title}
-        hint={copy.clubProfile.description}
-      />
+      <TopBar title={copy.clubProfile.title} onBack={onBack} />
       <SectionStatus
         loading={state.loading}
         error={state.error}

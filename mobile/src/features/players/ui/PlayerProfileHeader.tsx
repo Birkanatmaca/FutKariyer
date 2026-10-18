@@ -11,6 +11,14 @@ import { Pencil, Shield, Eye, EyeOff } from 'lucide-react-native';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import type { PlayerProfile } from '../domain/profile';
+
+// The owner's real network counts; other players' profiles show football
+// facts in their place.
+export type ProfileCounts = {
+  views: number;
+  followers: number;
+  following: number;
+};
 import { ProBadge } from '../../../shared/ui/ProBadge';
 
 export function PlayerProfileHeader({
@@ -18,10 +26,12 @@ export function PlayerProfileHeader({
   profile,
   avatarSource,
   onEdit,
+  counts,
   isPro = false,
 }: {
   fullName: string;
   profile: PlayerProfile;
+  counts?: ProfileCounts | null;
   isPro?: boolean;
   avatarSource?: ImageSourcePropType;
   onEdit?(): void;
@@ -52,33 +62,64 @@ export function PlayerProfileHeader({
       copy.playerOverview.years(profile.experienceYears),
     ],
   ];
+  // With counts the top row reads like Instagram (views, followers,
+  // following) and the football facts move into one bio line.
+  const top = counts
+    ? [
+        [copy.playerOverview.views, String(counts.views)],
+        [copy.playerOverview.followers, String(counts.followers)],
+        [copy.playerOverview.following, String(counts.following)],
+      ]
+    : stats;
+  const facts = [
+    profile.position,
+    profile.dominantFoot
+      ? copy.playerProfile.feet[profile.dominantFoot] +
+        copy.playerOverview.footSuffix
+      : '',
+    profile.experienceYears > 0
+      ? copy.playerOverview.years(profile.experienceYears) +
+        copy.playerOverview.experienceSuffix
+      : '',
+  ].filter(Boolean);
   const VisibilityIcon = profile.discoverable ? Eye : EyeOff;
   const availabilityColor =
     profile.availability === 'not_available' ? colors.secondary : colors.brand;
   return (
     <View style={styles.header}>
       <View style={styles.top}>
-        <View
-          style={styles.avatar}
-          accessibilityLabel={copy.playerOverview.avatar(fullName)}
-          accessibilityRole="image"
-        >
-          {avatarSource && failedSource !== avatarSource ? (
-            <Image
-              source={avatarSource}
-              resizeMode="cover"
-              style={styles.photo}
-              onError={() => setFailedSource(avatarSource)}
-            />
-          ) : (
-            <Text style={styles.initials}>{initials}</Text>
-          )}
+        <View style={styles.ring}>
+          <View
+            style={styles.avatar}
+            accessibilityLabel={copy.playerOverview.avatar(fullName)}
+            accessibilityRole="image"
+          >
+            {avatarSource && failedSource !== avatarSource ? (
+              <Image
+                source={avatarSource}
+                resizeMode="cover"
+                style={styles.photo}
+                onError={() => setFailedSource(avatarSource)}
+              />
+            ) : (
+              <Text style={styles.initials}>{initials}</Text>
+            )}
+          </View>
         </View>
         <View style={styles.stats}>
-          {stats.map(([label, value]) => (
-            <View key={label} style={styles.stat}>
-              <Text style={styles.statValue}>{value}</Text>
-              <Text style={styles.statLabel}>{label}</Text>
+          {top.map(([label, value]) => (
+            <View
+              key={label}
+              style={styles.stat}
+              accessible
+              accessibilityLabel={value + ' ' + label}
+            >
+              <Text style={[styles.statValue, counts && styles.countValue]}>
+                {value}
+              </Text>
+              <Text style={[styles.statLabel, counts && styles.countLabel]}>
+                {label}
+              </Text>
             </View>
           ))}
         </View>
@@ -91,6 +132,9 @@ export function PlayerProfileHeader({
           {isPro ? <ProBadge /> : null}
         </View>
         <Text style={styles.role}>{copy.roles.player}</Text>
+        {counts && facts.length ? (
+          <Text style={styles.bio}>{facts.join(' · ')}</Text>
+        ) : null}
         <View style={styles.tags}>
           <Text style={styles.tag}>
             {copy.football.types[profile.footballType]}
@@ -148,9 +192,15 @@ export function PlayerProfileHeader({
 const styles = StyleSheet.create({
   header: { gap: space.lg },
   top: { flexDirection: 'row', alignItems: 'center', gap: space.lg },
+  ring: {
+    padding: 3,
+    borderRadius: radius.pill,
+    borderWidth: 2,
+    borderColor: colors.brand,
+  },
   avatar: {
-    width: 88,
-    height: 88,
+    width: 84,
+    height: 84,
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: colors.border,
@@ -181,15 +231,18 @@ const styles = StyleSheet.create({
     lineHeight: 14,
     textAlign: 'center',
   },
-  identity: { gap: space.sm },
+  countValue: { fontSize: 18, lineHeight: 22, fontWeight: '800' },
+  countLabel: { fontSize: 12, lineHeight: 16, color: colors.secondary },
+  identity: { gap: space.xs },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     gap: space.sm,
   },
-  name: { color: colors.text, fontSize: 23, lineHeight: 29, fontWeight: '800' },
+  name: { color: colors.text, fontSize: 18, lineHeight: 24, fontWeight: '800' },
   role: { color: colors.secondary, fontSize: 13 },
+  bio: { color: colors.text, fontSize: 14, lineHeight: 20 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   tag: {
     color: colors.secondary,
@@ -222,8 +275,8 @@ const styles = StyleSheet.create({
   clubText: { color: colors.secondary, fontSize: 12, lineHeight: 18, flex: 1 },
   claim: { color: colors.muted, fontSize: 11 },
   edit: {
-    minHeight: 44,
-    borderRadius: radius.sm,
+    minHeight: 40,
+    borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.raised,

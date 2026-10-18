@@ -46,7 +46,7 @@ export function OrganizerHomeScreen({
 
   return (
     <Screen>
-      <Brand />
+      <Brand mark={false} />
       <PageHeader
         eyebrow={text.organizerEyebrow}
         title={copy.home.welcome(user?.fullName ?? '')}

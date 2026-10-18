@@ -3,14 +3,14 @@ import { StyleSheet, Text, View } from 'react-native';
 import { FileText } from 'lucide-react-native';
 import { Button } from '../../../shared/ui/Button';
 import { EmptyState } from '../../../shared/ui/EmptyState';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Screen } from '../../../shared/ui/Screen';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
 import { colors, radius, space } from '../../../styles/tokens';
 import type { ClubArticle, ClubReviewStatus } from '../domain/models';
 import type { ClubService } from '../application/club-service';
-import { BackLink, SectionStatus } from './ClubPrimitives';
+import { SectionStatus } from './ClubPrimitives';
 
 const statusColor: Record<ClubReviewStatus, string> = {
   pending: colors.warning,
@@ -33,12 +33,7 @@ export function ClubNewsMineScreen({
   const state = useFocusedResource(load);
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={copy.clubNews.eyebrow}
-        title={copy.clubNews.mineTitle}
-        hint={copy.clubNews.mineDescription}
-      />
+      <TopBar title={copy.clubNews.mineTitle} onBack={onBack} />
       <Button label={copy.clubNews.composeTitle} onPress={onCompose} />
       <SectionStatus
         loading={state.loading}

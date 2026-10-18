@@ -16,6 +16,12 @@ export function createNotificationsService(
     markAllRead(token: string) {
       return repository.markAllRead(token);
     },
+    deleteSelected(token: string, ids: string[]) {
+      return repository.deleteSelected(token, ids);
+    },
+    deleteAll(token: string) {
+      return repository.deleteAll(token);
+    },
   };
 }
 

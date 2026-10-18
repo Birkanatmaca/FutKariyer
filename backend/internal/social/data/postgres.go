@@ -6,6 +6,8 @@ import (
 	"errors"
 
 	moderation "futcareer/backend/internal/moderation/data"
+	notifications "futcareer/backend/internal/notifications/data"
+	notificationdomain "futcareer/backend/internal/notifications/domain"
 	"futcareer/backend/internal/social/domain"
 )
 
@@ -31,7 +33,7 @@ const postColumns = `p.id,u.id,u.full_name,u.role,u.verified,
  EXISTS(SELECT 1 FROM social_likes l WHERE l.post_id=p.id AND l.user_id=$1),p.author_id=$1,
  EXISTS(SELECT 1 FROM profile_follows f WHERE f.profile_id=p.author_id AND f.follower_id=$1),
  p.media_kind,p.media_mime,p.media_size,p.media_width,p.media_height,
- EXISTS(SELECT 1 FROM pro_memberships pm WHERE pm.user_id=u.id AND pm.expires_at>now())`
+ EXISTS(SELECT 1 FROM pro_memberships pm WHERE pm.user_id=u.id AND pm.expires_at>now()),p.show_on_profile`
 
 type scanner interface{ Scan(...any) error }
 type queryer interface {
@@ -41,7 +43,7 @@ type queryer interface {
 func scanPost(row scanner) (domain.Post, error) {
 	var p domain.Post
 	var media domain.Media
-	err := row.Scan(&p.ID, &p.Author.ID, &p.Author.FullName, &p.Author.Role, &p.Author.Verified, &p.Author.FootballType, &p.Author.LicenseStatus, &p.Body, &p.CreatedAt, &p.LikeCount, &p.ReplyCount, &p.Liked, &p.Owned, &p.Author.Following, &media.Kind, &media.MIME, &media.Size, &media.Width, &media.Height, &p.Author.IsPro)
+	err := row.Scan(&p.ID, &p.Author.ID, &p.Author.FullName, &p.Author.Role, &p.Author.Verified, &p.Author.FootballType, &p.Author.LicenseStatus, &p.Body, &p.CreatedAt, &p.LikeCount, &p.ReplyCount, &p.Liked, &p.Owned, &p.Author.Following, &media.Kind, &media.MIME, &media.Size, &media.Width, &media.Height, &p.Author.IsPro, &p.ShowOnProfile)
 	if errors.Is(err, sql.ErrNoRows) {
 		return p, domain.ErrNotFound
 	}
@@ -56,6 +58,26 @@ func getPost(ctx context.Context, q queryer, userID, id string) (domain.Post, er
 }
 func (r *Postgres) GetPost(ctx context.Context, userID, id string) (domain.Post, error) {
 	return getPost(ctx, r.db, userID, id)
+}
+func (r *Postgres) UserPosts(ctx context.Context, viewerID, authorID string, after domain.Cursor, profileMedia bool) ([]domain.Post, error) {
+	rows, err := r.db.QueryContext(ctx, `SELECT `+postColumns+` FROM social_posts p JOIN users u ON u.id=p.author_id
+	WHERE p.author_id=$2 AND `+activeAuthor+` AND `+visibleToViewer+`
+		AND (NOT $3 OR p.show_on_profile)
+		AND ($4='' OR (p.created_at,p.id)<($5::timestamptz,$4))
+	ORDER BY p.created_at DESC,p.id DESC LIMIT $6`, viewerID, authorID, profileMedia, after.ID, after.CreatedAt, domain.PageSize+1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []domain.Post{}
+	for rows.Next() {
+		p, err := scanPost(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, rows.Err()
 }
 func (r *Postgres) Feed(ctx context.Context, userID string, after domain.FeedCursor, following bool) ([]domain.Post, error) {
 	rows, err := r.db.QueryContext(ctx, `WITH viewer AS (
@@ -149,7 +171,7 @@ func (r *Postgres) CreatePost(ctx context.Context, userID, id, body string, medi
 	if media != nil {
 		attachment = *media
 	}
-	if _, err = tx.ExecContext(ctx, `INSERT INTO social_posts(id,author_id,body,media_kind,media_mime,media_size,media_width,media_height,media_data) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`, id, userID, body, attachment.Kind, attachment.MIME, attachment.Size, attachment.Width, attachment.Height, attachment.Data); err != nil {
+	if _, err = tx.ExecContext(ctx, `INSERT INTO social_posts(id,author_id,body,media_kind,media_mime,media_size,media_width,media_height,media_data,show_on_profile) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`, id, userID, body, attachment.Kind, attachment.MIME, attachment.Size, attachment.Width, attachment.Height, attachment.Data, media != nil && attachment.OnProfile); err != nil {
 		return domain.Post{}, err
 	}
 	out, err := getPost(ctx, tx, userID, id)
@@ -269,6 +291,22 @@ func (r *Postgres) Media(ctx context.Context, id string) (domain.Attachment, err
 	}
 	return out, err
 }
+// notifyFollow tells the followed account once per follower; unfollowing
+// and following again does not repeat it.
+func notifyFollow(ctx context.Context, tx *sql.Tx, followerID, profileID string) error {
+	var name string
+	if err := tx.QueryRowContext(ctx, `SELECT full_name FROM users WHERE id=$1`, followerID).Scan(&name); err != nil {
+		return err
+	}
+	return notifications.CreateInTx(ctx, tx, notificationdomain.NewNotification{
+		RecipientID: profileID,
+		Kind:        notificationdomain.KindFollow,
+		Title:       name,
+		Body:        "seni takip etmeye başladı.",
+		ResourceID:  followerID,
+		SourceKey:   "follow:" + followerID,
+	})
+}
 func (r *Postgres) SetFollow(ctx context.Context, userID, id string, following bool) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -292,7 +330,14 @@ func (r *Postgres) SetFollow(ctx context.Context, userID, id string, following b
 		return domain.ErrNotFound
 	}
 	if following {
-		_, err = tx.ExecContext(ctx, `INSERT INTO profile_follows(profile_id,follower_id) VALUES($1,$2) ON CONFLICT DO NOTHING`, id, userID)
+		var result sql.Result
+		result, err = tx.ExecContext(ctx, `INSERT INTO profile_follows(profile_id,follower_id) VALUES($1,$2) ON CONFLICT DO NOTHING`, id, userID)
+		if err == nil && id != userID {
+			var added int64
+			if added, err = result.RowsAffected(); err == nil && added > 0 {
+				err = notifyFollow(ctx, tx, userID, id)
+			}
+		}
 	} else {
 		_, err = tx.ExecContext(ctx, `DELETE FROM profile_follows WHERE profile_id=$1 AND follower_id=$2`, id, userID)
 	}

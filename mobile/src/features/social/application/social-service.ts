@@ -4,6 +4,7 @@ import {
   maxImageBytes,
   maxVideoBytes,
   type FeedScope,
+  type UserPostsFilter,
   type MediaKind,
   type SelectedMedia,
   type SocialRepository,
@@ -21,13 +22,26 @@ export function createSocialService(repository: SocialRepository) {
     feed: (token: string, cursor = '', scope: FeedScope = 'explore') =>
       repository.feed(token, cursor, scope),
     post: (token: string, id: string) => repository.post(token, id),
-    createPost: (token: string, body: string, media?: SelectedMedia) => {
+    userPosts: (
+      token: string,
+      userId: string,
+      cursor = '',
+      filter: UserPostsFilter = 'all',
+    ) => repository.userPosts(token, userId, cursor, filter),
+    // showOnProfile only applies to a post with a photo or video.
+    createPost: (
+      token: string,
+      body: string,
+      media?: SelectedMedia,
+      showOnProfile = false,
+    ) => {
       if (!body.trim() && !media) throw new Error(copy.social.emptyPost);
       if (media) validateMedia(media);
       return repository.createPost(
         token,
         body.trim() ? cleanBody(body) : '',
         media,
+        !!media && showOnProfile,
       );
     },
     pickMedia: async (kind: MediaKind) => {

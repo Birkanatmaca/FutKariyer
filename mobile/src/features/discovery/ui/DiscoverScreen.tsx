@@ -6,10 +6,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, Compass, ShieldCheck } from 'lucide-react-native';
+import { Compass, ShieldCheck } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { EmptyState } from '../../../shared/ui/EmptyState';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { copy } from '../../../shared/lib/copy';
@@ -68,25 +68,7 @@ export function DiscoverScreen({
   }
   return (
     <Screen key={JSON.stringify(query)}>
-      {onBack && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.form.back}
-          onPress={onBack}
-          style={styles.back}
-        >
-          <ArrowLeft size={20} color={colors.text} />
-        </Pressable>
-      )}
-      <PageHeader
-        eyebrow={copy.discover.eyebrow}
-        title={copy.discover.title}
-        hint={
-          role === 'player'
-            ? copy.discover.playerDescription
-            : copy.discover.providerDescription
-        }
-      />
+      <TopBar title={copy.discover.title} onBack={onBack} />
       {sections.length > 1 && (
         <View style={styles.segments}>
           {sections.map(kind => (
@@ -214,14 +196,6 @@ function PageButton({
   );
 }
 const styles = StyleSheet.create({
-  back: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   segments: {
     backgroundColor: colors.surface,
     padding: space.xs,

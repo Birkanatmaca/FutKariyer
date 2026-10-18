@@ -1,8 +1,14 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ArrowRight, CalendarDays, MapPin } from 'lucide-react-native';
+import {
+  ArrowRight,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+} from 'lucide-react-native';
 import { copy } from '../../../shared/lib/copy';
-import { colors, radius, space, type } from '../../../styles/tokens';
+import { colors, radius, shadow, space, type } from '../../../styles/tokens';
 import type { FootballService } from '../application/football-service';
 import { useFootballResource } from '../application/useFootballResource';
 import type { Competition } from '../domain/models';
@@ -67,7 +73,8 @@ export function FootballLeaguesSection({
 }
 
 // One swipeable row of compact cards; the screen's side padding is cancelled
-// so cards slide to the screen edge.
+// so cards slide to the screen edge. Edge arrows show only while more cards
+// lie in that direction and page the row by whole cards.
 function CompetitionRail({
   items,
   onOpen,
@@ -75,23 +82,81 @@ function CompetitionRail({
   items: Competition[];
   onOpen(competition: Competition): void;
 }) {
+  const scroll = useRef<ScrollView>(null);
+  const [offset, setOffset] = useState(0);
+  const [contentWidth, setContentWidth] = useState(0);
+  const [width, setWidth] = useState(0);
+  const step = CARD_WIDTH + space.md;
+  const canBack = offset > 1;
+  const canForward = offset + width < contentWidth - 1;
+  const page = (direction: 1 | -1) => {
+    const cards = Math.max(1, Math.floor((width - space.xl * 2) / step));
+    scroll.current?.scrollTo({
+      x: Math.max(0, offset + direction * cards * step),
+      animated: true,
+    });
+  };
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      decelerationRate="fast"
-      snapToInterval={CARD_WIDTH + space.md}
-      contentContainerStyle={styles.rail}
-      style={styles.railBleed}
-    >
-      {items.map(item => (
-        <CompetitionCard
-          key={item.slug}
-          competition={item}
-          onPress={() => onOpen(item)}
+    <View style={styles.railBleed}>
+      <ScrollView
+        ref={scroll}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        decelerationRate="fast"
+        snapToInterval={step}
+        contentContainerStyle={styles.rail}
+        scrollEventThrottle={32}
+        onScroll={event => setOffset(event.nativeEvent.contentOffset.x)}
+        onContentSizeChange={setContentWidth}
+        onLayout={event => setWidth(event.nativeEvent.layout.width)}
+      >
+        {items.map(item => (
+          <CompetitionCard
+            key={item.slug}
+            competition={item}
+            onPress={() => onOpen(item)}
+          />
+        ))}
+      </ScrollView>
+      {canBack ? (
+        <RailArrow
+          side="left"
+          label={text.railPrevious}
+          onPress={() => page(-1)}
         />
-      ))}
-    </ScrollView>
+      ) : null}
+      {canForward ? (
+        <RailArrow side="right" label={text.railNext} onPress={() => page(1)} />
+      ) : null}
+    </View>
+  );
+}
+
+function RailArrow({
+  side,
+  label,
+  onPress,
+}: {
+  side: 'left' | 'right';
+  label: string;
+  onPress(): void;
+}) {
+  const Icon = side === 'left' ? ChevronLeft : ChevronRight;
+  return (
+    <View
+      pointerEvents="box-none"
+      style={[styles.arrowSlot, side === 'left' ? styles.left : styles.right]}
+    >
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        hitSlop={8}
+        onPress={onPress}
+        style={({ pressed }) => [styles.arrow, pressed && styles.pressed]}
+      >
+        <Icon size={20} color={colors.brand} strokeWidth={2.4} />
+      </Pressable>
+    </View>
   );
 }
 
@@ -173,6 +238,25 @@ export const CARD_WIDTH = 112;
 const styles = StyleSheet.create({
   railBleed: { marginHorizontal: -space.xl },
   rail: { gap: space.md, paddingHorizontal: space.xl },
+  arrowSlot: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  left: { left: space.sm },
+  right: { right: space.sm },
+  arrow: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.raised,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...shadow.layer,
+  },
   card: {
     width: CARD_WIDTH,
     minHeight: 112,

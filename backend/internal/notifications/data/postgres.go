@@ -47,7 +47,12 @@ func (r *Postgres) List(ctx context.Context, userID string, page, pageSize int) 
 	if err := r.db.QueryRowContext(ctx, `SELECT count(*) FROM notifications WHERE recipient_id=$1 AND read_at IS NULL`, userID).Scan(&out.UnreadCount); err != nil {
 		return out, err
 	}
-	rows, err := r.db.QueryContext(ctx, `SELECT id,kind,title,body,resource_id,created_at,read_at FROM notifications WHERE recipient_id=$1 ORDER BY created_at DESC,id DESC LIMIT $2 OFFSET $3`, userID, pageSize, (page-1)*pageSize)
+	rows, err := r.db.QueryContext(ctx, `SELECT n.id,n.kind,n.title,n.body,n.resource_id,n.created_at,n.read_at,
+		COALESCE(a.role,''),
+		CASE WHEN a.id IS NULL THEN NULL ELSE EXISTS(SELECT 1 FROM profile_follows f WHERE f.profile_id=a.id AND f.follower_id=n.recipient_id) END
+		FROM notifications n
+		LEFT JOIN users a ON n.kind='follow' AND a.id=n.resource_id AND a.active
+		WHERE n.recipient_id=$1 ORDER BY n.created_at DESC,n.id DESC LIMIT $2 OFFSET $3`, userID, pageSize, (page-1)*pageSize)
 	if err != nil {
 		return out, err
 	}
@@ -55,13 +60,18 @@ func (r *Postgres) List(ctx context.Context, userID string, page, pageSize int) 
 	for rows.Next() {
 		var item domain.Notification
 		var readAt sql.NullTime
-		if err := rows.Scan(&item.ID, &item.Kind, &item.Title, &item.Body, &item.ResourceID, &item.CreatedAt, &readAt); err != nil {
+		var followingBack sql.NullBool
+		if err := rows.Scan(&item.ID, &item.Kind, &item.Title, &item.Body, &item.ResourceID, &item.CreatedAt, &readAt, &item.ActorRole, &followingBack); err != nil {
 			return out, err
 		}
 		item.CreatedAt = item.CreatedAt.UTC()
 		if readAt.Valid {
 			value := readAt.Time.UTC()
 			item.ReadAt = &value
+		}
+		if followingBack.Valid {
+			value := followingBack.Bool
+			item.FollowingBack = &value
 		}
 		out.Items = append(out.Items, item)
 	}
@@ -99,4 +109,18 @@ func (r *Postgres) MarkRead(ctx context.Context, userID, notificationID string) 
 func (r *Postgres) MarkAllRead(ctx context.Context, userID string) error {
 	_, err := r.db.ExecContext(ctx, `UPDATE notifications SET read_at=now() WHERE recipient_id=$1 AND read_at IS NULL`, userID)
 	return err
+}
+
+func (r *Postgres) Delete(ctx context.Context, userID string, ids []string) (int, error) {
+	query, args := `DELETE FROM notifications WHERE recipient_id=$1`, []any{userID}
+	if len(ids) > 0 {
+		query += ` AND id = ANY($2::text[])`
+		args = append(args, ids)
+	}
+	result, err := r.db.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, err
+	}
+	rows, err := result.RowsAffected()
+	return int(rows), err
 }

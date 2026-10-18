@@ -4,7 +4,7 @@ import { ApiError } from '../../../shared/api/client';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Field } from '../../../shared/ui/Field';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Screen } from '../../../shared/ui/Screen';
 import { copy } from '../../../shared/lib/copy';
 import { space, colors } from '../../../styles/tokens';
@@ -17,7 +17,6 @@ import {
   validateClubArticle,
   type FormErrors,
 } from '../application/validation';
-import { BackLink } from './ClubPrimitives';
 
 const emptyInput: ClubArticleInput = { title: '', summary: '', body: '' };
 
@@ -81,12 +80,7 @@ export function ClubNewsComposeScreen({
 
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={copy.clubNews.eyebrow}
-        title={copy.clubNews.composeTitle}
-        hint={copy.clubNews.composeDescription}
-      />
+      <TopBar title={copy.clubNews.composeTitle} onBack={onBack} />
       <View style={styles.form}>
         {clubArticleFields.map(field => {
           const { max } = clubArticleLimits[field];

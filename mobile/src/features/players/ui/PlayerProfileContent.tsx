@@ -1,8 +1,12 @@
 import React from 'react';
 import type { ImageSourcePropType } from 'react-native';
 import type { PlayerProfile } from '../domain/profile';
-import { PlayerProfileHeader } from './PlayerProfileHeader';
-import { PlayerMediaGallery, type GalleryProps } from './PlayerMediaGallery';
+import { PlayerProfileHeader, type ProfileCounts } from './PlayerProfileHeader';
+import {
+  PlayerMediaGallery,
+  type GalleryProps,
+  type ProfilePostsSlot,
+} from './PlayerMediaGallery';
 
 export function PlayerProfileContent({
   fullName,
@@ -10,9 +14,14 @@ export function PlayerProfileContent({
   avatarSource,
   gallery,
   onEdit,
+  counts,
+  posts,
   isPro = false,
 }: {
+  // Gönderiler tab and shared post media, composed by the app shell.
+  posts?: ProfilePostsSlot;
   fullName: string;
+  counts?: ProfileCounts | null;
   isPro?: boolean;
   profile: PlayerProfile;
   avatarSource?: ImageSourcePropType;
@@ -27,9 +36,10 @@ export function PlayerProfileContent({
         profile={profile}
         avatarSource={avatarSource}
         onEdit={onEdit}
+        counts={counts}
         isPro={isPro}
       />
-      <PlayerMediaGallery {...gallery} />
+      <PlayerMediaGallery {...gallery} posts={posts} />
     </>
   );
 }

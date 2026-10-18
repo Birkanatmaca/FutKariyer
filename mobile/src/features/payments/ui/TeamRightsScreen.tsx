@@ -1,14 +1,8 @@
 import React, { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { ArrowLeft, ShoppingBag } from 'lucide-react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ShoppingBag } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
 import { copy } from '../../../shared/lib/copy';
@@ -67,19 +61,10 @@ export function TeamRightsScreen({
   }
   return (
     <Screen>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={copy.payments.back}
-        onPress={onBack}
-        style={styles.back}
-      >
-        <ArrowLeft size={18} color={colors.text} />
-        <Text style={styles.backText}>{copy.payments.back}</Text>
-      </Pressable>
-      <PageHeader
-        eyebrow={copy.payments.eyebrow}
+      <TopBar
         title={copy.payments.title}
-        hint={copy.payments.description}
+        onBack={onBack}
+        backLabel={copy.payments.back}
       />
       <View style={styles.included}>
         <Text style={styles.includedTitle}>{copy.payments.included}</Text>
@@ -141,15 +126,6 @@ export function TeamRightsScreen({
 }
 
 const styles = StyleSheet.create({
-  back: {
-    minHeight: 44,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingRight: space.md,
-  },
-  backText: { color: colors.text, fontSize: 13, fontWeight: '700' },
   included: {
     borderRadius: radius.md,
     borderWidth: 1,

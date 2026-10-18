@@ -13,6 +13,7 @@ import {
   Film,
   Grid3X3,
   ImageOff,
+  Newspaper,
   Play,
   Plus,
   Trash2,
@@ -23,13 +24,23 @@ import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { VideoPlayer } from '../../../shared/ui/VideoPlayer';
 import { copy } from '../../../shared/lib/copy';
-import type { MediaSource } from '../../../shared/domain/media';
+import type { MediaKind, MediaSource } from '../../../shared/domain/media';
 import { colors, radius, space, type } from '../../../styles/tokens';
 import type { PlayerMediaService } from '../application/media-service';
 import { usePlayerGallery } from '../application/usePlayerGallery';
 import type { PlayerMediaItem } from '../domain/media';
 
-type Tab = 'photos' | 'videos';
+type Tab = 'posts' | 'photos' | 'videos';
+type MediaTab = Exclude<Tab, 'posts'>;
+
+// Posts slot filled by the app shell: the Gönderiler tab content and the
+// post photos/videos the owner chose to show on the profile.
+export type ProfilePostsSlot = {
+  postsTab: React.ReactNode;
+  media: { id: string; kind: MediaKind; createdAt: string }[];
+  renderMedia(item: { id: string; kind: MediaKind }): React.ReactNode;
+  onOpenMedia(id: string): void;
+};
 const text = copy.playerOverview;
 
 export type GalleryProps = {
@@ -42,9 +53,12 @@ export type GalleryProps = {
 
 // Instagram-like gallery: Fotoğraflar then Videolar, three square tiles a row.
 // Without gallery props (no session) it shows the empty state only.
-export function PlayerMediaGallery(props: Partial<GalleryProps>) {
+export function PlayerMediaGallery({
+  posts,
+  ...props
+}: Partial<GalleryProps> & { posts?: ProfilePostsSlot }) {
   return props.token && props.ownerId && props.service ? (
-    <LoadedGallery {...(props as GalleryProps)} />
+    <LoadedGallery {...(props as GalleryProps)} posts={posts} />
   ) : (
     <GalleryFrame selected="photos" onSelect={() => {}}>
       <Empty tab="photos" />
@@ -52,16 +66,36 @@ export function PlayerMediaGallery(props: Partial<GalleryProps>) {
   );
 }
 
-function LoadedGallery({ token, ownerId, service, editable }: GalleryProps) {
+function LoadedGallery({
+  token,
+  ownerId,
+  service,
+  editable,
+  posts,
+}: GalleryProps & { posts?: ProfilePostsSlot }) {
   const gallery = usePlayerGallery(service, token, ownerId);
-  const [selected, setSelected] = useState<Tab>('photos');
+  const [selected, setSelected] = useState<Tab>(posts ? 'posts' : 'photos');
   const [open, setOpen] = useState<PlayerMediaItem | null>(null);
-  const kind = selected === 'photos' ? 'image' : 'video';
+  if (selected === 'posts' && posts)
+    return (
+      <GalleryFrame selected={selected} onSelect={setSelected} withPosts>
+        {posts.postsTab}
+      </GalleryFrame>
+    );
+  const tab: MediaTab = selected === 'videos' ? 'videos' : 'photos';
+  const kind = tab === 'photos' ? 'image' : 'video';
   const items = gallery.items.filter(item => item.kind === kind);
-  const limit = gallery.limits?.[selected];
+  // Uploaded gallery items and shared post media, newest first.
+  const tiles = [
+    ...items.map(item => ({ upload: item, createdAt: item.createdAt })),
+    ...(posts?.media ?? [])
+      .filter(item => item.kind === kind)
+      .map(item => ({ post: item, createdAt: item.createdAt })),
+  ].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+  const limit = gallery.limits?.[tab];
   const full = limit !== undefined && items.length >= limit;
   return (
-    <GalleryFrame selected={selected} onSelect={setSelected}>
+    <GalleryFrame selected={tab} onSelect={setSelected} withPosts={!!posts}>
       {editable ? (
         <View style={styles.toolbar}>
           <Text style={[styles.count, type.number]}>
@@ -85,7 +119,7 @@ function LoadedGallery({ token, ownerId, service, editable }: GalleryProps) {
             <Text style={styles.addText}>
               {gallery.busy === kind
                 ? text.uploading
-                : selected === 'photos'
+                : tab === 'photos'
                 ? text.addPhoto
                 : text.addVideo}
             </Text>
@@ -107,20 +141,32 @@ function LoadedGallery({ token, ownerId, service, editable }: GalleryProps) {
           <ErrorBanner message={gallery.error} />
           <Button label={copy.form.retry} secondary onPress={gallery.retry} />
         </View>
-      ) : items.length ? (
+      ) : tiles.length ? (
         <View style={styles.grid}>
-          {items.map(item => (
-            <Tile
-              key={item.id}
-              item={item}
-              token={token}
-              service={service}
-              onOpen={() => setOpen(item)}
-            />
-          ))}
+          {tiles.map(tile =>
+            'upload' in tile && tile.upload ? (
+              <Tile
+                key={tile.upload.id}
+                item={tile.upload}
+                token={token}
+                service={service}
+                onOpen={() => setOpen(tile.upload)}
+              />
+            ) : 'post' in tile && tile.post && posts ? (
+              <Pressable
+                key={'post' + tile.post.id}
+                accessibilityRole="button"
+                accessibilityLabel={text.openPost}
+                onPress={() => posts.onOpenMedia(tile.post.id)}
+                style={styles.tile}
+              >
+                {posts.renderMedia(tile.post)}
+              </Pressable>
+            ) : null,
+          )}
         </View>
       ) : (
-        <Empty tab={selected} />
+        <Empty tab={tab} />
       )}
       <Viewer
         item={open}
@@ -144,16 +190,22 @@ function GalleryFrame({
   selected,
   onSelect,
   children,
+  withPosts = false,
 }: {
   selected: Tab;
   onSelect(tab: Tab): void;
   children: React.ReactNode;
+  withPosts?: boolean;
 }) {
+  const tabs: Tab[] = withPosts
+    ? ['posts', 'photos', 'videos']
+    : ['photos', 'videos'];
   return (
     <View style={styles.gallery}>
       <View accessibilityRole="tablist" style={styles.tabs}>
-        {(['photos', 'videos'] as const).map(tab => {
-          const Icon = tab === 'photos' ? Grid3X3 : Film;
+        {tabs.map(tab => {
+          const Icon =
+            tab === 'posts' ? Newspaper : tab === 'photos' ? Grid3X3 : Film;
           const active = selected === tab;
           return (
             <Pressable
@@ -176,7 +228,7 @@ function GalleryFrame({
   );
 }
 
-function Empty({ tab }: { tab: Tab }) {
+function Empty({ tab }: { tab: MediaTab }) {
   const Icon = tab === 'photos' ? Camera : Film;
   return (
     <View accessibilityLiveRegion="polite" style={styles.empty}>

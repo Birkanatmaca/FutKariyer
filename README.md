@@ -6,7 +6,7 @@ Futbolcuları, kulüpleri ve antrenörleri bir araya getiren futbol ağı. React
 
 - Yaş sınırı olmadan herkese açık sporcu kaydı; yönetici tarafından açılan kulüp/antrenör hesapları
 - Kayıt, giriş, oturum geri yükleme, hesap bilgileri ve çıkış
-- Profesyonel koyu mobil tema; Ana Sayfa, Ligler, Sosyal, Takımlar ve Diğer sekmeleri; ortada 66 piksel dairesel futbol topu, Diğer içinde Profil, Ayarlar, Haberler ve bildirim merkezi
+- Profesyonel koyu mobil tema; Ana Sayfa, Ligler, Takımlar, Sosyal, Profil, Bildirimler ve Diğer sekmeleri; ortada 66 piksel dairesel futbol topu, Diğer içinde Ayarlar ve Haberler
 - Kalıcı PostgreSQL kullanıcı/oturum verisi; bcrypt şifre hash'i, rastgele bearer token ve sunucuda yalnızca token hash'i
 - Go repository/uygulama/HTTP katmanları; mobil özellik modülleri ve merkezi tasarım tokenları
 - Oyuncu profili temel alanları, uygunluk ve keşif tercihi; PostgreSQL kalıcılığı ve hesap türü yetkilendirmesi
@@ -103,7 +103,7 @@ Sosyal ekranın üstünde Keşfet ve Takip ettiklerin sekmeleri, sağ altta tabb
 
 Beğeni, metin yanıt, sahibinin silmesi, cursor sayfalama ve yenileme korunur. Kartlarda yalnızca ad/rol/doğrulama/takip durumu görünür; özel hesap bilgisi veya yetkisiz profil bağlantısı yoktur. API metinleri 500 karakterle sınırlar, gönderiler arasında 5 saniye ve yanıtlar arasında 3 saniye beklemeyi aynı transaction içindeki kalıcı sayaçla uygular; silme hız sınırını sıfırlamaz. Boş akışa örnek içerik eklenmez.
 
-Alt gezinme Ana Sayfa, Ligler, Sosyal, Takımlar ve Diğer sırasıyla beş sekme kullanır. Ortadaki Sosyal, Ehekim merkez butonundan esinlenen 66 piksel çapında yuvarlak futbol topu butonuyla açılır. Profil ve Haberler Diğer menüsündedir; Ayarlar, Keşfet, İstekler ve Bildirimler de buradan açılır. Bildirimler takım başvurusu ve ödeme durumlarını gösterir; okunmamış sayısı menüde görünür ve kayıtlar tek tek veya topluca okundu işaretlenebilir. Oyuncular Diğer içindeki Takım başvurularım alanından kalan haklarını ve kulüp yanıtlarını izler; kulüp hesapları Takım başvuruları alanından gelen istekleri yönetir. Ana sayfadaki profil kısayolu aynı profile gider. Keşif, profil düzenleme ve geri dönüşler korunur. Ligler yönetici tarafından oluşturulan yayınlanmış ligleri, puan durumunu, fikstürü ve maç istatistiklerini gösterir. Takımlar sekmesi tüm etkin kulüp hesaplarını rehberde listeler; takım ayrıntısı saha ve antrenman bilgilerini sunar.
+Alt gezinme Ana Sayfa, Ligler, Takımlar, Sosyal, Profil, Bildirimler ve Diğer sırasıyla yedi sekme kullanır (organizasyon hesabında Profil yoktur). Ortadaki Sosyal, Ehekim merkez butonundan esinlenen 66 piksel çapında yuvarlak futbol topu butonuyla açılır. Haberler Diğer menüsündedir; Ayarlar, Keşfet ve İstekler de buradan açılır. Bildirimler takım başvurusu ve ödeme durumlarını gösterir; okunmamış sayısı sekme rozetinde görünür ve kayıtlar tek tek veya topluca okundu işaretlenebilir. Oyuncular Diğer içindeki Takım başvurularım alanından kalan haklarını ve kulüp yanıtlarını izler; kulüp hesapları Takım başvuruları alanından gelen istekleri yönetir. Ana sayfadaki profil kısayolu aynı profile gider. Keşif, profil düzenleme ve geri dönüşler korunur. Ligler yönetici tarafından oluşturulan yayınlanmış ligleri, puan durumunu, fikstürü ve maç istatistiklerini gösterir. Takımlar sekmesi tüm etkin kulüp hesaplarını rehberde listeler; takım ayrıntısı saha ve antrenman bilgilerini sunar.
 
 Ana sayfa tek kişisel kart (karşılama ve kendi sayaçları), reklam kaydırıcısı ve haberler alanını sunar. Görüntülemeler yetkili keşif detayları açıldığında kaydedilir; aynı görüntüleyenin aynı profile UTC günü içinde tekrar girişi tek sayılır. Takipçi/takip edilen sayaçları gerçek takip kayıtlarından, aktif hesaplar için hesaplanır. Keşif detayındaki takip düğmesi mevcut rol, görünürlük ve doğrulama kurallarını aşmaz; özel iletişim açmaz. Sayaçlar yalnızca oturum sahibine döndürülür.
 
@@ -368,6 +368,9 @@ Release için productionApiUrl alanını gerçek HTTPS servis adresiyle doldur. 
 | GET | /v1/me/notifications/unread-count | Diğer menüsü rozeti için okunmamış sayısı |
 | PUT | /v1/me/notifications/{id}/read | Kullanıcıya ait bir bildirimi okundu işaretleme |
 | PUT | /v1/me/notifications/read-all | Kullanıcının tüm bildirimlerini okundu işaretleme |
+| POST | /v1/me/notifications/delete | Seçilen bildirimleri (1–100 kimlik) kalıcı silme |
+| DELETE | /v1/me/notifications | Kullanıcının tüm bildirimlerini kalıcı silme |
+| GET | /v1/social/users/{id}/posts | Hesabın gönderileri, en yeni önce; filter=media profilde gösterilen medyalı gönderiler |
 | GET | /v1/social/posts?scope=explore&cursor=... | 20 gönderilik Keşfet akışı; scope=following yalnızca takip edilenleri döndürür |
 | POST | /v1/social/posts | JSON body ile metin veya multipart body/media ile görsel/video gönderisi |
 | GET | /v1/social/posts/{id} | Gönderi, medya bilgisi ve gerçek etkileşim sayaçları |

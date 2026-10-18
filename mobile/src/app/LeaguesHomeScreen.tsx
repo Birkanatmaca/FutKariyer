@@ -33,7 +33,7 @@ export function LeaguesHomeScreen({
   return (
     <Screen>
       <View style={styles.header}>
-        <Brand />
+        <Brand mark={false} />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={copy.leagues.searchOpen}

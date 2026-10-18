@@ -18,12 +18,13 @@ const (
 	KindNewsReview      = "news_review"
 	KindConnection      = "connection"
 	KindTournament      = "tournament"
+	KindFollow          = "follow"
 )
 
 // ValidKind lists every kind the notification center knows how to display.
 func ValidKind(kind string) bool {
 	switch kind {
-	case KindTeamApplication, KindPayment, KindOpportunity, KindGift, KindGameReward, KindNewsReview, KindConnection, KindTournament:
+	case KindTeamApplication, KindPayment, KindOpportunity, KindGift, KindGameReward, KindNewsReview, KindConnection, KindTournament, KindFollow:
 		return true
 	}
 	return false
@@ -37,6 +38,10 @@ type Notification struct {
 	ResourceID string     `json:"resourceId"`
 	CreatedAt  time.Time  `json:"createdAt"`
 	ReadAt     *time.Time `json:"readAt"`
+	// Follow notifications: the follower's role and whether the recipient
+	// already follows them back.
+	ActorRole     string `json:"actorRole,omitempty"`
+	FollowingBack *bool  `json:"followingBack,omitempty"`
 }
 
 type NewNotification struct {
@@ -62,6 +67,9 @@ type Repository interface {
 	UnreadCount(context.Context, string) (int, error)
 	MarkRead(context.Context, string, string) error
 	MarkAllRead(context.Context, string) error
+	// Delete removes the given notifications of the recipient; an empty
+	// list removes all of them. It returns how many rows were removed.
+	Delete(context.Context, string, []string) (int, error)
 }
 
 type Announcement struct {

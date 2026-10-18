@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Megaphone } from 'lucide-react-native';
-import { BackLink } from '../../../shared/ui/BackLink';
 import { Button } from '../../../shared/ui/Button';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
-import { PageHeader } from '../../../shared/ui/PageHeader';
 import { Screen } from '../../../shared/ui/Screen';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { copy } from '../../../shared/lib/copy';
 import { colors, space } from '../../../styles/tokens';
 import type { ListingsService } from '../application/listings-service';
@@ -31,12 +30,7 @@ export function ListingsScreen({
   const feed = useListingFeed(service, token, filter);
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={text.eyebrow}
-        title={text.title}
-        hint={text.description}
-      />
+      <TopBar title={text.title} onBack={onBack} />
       <ListingFilterBar value={filter} onChange={setFilter} />
       {feed.loading ? (
         <ActivityIndicator color={colors.brand} />

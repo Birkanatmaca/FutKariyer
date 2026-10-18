@@ -36,6 +36,8 @@ type Media struct {
 type Attachment struct {
 	Media
 	Data []byte
+	// OnProfile also lists the media in the author's profile gallery tabs.
+	OnProfile bool
 }
 
 type Post struct {
@@ -48,6 +50,8 @@ type Post struct {
 	ReplyCount int       `json:"replyCount"`
 	Liked      bool      `json:"liked"`
 	Owned      bool      `json:"owned"`
+	// Only media posts can be shown in the author's profile gallery.
+	ShowOnProfile bool `json:"showOnProfile"`
 }
 
 type Reply struct {
@@ -75,6 +79,9 @@ type Page[T any] struct {
 type Repository interface {
 	Feed(context.Context, string, FeedCursor, bool) ([]Post, error)
 	GetPost(context.Context, string, string) (Post, error)
+	// UserPosts pages an author's posts newest first; profileMedia keeps
+	// only the media posts shown on their profile.
+	UserPosts(ctx context.Context, viewerID, authorID string, after Cursor, profileMedia bool) ([]Post, error)
 	CreatePost(context.Context, string, string, string, *Attachment) (Post, error)
 	DeletePost(context.Context, string, string) error
 	Media(context.Context, string) (Attachment, error)

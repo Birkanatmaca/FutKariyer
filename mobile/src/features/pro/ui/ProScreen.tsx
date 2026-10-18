@@ -2,8 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Eye, Sparkles, Ticket, VenetianMask } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
-import { BackLink } from '../../../shared/ui/BackLink';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
 import { ProBadge } from '../../../shared/ui/ProBadge';
@@ -83,12 +82,7 @@ export function ProScreen({
     : [];
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={copy.pro.eyebrow}
-        title={copy.pro.title}
-        hint={copy.pro.hint}
-      />
+      <TopBar title={copy.pro.title} onBack={onBack} />
       {state.loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : state.error ? (

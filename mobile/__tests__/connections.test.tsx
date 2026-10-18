@@ -32,6 +32,7 @@ jest.mock('lucide-react-native', () => ({
   ArrowLeft: () => null,
   ArrowUpRight: () => null,
   BadgeCheck: () => null,
+  ChevronLeft: () => null,
   CircleAlert: () => null,
   Eye: () => null,
   EyeOff: () => null,

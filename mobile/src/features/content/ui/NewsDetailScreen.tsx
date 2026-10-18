@@ -1,13 +1,12 @@
 import React, { useCallback } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
-import { ArrowLeft } from 'lucide-react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
-import { colors, radius } from '../../../styles/tokens';
+import { colors, space, type } from '../../../styles/tokens';
 import type { ContentService } from '../application/content-service';
 import { ContentImage } from './ContentImage';
 export function NewsDetailScreen({
@@ -32,14 +31,7 @@ export function NewsDetailScreen({
   );
   return (
     <Screen>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={copy.form.back}
-        onPress={onBack}
-        style={styles.back}
-      >
-        <ArrowLeft size={20} color={colors.text} />
-      </Pressable>
+      <TopBar title={copy.news.title} onBack={onBack} />
       {state.loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : state.error ? (
@@ -50,11 +42,17 @@ export function NewsDetailScreen({
       ) : (
         state.data && (
           <>
-            <PageHeader
-              eyebrow={copy.news.date(state.data.createdAt)}
-              title={state.data.title}
-              description={state.data.summary}
-            />
+            <View style={styles.heading}>
+              <Text style={styles.date}>
+                {copy.news.date(state.data.createdAt)}
+              </Text>
+              <Text accessibilityRole="header" style={styles.title}>
+                {state.data.title}
+              </Text>
+              {state.data.summary ? (
+                <Text style={styles.summary}>{state.data.summary}</Text>
+              ) : null}
+            </View>
             {!!state.data.imageId && (
               <ContentImage
                 uri={service.imageUrl(state.data.imageId)}
@@ -69,13 +67,9 @@ export function NewsDetailScreen({
   );
 }
 const styles = StyleSheet.create({
-  back: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  heading: { gap: space.sm },
+  date: { ...type.caption, color: colors.muted },
+  title: { ...type.title, color: colors.text },
+  summary: { ...type.body, color: colors.secondary },
   body: { color: colors.secondary, fontSize: 15, lineHeight: 26 },
 });

@@ -42,6 +42,7 @@ jest.mock('lucide-react-native', () => ({
   CalendarDays: () => null,
   Check: () => null,
   CheckCheck: () => null,
+  ChevronLeft: () => null,
   ChevronRight: () => null,
   CircleAlert: () => null,
   ClipboardList: () => null,
@@ -58,6 +59,10 @@ jest.mock('lucide-react-native', () => ({
   Sparkles: () => null,
   Trophy: () => null,
   X: () => null,
+  CircleCheck: () => null,
+  Medal: () => null,
+  Trash2: () => null,
+  UserPlus: () => null,
 }));
 
 const mockedRequest = request as jest.MockedFunction<typeof request>;
@@ -435,7 +440,9 @@ describe('opportunity notification', () => {
         />,
       );
     });
-    await act(async () => button(root, 'Yeni ilan').props.onPress());
+    await act(async () =>
+      button(root, 'Yeni ilan, Örnek Spor sol bek arıyor.').props.onPress(),
+    );
     expect(onOpenListing).toHaveBeenCalledWith(listing.id);
   });
 });

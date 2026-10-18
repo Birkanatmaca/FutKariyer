@@ -1,14 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { ArrowLeft, Newspaper } from 'lucide-react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { Newspaper } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
@@ -49,22 +43,7 @@ export function NewsScreen({
   }, [page, state.data, state.loading]);
   return (
     <Screen>
-      {onBack && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.form.back}
-          onPress={onBack}
-          style={styles.back}
-        >
-          <ArrowLeft size={20} color={colors.text} />
-          <Text style={styles.backText}>{copy.form.back}</Text>
-        </Pressable>
-      )}
-      <PageHeader
-        eyebrow={copy.news.eyebrow}
-        title={copy.news.title}
-        hint={copy.news.description}
-      />
+      <TopBar title={copy.news.title} onBack={onBack} />
       {state.loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : state.error ? (
@@ -118,14 +97,6 @@ export function NewsScreen({
   );
 }
 const styles = StyleSheet.create({
-  back: {
-    minHeight: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    alignSelf: 'flex-start',
-  },
-  backText: { color: colors.text, fontSize: 13, fontWeight: '700' },
   pages: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   TextInput,
   View,
@@ -32,16 +33,20 @@ export function SocialPublishScreen({
   service,
   onBack,
   onPublished,
+  profileOption = false,
 }: {
   token: string;
   name: string;
   service: SocialService;
   onBack(): void;
   onPublished(): void;
+  // Players can also list a post's photo or video in their profile tabs.
+  profileOption?: boolean;
 }) {
   const navigation = useNavigation();
   const [body, setBody] = useState('');
   const [media, setMedia] = useState<SelectedMedia | null>(null);
+  const [showOnProfile, setShowOnProfile] = useState(false);
   const [busy, setBusy] = useState(false);
   const [picking, setPicking] = useState(false);
   const [error, setError] = useState('');
@@ -101,7 +106,12 @@ export function SocialPublishScreen({
     setBusy(true);
     setError('');
     try {
-      await service.createPost(token, body, media || undefined);
+      await service.createPost(
+        token,
+        body,
+        media || undefined,
+        profileOption && showOnProfile,
+      );
       published.current = true;
       if (alive.current) onPublished();
     } catch (failure) {
@@ -210,6 +220,28 @@ export function SocialPublishScreen({
               </Text>
             </View>
           ) : null}
+          {media && profileOption ? (
+            <View style={styles.profileRow}>
+              <View style={styles.profileText}>
+                <Text style={styles.profileTitle}>
+                  {copy.social.showOnProfile}
+                </Text>
+                <Text style={styles.hint}>
+                  {media.kind === 'image'
+                    ? copy.social.showOnProfileImage
+                    : copy.social.showOnProfileVideo}
+                </Text>
+              </View>
+              <Switch
+                accessibilityLabel={copy.social.showOnProfile}
+                value={showOnProfile}
+                disabled={busy || picking}
+                onValueChange={setShowOnProfile}
+                trackColor={{ false: colors.overlay, true: colors.brand }}
+                thumbColor={colors.text}
+              />
+            </View>
+          ) : null}
           <View style={styles.tools}>
             <Pressable
               accessibilityRole="button"
@@ -284,6 +316,18 @@ const styles = StyleSheet.create({
     gap: space.lg,
   },
   header: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+  profileText: { flex: 1, gap: space.xs },
+  profileTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
   back: {
     minWidth: 44,
     minHeight: 44,

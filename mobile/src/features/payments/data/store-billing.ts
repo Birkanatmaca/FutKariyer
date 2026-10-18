@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { LogBox, Platform } from 'react-native';
 import {
   ErrorCode,
   fetchProducts,
@@ -26,6 +26,10 @@ const store: Store | null =
     ? 'google_play'
     : null;
 
+// Background recovery runs on every sign-in and foreground; without a signed-in
+// Play/App Store account the library logs the handled failure as an error.
+LogBox.ignoreLogs(['[RN-IAP] Failed to get available purchases']);
+
 let connection: Promise<unknown> | null = null;
 function connect() {
   connection ??= initConnection().catch(error => {
@@ -33,6 +37,18 @@ function connect() {
     throw error;
   });
   return connection;
+}
+
+// A dropped store service keeps the cached connection resolved, so reconnect
+// on the next call after any failure.
+async function withStore<T>(run: () => Promise<T>) {
+  await connect();
+  try {
+    return await run();
+  } catch (error) {
+    connection = null;
+    throw error;
+  }
 }
 
 function toPurchase(purchase: Purchase): StorePurchase | null {
@@ -60,8 +76,9 @@ function orderOf(purchase: Purchase) {
 export const storeBilling: StoreBilling = {
   store,
   async prices(productIds) {
-    await connect();
-    const products = await fetchProducts({ skus: productIds, type: 'in-app' });
+    const products = await withStore(() =>
+      fetchProducts({ skus: productIds, type: 'in-app' }),
+    );
     const out: Record<string, string> = {};
     for (const product of products ?? [])
       out[product.id] = product.displayPrice;
@@ -114,8 +131,7 @@ export const storeBilling: StoreBilling = {
     });
   },
   async unfinished() {
-    await connect();
-    const purchases = await getAvailablePurchases();
+    const purchases = await withStore(() => getAvailablePurchases());
     return purchases
       .map(toPurchase)
       .filter((item): item is StorePurchase => !!item);

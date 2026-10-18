@@ -8,6 +8,8 @@ export const maxPostLength = 500;
 export const maxImageBytes = 4 * 1024 * 1024;
 export const maxVideoBytes = 30 * 1024 * 1024;
 export type FeedScope = 'explore' | 'following';
+// Profile post lists: every post, or only the media posts shown on the profile.
+export type UserPostsFilter = 'all' | 'media';
 import type {
   MediaKind,
   MediaSource,
@@ -46,6 +48,8 @@ export type SocialPost = {
   replyCount: number;
   liked: boolean;
   owned: boolean;
+  // A media post the author also lists in their profile gallery tabs.
+  showOnProfile?: boolean;
 };
 export type SocialReply = {
   id: string;
@@ -63,10 +67,17 @@ export interface SocialRepository {
     scope: FeedScope,
   ): Promise<SocialPage<SocialPost>>;
   post(token: string, id: string): Promise<SocialPost>;
+  userPosts(
+    token: string,
+    userId: string,
+    cursor: string,
+    filter: UserPostsFilter,
+  ): Promise<SocialPage<SocialPost>>;
   createPost(
     token: string,
     body: string,
     media?: SelectedMedia,
+    showOnProfile?: boolean,
   ): Promise<SocialPost>;
   follow(token: string, id: string, following: boolean): Promise<boolean>;
   pickMedia(kind: MediaKind): Promise<SelectedMedia | null>;

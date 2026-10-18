@@ -76,7 +76,9 @@ function postValid(value: unknown): value is SocialPost {
     countValid(post.likeCount) &&
     countValid(post.replyCount) &&
     typeof post.liked === 'boolean' &&
-    typeof post.owned === 'boolean'
+    typeof post.owned === 'boolean' &&
+    (post.showOnProfile === undefined ||
+      typeof post.showOnProfile === 'boolean')
   );
 }
 function replyValid(value: unknown): value is SocialReply {
@@ -129,10 +131,24 @@ export const socialRepository: SocialRepository = {
   async post(token, id) {
     return validPost(await request<{ post: unknown }>(path(id), { token }));
   },
-  async createPost(token, body, media) {
+  async userPosts(token, userId, cursor, filter) {
+    return validPage(
+      await request<unknown>(
+        '/v1/social/users/' +
+          encodeURIComponent(userId) +
+          '/posts?cursor=' +
+          encodeURIComponent(cursor) +
+          (filter === 'media' ? '&filter=media' : ''),
+        { token },
+      ),
+      postValid,
+    );
+  },
+  async createPost(token, body, media, showOnProfile) {
     const formData = media ? new FormData() : undefined;
     if (formData && media) {
       formData.append('body', body);
+      formData.append('showOnProfile', showOnProfile ? 'true' : 'false');
       appendMedia(formData, media);
     }
     return validPost(

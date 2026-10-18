@@ -1,10 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { confirmAction } from '../../connections';
-import { BackLink } from '../../../shared/ui/BackLink';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Screen } from '../../../shared/ui/Screen';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
 import { colors, space } from '../../../styles/tokens';
@@ -115,7 +115,7 @@ export function OrganizerTournamentScreen({
     tournament?.status === 'open' || tournament?.status === 'closed';
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
+      <TopBar title={text.manageTitle} onBack={onBack} />
       {state.loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : state.error ? (
@@ -127,7 +127,6 @@ export function OrganizerTournamentScreen({
         <ErrorBanner message={text.notFound} />
       ) : (
         <>
-          <Text style={styles.eyebrow}>{text.manageEyebrow}</Text>
           <TournamentSummary tournament={tournament} showOrganizer={false} />
           {notice ? (
             <Text accessibilityRole="alert" style={styles.notice}>
@@ -195,12 +194,6 @@ export function OrganizerTournamentScreen({
 }
 
 const styles = StyleSheet.create({
-  eyebrow: {
-    color: colors.muted,
-    fontSize: 10,
-    letterSpacing: 1.6,
-    fontWeight: '700',
-  },
   notice: { color: colors.success, fontSize: 13, lineHeight: 19 },
   section: { color: colors.text, fontSize: 18, fontWeight: '800' },
   meta: { color: colors.muted, fontSize: 12, lineHeight: 18 },

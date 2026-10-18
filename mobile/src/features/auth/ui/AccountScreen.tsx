@@ -1,20 +1,14 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import {
-  ArrowLeft,
-  Ban,
-  ChevronRight,
-  LockKeyhole,
-  Trash2,
-} from 'lucide-react-native';
+import { Ban, ChevronRight, LockKeyhole, Trash2 } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { confirmSignOut } from './confirm-sign-out';
 import { DeleteAccountPrompt } from './DeleteAccountPrompt';
 import { copy } from '../../../shared/lib/copy';
-import { colors, radius, space } from '../../../styles/tokens';
+import { colors, radius, space, type } from '../../../styles/tokens';
 import { useAuth } from '../application/AuthProvider';
 export function AccountScreen({
   onBack,
@@ -76,23 +70,13 @@ export function AccountScreen({
   ];
   return (
     <Screen>
-      {onBack && (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.form.back}
-          onPress={onBack}
-          style={styles.back}
-        >
-          <ArrowLeft size={20} color={colors.text} />
-        </Pressable>
-      )}
-      <PageHeader
-        eyebrow={copy.profile.eyebrow}
+      <TopBar
         title={settings ? copy.playerOverview.settings : copy.profile.title}
-        description={
-          settings ? copy.playerOverview.settingsHint : copy.profile.description
-        }
+        onBack={onBack}
       />
+      <Text style={styles.description}>
+        {settings ? copy.playerOverview.settingsHint : copy.profile.description}
+      </Text>
       <View style={styles.identity}>
         <View style={styles.avatar}>
           <Text style={styles.initials}>{initials}</Text>
@@ -163,14 +147,7 @@ export function AccountScreen({
   );
 }
 const styles = StyleSheet.create({
-  back: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  description: { ...type.body, color: colors.secondary },
   identity: {
     flexDirection: 'row',
     alignItems: 'center',

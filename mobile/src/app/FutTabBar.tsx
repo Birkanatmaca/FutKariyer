@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  Easing,
   Keyboard,
   Platform,
   Pressable,
@@ -9,10 +10,12 @@ import {
   View,
 } from 'react-native';
 import {
+  Bell,
   Ellipsis,
   House,
   Shield,
   Trophy,
+  UserRound,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,6 +30,8 @@ const userIcons: Record<string, TabIcon> = {
   Home: House,
   Leagues: Trophy,
   Teams: Shield,
+  Profile: UserRound,
+  Notifications: Bell,
   More: Ellipsis,
 };
 function TabItem({
@@ -34,6 +39,7 @@ function TabItem({
   label,
   icon: Icon,
   active,
+  badge,
   onPress,
   onLongPress,
 }: {
@@ -41,10 +47,12 @@ function TabItem({
   label: string;
   icon: TabIcon;
   active: boolean;
+  badge?: number | null;
   onPress(): void;
   onLongPress(): void;
 }) {
   const scale = useRef(new Animated.Value(1)).current;
+  const hop = useRef(new Animated.Value(0)).current;
   const social = name === 'Social';
   const reducedMotion = useReducedMotion();
   function press() {
@@ -52,6 +60,7 @@ function TabItem({
       onPress();
       return;
     }
+    if (social) bounce(hop);
     Animated.sequence([
       Animated.timing(scale, {
         toValue: 0.94,
@@ -70,7 +79,9 @@ function TabItem({
   return (
     <Pressable
       accessibilityRole="tab"
-      accessibilityLabel={label}
+      accessibilityLabel={
+        badge ? label + ', ' + copy.more.unread(badge) : label
+      }
       accessibilityState={{ selected: active }}
       aria-selected={active}
       onPress={press}
@@ -89,14 +100,25 @@ function TabItem({
           <View
             style={[styles.socialCircle, active && styles.activeSocialCircle]}
           >
-            <FootballTabIcon />
+            <Animated.View style={{ transform: [{ translateY: hop }] }}>
+              <FootballTabIcon />
+            </Animated.View>
           </View>
         ) : (
-          <Icon
-            size={22}
-            color={active ? colors.brand : colors.secondary}
-            strokeWidth={active ? 2.4 : 1.8}
-          />
+          <View>
+            <Icon
+              size={22}
+              color={active ? colors.brand : colors.secondary}
+              strokeWidth={active ? 2.4 : 1.8}
+            />
+            {badge ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {badge > 99 ? '99+' : badge}
+                </Text>
+              </View>
+            ) : null}
+          </View>
         )}
         <Text
           numberOfLines={1}
@@ -113,15 +135,41 @@ function TabItem({
     </Pressable>
   );
 }
+// The Social ball hops up, lands and rebounds once.
+function bounce(hop: Animated.Value) {
+  const native = Platform.OS !== 'web';
+  const step = (
+    toValue: number,
+    duration: number,
+    easing: (t: number) => number,
+  ) =>
+    Animated.timing(hop, {
+      toValue,
+      duration,
+      easing,
+      useNativeDriver: native,
+    });
+  hop.stopAnimation();
+  hop.setValue(0);
+  Animated.sequence([
+    step(-22, 170, Easing.out(Easing.quad)),
+    step(0, 170, Easing.in(Easing.quad)),
+    step(-7, 110, Easing.out(Easing.quad)),
+    step(0, 110, Easing.in(Easing.quad)),
+  ]).start();
+}
+
 // The admin shell reuses the same bar with its own tab names and icons.
 export function FutTabBar({
   state,
   navigation,
   icons = userIcons,
   labels = copy.tabs,
+  badges = {},
 }: BottomTabBarProps & {
   icons?: Record<string, TabIcon>;
   labels?: Record<string, string>;
+  badges?: Record<string, number | null>;
 }) {
   const insets = useSafeAreaInsets();
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -161,6 +209,7 @@ export function FutTabBar({
               label={labels[name] ?? name}
               icon={icons[name] ?? Ellipsis}
               active={active}
+              badge={badges[name]}
               onPress={() => {
                 const event = navigation.emit({
                   type: 'tabPress',
@@ -253,4 +302,19 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   activeLabel: { color: colors.brand, fontWeight: '700' },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -10,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 9,
+    backgroundColor: colors.danger,
+    borderWidth: 2,
+    borderColor: colors.surface,
+  },
+  badgeText: { color: colors.text, fontSize: 9, fontWeight: '800' },
 });

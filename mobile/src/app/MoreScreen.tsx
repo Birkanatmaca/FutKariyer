@@ -1,13 +1,12 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
+  ChevronRight,
   Compass,
   ClipboardList,
-  Bell,
   MessagesSquare,
   ShoppingBag,
   Settings,
-  UserRound,
   Newspaper,
   Gift,
   Medal,
@@ -15,22 +14,28 @@ import {
   Shield,
   Users,
   Eye,
+  type LucideIcon,
 } from 'lucide-react-native';
 import { Screen } from '../shared/ui/Screen';
 import { Brand } from '../shared/ui/Brand';
-import { PageHeader } from '../shared/ui/PageHeader';
 import { copy } from '../shared/lib/copy';
 import { colors, radius, space } from '../styles/tokens';
+
+type Entry = {
+  title: string;
+  hint: string;
+  icon: LucideIcon;
+  onPress(): void;
+};
+type Section = { title: string; entries: Entry[] };
 
 export function MoreScreen({
   onSettings,
   onDiscover,
   onConnections,
-  onProfile,
   onTeamRequests,
   onMyTeamApplications,
   onBuyTeamRights,
-  onNotifications,
   onNews,
   onGifts,
   onSquad,
@@ -40,7 +45,6 @@ export function MoreScreen({
   onTournaments,
   onTournamentEntries,
   onVisitors,
-  unreadCount,
   isClub,
   isPlayer,
   isOrganizer = false,
@@ -48,11 +52,9 @@ export function MoreScreen({
   onSettings(): void;
   onDiscover(): void;
   onConnections(): void;
-  onProfile(): void;
   onTeamRequests(): void;
   onMyTeamApplications(): void;
   onBuyTeamRights(): void;
-  onNotifications(): void;
   onNews(): void;
   onGifts(): void;
   onSquad(): void;
@@ -62,253 +64,220 @@ export function MoreScreen({
   onTournaments(): void;
   onTournamentEntries(): void;
   onVisitors(): void;
-  unreadCount: number | null;
   isClub: boolean;
   isPlayer: boolean;
-  // Organizers only see account, notifications, news and tournaments; the
-  // other entries open player or club features the server rejects for them.
+  // Organizers only see tournaments, news and account; the other entries
+  // open player or club features the server rejects for them.
   isOrganizer?: boolean;
 }) {
-  const entries = [
-    {
-      title: copy.more.profile,
-      hint: copy.more.profileHint,
-      icon: UserRound,
-      onPress: onProfile,
-    },
-    {
-      title: copy.more.settings,
-      hint: copy.more.settingsHint,
-      icon: Settings,
-      onPress: onSettings,
-    },
-    {
-      title: copy.more.notifications,
-      hint: copy.more.notificationsHint,
-      icon: Bell,
-      onPress: onNotifications,
-      badge: unreadCount,
-    },
-    {
-      title: copy.more.news,
-      hint: copy.more.newsHint,
-      icon: Newspaper,
-      onPress: onNews,
-    },
-    {
-      title: copy.more.gifts,
-      hint: copy.more.giftsHint,
-      icon: Gift,
-      onPress: onGifts,
-    },
-    {
-      title: copy.more.visitors,
-      hint: copy.more.visitorsHint,
-      icon: Eye,
-      onPress: onVisitors,
-    },
-    {
-      title: copy.more.discover,
-      hint: copy.more.discoverHint,
-      icon: Compass,
-      onPress: onDiscover,
-    },
-    {
-      title: copy.more.connections,
-      hint: copy.more.connectionsHint,
-      icon: MessagesSquare,
-      onPress: onConnections,
-    },
-    ...(isClub
-      ? [
-          {
-            title: copy.more.teamRequests,
-            hint: copy.more.teamRequestsHint,
-            icon: ClipboardList,
-            onPress: onTeamRequests,
-          },
-          {
-            title: copy.more.squad,
-            hint: copy.more.squadHint,
-            icon: Users,
-            onPress: onSquad,
-          },
-          {
-            title: copy.more.clubListings,
-            hint: copy.more.clubListingsHint,
-            icon: Megaphone,
-            onPress: onClubListings,
-          },
-          {
-            title: copy.more.tournaments,
-            hint: copy.more.tournamentsHint,
-            icon: Medal,
-            onPress: onTournaments,
-          },
-          {
-            title: copy.more.tournamentEntries,
-            hint: copy.more.tournamentEntriesHint,
-            icon: ClipboardList,
-            onPress: onTournamentEntries,
-          },
-        ]
-      : [
-          {
-            title: copy.more.listings,
-            hint: copy.more.listingsHint,
-            icon: Megaphone,
-            onPress: onListings,
-          },
-        ]),
-    ...(isPlayer
-      ? [
-          {
-            title: copy.more.buyTeamRights,
-            hint: copy.more.buyTeamRightsHint,
-            icon: ShoppingBag,
-            onPress: onBuyTeamRights,
-          },
-          {
-            title: copy.more.myTeamApplications,
-            hint: copy.more.myTeamApplicationsHint,
-            icon: ClipboardList,
-            onPress: onMyTeamApplications,
-          },
-          {
-            title: copy.more.memberships,
-            hint: copy.more.membershipsHint,
-            icon: Shield,
-            onPress: onMemberships,
-          },
-        ]
-      : []),
-    ...(isClub
-      ? []
-      : [
-          {
-            title: copy.more.tournaments,
-            hint: copy.more.tournamentsHint,
-            icon: Medal,
-            onPress: onTournaments,
-          },
-        ]),
-  ];
-  const organizerTitles: string[] = [
-    copy.more.settings,
-    copy.more.notifications,
-    copy.more.news,
-    copy.more.tournaments,
-  ];
-  const visible = isOrganizer
-    ? entries.filter(entry => organizerTitles.includes(entry.title))
-    : entries;
+  const text = copy.more;
+  const entry = (
+    title: string,
+    hint: string,
+    icon: LucideIcon,
+    onPress: () => void,
+  ): Entry => ({ title, hint, icon, onPress });
+  const tournaments = entry(
+    text.tournaments,
+    text.tournamentsHint,
+    Medal,
+    onTournaments,
+  );
+  const news = entry(text.news, text.newsHint, Newspaper, onNews);
+  const settings = entry(
+    text.settings,
+    text.settingsHint,
+    Settings,
+    onSettings,
+  );
+  const network: Section = {
+    title: text.sections.network,
+    entries: [
+      entry(text.discover, text.discoverHint, Compass, onDiscover),
+      entry(
+        text.connections,
+        text.connectionsHint,
+        MessagesSquare,
+        onConnections,
+      ),
+      entry(text.visitors, text.visitorsHint, Eye, onVisitors),
+    ],
+  };
+  const explore: Section = { title: text.sections.explore, entries: [news] };
+  const account: Section = {
+    title: text.sections.account,
+    entries: [settings],
+  };
+  // Grouped by what the account does most, then network, rewards and account.
+  const sections: Section[] = isOrganizer
+    ? [
+        { title: text.sections.tournaments, entries: [tournaments] },
+        explore,
+        account,
+      ]
+    : isClub
+    ? [
+        {
+          title: text.sections.club,
+          entries: [
+            entry(
+              text.teamRequests,
+              text.teamRequestsHint,
+              ClipboardList,
+              onTeamRequests,
+            ),
+            entry(text.squad, text.squadHint, Users, onSquad),
+            entry(
+              text.clubListings,
+              text.clubListingsHint,
+              Megaphone,
+              onClubListings,
+            ),
+          ],
+        },
+        {
+          title: text.sections.tournaments,
+          entries: [
+            tournaments,
+            entry(
+              text.tournamentEntries,
+              text.tournamentEntriesHint,
+              ClipboardList,
+              onTournamentEntries,
+            ),
+          ],
+        },
+        network,
+        {
+          title: text.sections.rewards,
+          entries: [entry(text.gifts, text.giftsHint, Gift, onGifts)],
+        },
+        explore,
+        account,
+      ]
+    : [
+        {
+          title: text.sections.career,
+          entries: [
+            entry(text.listings, text.listingsHint, Megaphone, onListings),
+            ...(isPlayer
+              ? [
+                  entry(
+                    text.myTeamApplications,
+                    text.myTeamApplicationsHint,
+                    ClipboardList,
+                    onMyTeamApplications,
+                  ),
+                  entry(
+                    text.memberships,
+                    text.membershipsHint,
+                    Shield,
+                    onMemberships,
+                  ),
+                ]
+              : []),
+            tournaments,
+          ],
+        },
+        network,
+        {
+          title: text.sections.rewards,
+          entries: [
+            ...(isPlayer
+              ? [
+                  entry(
+                    text.buyTeamRights,
+                    text.buyTeamRightsHint,
+                    ShoppingBag,
+                    onBuyTeamRights,
+                  ),
+                ]
+              : []),
+            entry(text.gifts, text.giftsHint, Gift, onGifts),
+          ],
+        },
+        explore,
+        account,
+      ];
   return (
     <Screen>
-      <Brand />
-      <PageHeader
-        eyebrow={copy.more.eyebrow}
-        title={copy.more.title}
-        hint={copy.more.description}
-      />
-      <View style={styles.grid}>
-        {rows(visible).map(row => (
-          <View key={row[0].title} style={styles.row}>
-            {row.map(({ title, hint, icon: Icon, onPress, badge }) => (
+      <Brand mark={false} />
+      {sections.map(section => (
+        <View key={section.title} style={styles.section}>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>
+            {section.title}
+          </Text>
+          <View style={styles.group}>
+            {section.entries.map(({ title, hint, icon: Icon, onPress }, i) => (
               <Pressable
                 key={title}
                 accessibilityRole="button"
-                accessibilityLabel={
-                  badge ? title + ', ' + copy.more.unread(badge) : title
-                }
+                accessibilityLabel={title}
                 accessibilityHint={hint}
                 onPress={onPress}
                 style={({ pressed }) => [
-                  styles.tile,
+                  styles.row,
+                  i > 0 && styles.divider,
                   pressed && styles.pressed,
                 ]}
               >
                 <View style={styles.icon}>
-                  <Icon size={24} color={colors.brand} strokeWidth={2} />
-                  {badge ? (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>
-                        {badge > 99 ? '99+' : badge}
-                      </Text>
-                    </View>
-                  ) : null}
+                  <Icon size={20} color={colors.brand} strokeWidth={2} />
                 </View>
-                <Text numberOfLines={2} style={styles.title}>
-                  {title}
-                </Text>
+                <View style={styles.text}>
+                  <Text numberOfLines={1} style={styles.title}>
+                    {title}
+                  </Text>
+                  <Text numberOfLines={1} style={styles.hint}>
+                    {hint}
+                  </Text>
+                </View>
+                <ChevronRight size={18} color={colors.muted} />
               </Pressable>
             ))}
-            {Array.from({ length: columns - row.length }, (_, i) => (
-              <View key={'spacer' + i} style={styles.spacer} />
-            ))}
           </View>
-        ))}
-      </View>
+        </View>
+      ))}
     </Screen>
   );
 }
-// Three icon tiles per row: one word each, the explanation lives in the accessibility hint.
-const columns = 3;
-function rows<T>(items: T[]): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += columns) {
-    out.push(items.slice(i, i + columns));
-  }
-  return out;
-}
+
 const styles = StyleSheet.create({
-  grid: { gap: space.md },
-  row: { flexDirection: 'row', gap: space.md },
-  spacer: { flex: 1 },
-  tile: {
-    flex: 1,
-    minWidth: 0,
-    minHeight: 112,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space.sm,
-    paddingHorizontal: space.sm,
-    paddingVertical: space.lg,
+  section: { gap: space.sm },
+  sectionTitle: {
+    color: colors.muted,
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    paddingHorizontal: space.xs,
+  },
+  group: {
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.hairline,
     backgroundColor: colors.surface,
+    overflow: 'hidden',
   },
-  pressed: { backgroundColor: colors.raised, transform: [{ scale: 0.97 }] },
+  row: {
+    minHeight: 64,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingHorizontal: space.lg,
+    paddingVertical: space.md,
+  },
+  divider: { borderTopWidth: 1, borderTopColor: colors.hairline },
+  pressed: { backgroundColor: colors.raised },
   icon: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 38,
+    height: 38,
+    borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.brandWash,
-    borderWidth: 1,
-    borderColor: colors.brandSoft,
   },
-  title: {
-    color: colors.text,
-    fontSize: 13,
-    lineHeight: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    right: -6,
-    minWidth: 22,
-    height: 22,
-    paddingHorizontal: space.xs,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 11,
-    backgroundColor: colors.danger,
-    borderWidth: 2,
-    borderColor: colors.surface,
-  },
-  badgeText: { color: colors.text, fontSize: 10, fontWeight: '800' },
+  text: { flex: 1, minWidth: 0, gap: 2 },
+  title: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  hint: { color: colors.muted, fontSize: 12, lineHeight: 16 },
 });

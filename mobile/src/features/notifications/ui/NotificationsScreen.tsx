@@ -9,42 +9,25 @@ import {
 import {
   ArrowLeft,
   Bell,
-  Check,
   CheckCheck,
-  CreditCard,
-  Gift,
-  Handshake,
-  Medal,
-  Newspaper,
-  Sparkles,
-  Trophy,
+  Trash2,
+  X,
+  type LucideIcon,
 } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { Brand } from '../../../shared/ui/Brand';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
 import { colors, radius, space } from '../../../styles/tokens';
-import type {
-  AppNotification,
-  DisplayNotificationKind,
-} from '../domain/models';
+import type { AppNotification } from '../domain/models';
 import type { NotificationsService } from '../application/notification-service';
+import { ConfirmPrompt } from './ConfirmPrompt';
+import { NotificationRow } from './NotificationRow';
 
 type NotificationFilter = 'all' | 'unread';
-
-const kindIcon: Record<DisplayNotificationKind, typeof Bell> = {
-  team_application: Bell,
-  payment: CreditCard,
-  opportunity: Sparkles,
-  gift: Gift,
-  game_reward: Trophy,
-  news_review: Newspaper,
-  connection: Handshake,
-  tournament: Medal,
-  other: Bell,
-};
+type BulkAction = 'markAllRead' | 'deleteAll' | 'deleteSelected';
 
 export function NotificationsScreen({
   token,
@@ -54,14 +37,19 @@ export function NotificationsScreen({
   onOpenConnections,
   onOpenListing,
   onOpenTournament,
+  onOpenProfile,
+  onFollowBack,
 }: {
   token: string;
   service: NotificationsService;
-  onBack(): void;
+  onBack?(): void;
   onOpenGifts?(): void;
   onOpenConnections?(): void;
   onOpenListing?(id: string): void;
   onOpenTournament?(resourceId: string): void;
+  // Follow notifications: open the follower's profile and follow them back.
+  onOpenProfile?(userId: string, role: AppNotification['actorRole']): void;
+  onFollowBack?(userId: string): Promise<void>;
 }) {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<NotificationFilter>('all');
@@ -69,6 +57,10 @@ export function NotificationsScreen({
   const [busyAll, setBusyAll] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  // A long press starts selecting; the delete action then targets only the
+  // selected notifications of this page.
+  const [selected, setSelected] = useState<string[] | null>(null);
+  const [confirm, setConfirm] = useState<BulkAction | null>(null);
   const load = useCallback(
     () => service.list(token, page),
     [service, token, page],
@@ -86,7 +78,6 @@ export function NotificationsScreen({
     setNotice('');
     try {
       await service.markRead(token, id);
-      setNotice(copy.notifications.markedRead);
       state.retry();
     } catch (failure) {
       setError(
@@ -97,14 +88,48 @@ export function NotificationsScreen({
     }
   }
 
-  async function markAllRead() {
-    if (busyID || busyAll || !state.data?.unreadCount) return;
+  // A tap marks the notification read and opens what it is about.
+  function open(item: AppNotification) {
+    if (item.readAt === null) markRead(item.id);
+    const target = /^[a-f0-9]{32}$/.test(item.resourceId);
+    if (item.kind === 'follow' && item.actorRole)
+      onOpenProfile?.(item.resourceId, item.actorRole);
+    else if (item.kind === 'gift') onOpenGifts?.();
+    else if (item.kind === 'connection') onOpenConnections?.();
+    else if (item.kind === 'opportunity' && target)
+      onOpenListing?.(item.resourceId);
+    else if (item.kind === 'tournament' && target)
+      onOpenTournament?.(item.resourceId);
+  }
+
+  function toggle(id: string) {
+    setSelected(current => {
+      const list = current ?? [];
+      const next = list.includes(id)
+        ? list.filter(item => item !== id)
+        : [...list, id];
+      return next.length ? next : null;
+    });
+  }
+
+  async function runBulk(action: BulkAction) {
+    if (busyID || busyAll) return;
     setBusyAll(true);
     setError('');
     setNotice('');
     try {
-      await service.markAllRead(token);
-      setNotice(copy.notifications.allMarkedRead);
+      if (action === 'markAllRead') {
+        await service.markAllRead(token);
+        setNotice(copy.notifications.allMarkedRead);
+      } else if (action === 'deleteAll') {
+        await service.deleteAll(token);
+        setNotice(copy.notifications.deleted);
+        setPage(1);
+      } else if (selected?.length) {
+        await service.deleteSelected(token, selected);
+        setNotice(copy.notifications.deleted);
+      }
+      setSelected(null);
       state.retry();
     } catch (failure) {
       setError(
@@ -112,43 +137,77 @@ export function NotificationsScreen({
       );
     } finally {
       setBusyAll(false);
+      setConfirm(null);
     }
   }
 
+  const selecting = selected !== null;
+  const hasItems = !!state.data && state.data.total > 0;
+  const prompt = confirm
+    ? confirm === 'deleteSelected'
+      ? {
+          ...copy.notifications.confirm.deleteSelected,
+          body: copy.notifications.confirm.deleteSelected.body(
+            selected?.length ?? 0,
+          ),
+          danger: true,
+        }
+      : {
+          ...copy.notifications.confirm[confirm],
+          danger: confirm === 'deleteAll',
+        }
+    : null;
+
   return (
     <Screen>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={copy.notifications.back}
-        onPress={onBack}
-        style={styles.back}
-      >
-        <ArrowLeft size={18} color={colors.text} />
-        <Text style={styles.backText}>{copy.notifications.back}</Text>
-      </Pressable>
-      <PageHeader
-        eyebrow={copy.notifications.eyebrow}
-        title={copy.notifications.title}
-        hint={copy.notifications.description}
-      />
-      {state.data?.unreadCount ? (
-        <View style={styles.unreadSummary}>
-          <View style={styles.unreadIcon}>
-            <Bell size={19} color={colors.brand} />
-          </View>
-          <Text style={styles.unreadText}>
-            {copy.notifications.unread(state.data.unreadCount)}
-          </Text>
-          <Button
-            label={copy.notifications.markAllRead}
-            secondary
-            loading={busyAll}
-            disabled={!!busyID}
-            onPress={markAllRead}
+      {onBack ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={copy.notifications.back}
+          onPress={onBack}
+          style={styles.back}
+        >
+          <ArrowLeft size={18} color={colors.text} />
+          <Text style={styles.backText}>{copy.notifications.back}</Text>
+        </Pressable>
+      ) : null}
+      <View style={styles.header}>
+        <Brand mark={false} />
+        <View style={styles.headerActions}>
+          {selecting ? (
+            <HeaderAction
+              icon={X}
+              label={copy.notifications.cancelSelection}
+              onPress={() => setSelected(null)}
+            />
+          ) : (
+            <HeaderAction
+              icon={CheckCheck}
+              label={copy.notifications.markAllRead}
+              disabled={!state.data?.unreadCount || busyAll || !!busyID}
+              onPress={() => setConfirm('markAllRead')}
+            />
+          )}
+          <HeaderAction
+            icon={Trash2}
+            danger={selecting}
+            badge={selected?.length}
+            label={
+              selecting
+                ? copy.notifications.deleteSelected(selected.length)
+                : copy.notifications.deleteAll
+            }
+            disabled={!hasItems || busyAll || !!busyID}
+            onPress={() =>
+              setConfirm(selecting ? 'deleteSelected' : 'deleteAll')
+            }
           />
         </View>
-      ) : state.data && state.data.total > 0 ? (
-        <Text style={styles.readSummary}>{copy.notifications.allRead}</Text>
+      </View>
+      {selecting ? (
+        <Text accessibilityRole="alert" style={styles.selection}>
+          {copy.notifications.selected(selected.length)}
+        </Text>
       ) : null}
       {items.length > 0 && !state.loading && !state.error ? (
         <View
@@ -184,16 +243,19 @@ export function NotificationsScreen({
       ) : visibleItems.length ? (
         <View style={styles.list}>
           {visibleItems.map(item => (
-            <NotificationCard
+            <NotificationRow
               key={item.id}
               item={item}
-              busy={busyID === item.id}
-              disabled={!!busyID || busyAll}
-              onMarkRead={() => markRead(item.id)}
-              onOpenGifts={onOpenGifts}
-              onOpenConnections={onOpenConnections}
-              onOpenListing={onOpenListing}
-              onOpenTournament={onOpenTournament}
+              disabled={busyID === item.id || busyAll}
+              selecting={selecting}
+              selected={!!selected?.includes(item.id)}
+              onSelect={() => toggle(item.id)}
+              onPress={() => open(item)}
+              onFollowBack={
+                item.kind === 'follow' && item.actorRole && onFollowBack
+                  ? () => onFollowBack(item.resourceId)
+                  : undefined
+              }
             />
           ))}
         </View>
@@ -237,7 +299,57 @@ export function NotificationsScreen({
           />
         </View>
       ) : null}
+      <ConfirmPrompt
+        request={prompt}
+        busy={busyAll}
+        onCancel={() => setConfirm(null)}
+        onConfirm={() => confirm && runBulk(confirm)}
+      />
     </Screen>
+  );
+}
+
+function HeaderAction({
+  icon: Icon,
+  label,
+  onPress,
+  disabled,
+  danger,
+  badge,
+}: {
+  icon: LucideIcon;
+  label: string;
+  onPress(): void;
+  disabled?: boolean;
+  danger?: boolean;
+  badge?: number;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled }}
+      disabled={disabled}
+      hitSlop={4}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.headerAction,
+        danger && styles.headerActionDanger,
+        disabled && styles.disabled,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Icon
+        size={20}
+        color={danger ? colors.danger : colors.text}
+        strokeWidth={2}
+      />
+      {badge ? (
+        <View style={styles.actionBadge}>
+          <Text style={styles.actionBadgeText}>{badge}</Text>
+        </View>
+      ) : null}
+    </Pressable>
   );
 }
 
@@ -265,138 +377,6 @@ function FilterTab({
   );
 }
 
-function NotificationCard({
-  item,
-  busy,
-  disabled,
-  onMarkRead,
-  onOpenGifts,
-  onOpenConnections,
-  onOpenListing,
-  onOpenTournament,
-}: {
-  item: AppNotification;
-  busy: boolean;
-  disabled: boolean;
-  onMarkRead(): void;
-  onOpenGifts?(): void;
-  onOpenConnections?(): void;
-  onOpenListing?(id: string): void;
-  onOpenTournament?(resourceId: string): void;
-}) {
-  const read = item.readAt !== null;
-  const Icon = kindIcon[item.kind];
-  const opensGifts = item.kind === 'gift' && !!onOpenGifts;
-  const opensConnections = item.kind === 'connection' && !!onOpenConnections;
-  // Opportunity notifications may point at a club listing; the caller decides
-  // whether the listing is still open, otherwise tapping only marks it read.
-  const opensListing =
-    item.kind === 'opportunity' &&
-    /^[a-f0-9]{32}$/.test(item.resourceId) &&
-    !!onOpenListing;
-  // Tournament notifications carry a tournament id or an entry id; the caller
-  // resolves which screen to open.
-  const opensTournament =
-    item.kind === 'tournament' &&
-    /^[a-f0-9]{32}$/.test(item.resourceId) &&
-    !!onOpenTournament;
-  const actionable =
-    !read || opensGifts || opensConnections || opensListing || opensTournament;
-  const date = new Date(item.createdAt).toLocaleString('tr-TR', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
-  // Tapping marks an unread notification as read; gift and connection notifications also open their screen.
-  function open() {
-    if (!read) onMarkRead();
-    if (opensGifts) onOpenGifts?.();
-    if (opensConnections) onOpenConnections?.();
-    if (opensListing) onOpenListing?.(item.resourceId);
-    if (opensTournament) onOpenTournament?.(item.resourceId);
-  }
-  return (
-    <Pressable
-      accessibilityRole={actionable ? 'button' : undefined}
-      accessibilityLabel={item.title}
-      accessibilityState={{ disabled: disabled || busy || !actionable, busy }}
-      disabled={disabled || busy || !actionable}
-      onPress={open}
-      style={[styles.card, !read && styles.unreadCard]}
-    >
-      <View style={styles.cardIcon}>
-        <Icon size={19} color={read ? colors.muted : colors.brand} />
-      </View>
-      <View style={styles.cardContent}>
-        <Text style={[styles.kindLabel, read && styles.kindLabelRead]}>
-          {copy.notifications.kinds[item.kind]}
-        </Text>
-        <View style={styles.cardHeading}>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          {!read ? <View style={styles.unreadDot} /> : null}
-        </View>
-        <Text style={styles.cardBody}>{item.body}</Text>
-        <Text style={styles.date}>{date}</Text>
-        {read ? (
-          <View style={styles.readStatus}>
-            <Check size={14} color={colors.success} />
-            <Text style={styles.readStatusText}>{copy.notifications.read}</Text>
-          </View>
-        ) : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={copy.notifications.markRead}
-            accessibilityState={{ disabled: disabled || busy, busy }}
-            disabled={disabled || busy}
-            onPress={onMarkRead}
-            style={styles.markRead}
-          >
-            {busy ? (
-              <ActivityIndicator size="small" color={colors.brand} />
-            ) : (
-              <>
-                <CheckCheck size={15} color={colors.brand} />
-                <Text style={styles.markReadText}>
-                  {copy.notifications.markRead}
-                </Text>
-              </>
-            )}
-          </Pressable>
-        )}
-        {opensGifts ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={copy.notifications.openGifts}
-            accessibilityState={{ disabled: disabled || busy, busy }}
-            disabled={disabled || busy}
-            onPress={open}
-            style={styles.markRead}
-          >
-            <Gift size={15} color={colors.brand} />
-            <Text style={styles.markReadText}>
-              {copy.notifications.openGifts}
-            </Text>
-          </Pressable>
-        ) : null}
-        {opensConnections ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={copy.notifications.openConnections}
-            accessibilityState={{ disabled: disabled || busy, busy }}
-            disabled={disabled || busy}
-            onPress={open}
-            style={styles.markRead}
-          >
-            <Handshake size={15} color={colors.brand} />
-            <Text style={styles.markReadText}>
-              {copy.notifications.openConnections}
-            </Text>
-          </Pressable>
-        ) : null}
-      </View>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   back: {
     minHeight: 44,
@@ -407,24 +387,42 @@ const styles = StyleSheet.create({
     paddingRight: space.md,
   },
   backText: { color: colors.text, fontSize: 13, fontWeight: '700' },
-  unreadSummary: {
-    padding: space.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    gap: space.md,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  unreadIcon: {
-    width: 40,
-    height: 40,
+  headerActions: { flexDirection: 'row', gap: space.sm },
+  headerAction: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.sm,
     backgroundColor: colors.raised,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  unreadText: { color: colors.text, fontSize: 14, fontWeight: '700' },
-  readSummary: { color: colors.success, fontSize: 13, fontWeight: '700' },
+  headerActionDanger: {
+    borderColor: colors.danger,
+    backgroundColor: colors.dangerWash,
+  },
+  disabled: { opacity: 0.4 },
+  pressed: { opacity: 0.8, transform: [{ scale: 0.97 }] },
+  actionBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.danger,
+  },
+  actionBadgeText: { color: colors.brandInk, fontSize: 10, fontWeight: '800' },
+  selection: { color: colors.secondary, fontSize: 13, fontWeight: '600' },
   filter: {
     flexDirection: 'row',
     padding: space.xs,
@@ -445,7 +443,7 @@ const styles = StyleSheet.create({
   filterText: { color: colors.secondary, fontSize: 13, fontWeight: '700' },
   filterTextSelected: { color: colors.brandInk },
   notice: { color: colors.success, fontSize: 13, lineHeight: 19 },
-  list: { gap: space.md },
+  list: { gap: space.xs },
   card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -457,6 +455,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   unreadCard: { borderColor: colors.brand, backgroundColor: colors.raised },
+  selectedCard: {
+    borderColor: colors.brand,
+    backgroundColor: colors.brandWash,
+  },
+  selectedIcon: { backgroundColor: colors.brand },
   cardIcon: {
     width: 38,
     height: 38,

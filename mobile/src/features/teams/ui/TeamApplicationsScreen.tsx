@@ -7,14 +7,13 @@ import {
   View,
 } from 'react-native';
 import {
-  ArrowLeft,
   ArrowRight,
   ClipboardList,
   MapPin,
   RefreshCw,
 } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
@@ -52,19 +51,10 @@ export function TeamApplicationsScreen({
   }
   return (
     <Screen>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={copy.teams.applicationsBack}
-        onPress={onBack}
-        style={styles.back}
-      >
-        <ArrowLeft size={18} color={colors.text} />
-        <Text style={styles.backText}>{copy.teams.applicationsBack}</Text>
-      </Pressable>
-      <PageHeader
-        eyebrow={copy.teams.applicationsEyebrow}
+      <TopBar
         title={copy.teams.applicationsTitle}
-        hint={copy.teams.applicationsDescription}
+        onBack={onBack}
+        backLabel={copy.teams.applicationsBack}
       />
       {state.loading ? (
         <ActivityIndicator color={colors.brand} />
@@ -228,15 +218,6 @@ function PageButton({
 }
 
 const styles = StyleSheet.create({
-  back: {
-    minHeight: 44,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingRight: space.md,
-  },
-  backText: { color: colors.text, fontSize: 13, fontWeight: '700' },
   quota: {
     borderRadius: radius.md,
     borderWidth: 1,

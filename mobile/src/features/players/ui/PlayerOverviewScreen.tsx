@@ -6,12 +6,14 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, Settings } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
+import type { ProfileCounts } from './PlayerProfileHeader';
+import type { ProfilePostsSlot } from './PlayerMediaGallery';
 import type { PlayerProfileService } from '../application/profile-service';
 import type { PlayerMediaService } from '../application/media-service';
 import { usePlayerProfile } from '../application/usePlayerProfile';
@@ -22,8 +24,9 @@ export function PlayerOverviewScreen({
   token,
   service,
   onEdit,
-  onAccount,
   onBack,
+  counts,
+  posts,
   isPro = false,
   userId,
   media,
@@ -36,35 +39,23 @@ export function PlayerOverviewScreen({
   token: string | null;
   service: PlayerProfileService;
   onEdit(): void;
-  onAccount(): void;
   onBack?(): void;
+  counts?: ProfileCounts | null;
+  posts?: ProfilePostsSlot;
 }) {
   const { profile, error, loading, retry } = usePlayerProfile(service, token);
   return (
     <Screen>
-      <View style={styles.toolbar}>
-        {onBack && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={copy.form.back}
-            style={styles.settings}
-            onPress={onBack}
-          >
-            <ArrowLeft color={colors.text} size={20} />
-          </Pressable>
-        )}
-        <Text accessibilityRole="header" style={styles.title}>
-          {copy.profile.title}
-        </Text>
+      {onBack && (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={copy.playerOverview.settings}
-          onPress={onAccount}
-          style={styles.settings}
+          accessibilityLabel={copy.form.back}
+          style={styles.back}
+          onPress={onBack}
         >
-          <Settings color={colors.text} size={22} />
+          <ArrowLeft color={colors.text} size={20} />
         </Pressable>
-      </View>
+      )}
       {loading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={colors.brand} />
@@ -81,6 +72,8 @@ export function PlayerOverviewScreen({
             fullName={fullName}
             profile={profile}
             onEdit={onEdit}
+            counts={counts}
+            posts={posts}
             isPro={isPro}
             gallery={
               token && userId && media
@@ -94,14 +87,7 @@ export function PlayerOverviewScreen({
   );
 }
 const styles = StyleSheet.create({
-  toolbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: space.lg,
-  },
-  title: { color: colors.text, fontSize: 23, fontWeight: '800', flex: 1 },
-  settings: {
+  back: {
     width: 44,
     height: 44,
     borderRadius: radius.pill,

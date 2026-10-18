@@ -8,11 +8,10 @@ import {
 } from 'react-native';
 import { Megaphone, CircleX } from 'lucide-react-native';
 import { confirmAction } from '../../connections';
-import { BackLink } from '../../../shared/ui/BackLink';
 import { Button } from '../../../shared/ui/Button';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Screen } from '../../../shared/ui/Screen';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
@@ -80,12 +79,7 @@ export function ClubListingsScreen({
 
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={text.mineEyebrow}
-        title={text.mineTitle}
-        hint={text.mineDescription}
-      />
+      <TopBar title={text.mineTitle} onBack={onBack} />
       {notice ? (
         <Text accessibilityRole="alert" style={styles.notice}>
           {notice}

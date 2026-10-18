@@ -75,7 +75,7 @@ export function TeamsScreen({
     );
   return (
     <Screen>
-      <Brand />
+      <Brand mark={false} />
       <PageHeader
         eyebrow={copy.teams.eyebrow}
         title={copy.teams.title}

@@ -26,7 +26,11 @@ function validNotification(
     Number.isFinite(Date.parse(item.createdAt)) &&
     (item.readAt === null ||
       (typeof item.readAt === 'string' &&
-        Number.isFinite(Date.parse(item.readAt))))
+        Number.isFinite(Date.parse(item.readAt)))) &&
+    (item.actorRole === undefined ||
+      ['player', 'club', 'coach'].includes(item.actorRole)) &&
+    (item.followingBack === undefined ||
+      typeof item.followingBack === 'boolean')
   );
 }
 
@@ -85,6 +89,24 @@ export const notificationsRepository: NotificationsRepository = {
   async markAllRead(token) {
     const result = await request<unknown>('/v1/me/notifications/read-all', {
       method: 'PUT',
+      token,
+    });
+    if (!validCount(result) || result.unreadCount !== 0) {
+      throw new ApiError(copy.form.unexpected);
+    }
+  },
+  async deleteSelected(token, ids) {
+    const result = await request<unknown>('/v1/me/notifications/delete', {
+      method: 'POST',
+      token,
+      body: { ids },
+    });
+    if (!validCount(result)) throw new ApiError(copy.form.unexpected);
+    return result.unreadCount;
+  },
+  async deleteAll(token) {
+    const result = await request<unknown>('/v1/me/notifications', {
+      method: 'DELETE',
       token,
     });
     if (!validCount(result) || result.unreadCount !== 0) {

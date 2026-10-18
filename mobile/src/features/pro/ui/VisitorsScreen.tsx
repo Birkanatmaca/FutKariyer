@@ -8,8 +8,7 @@ import {
 } from 'react-native';
 import { Eye, Sparkles } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
-import { BackLink } from '../../../shared/ui/BackLink';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { Button } from '../../../shared/ui/Button';
@@ -40,12 +39,7 @@ export function VisitorsScreen({
   const data = state.data;
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={copy.visitors.eyebrow}
-        title={copy.visitors.title}
-        hint={copy.visitors.hint}
-      />
+      <TopBar title={copy.visitors.title} onBack={onBack} />
       {state.loading ? (
         <View style={styles.loading}>
           <ActivityIndicator color={colors.brand} />

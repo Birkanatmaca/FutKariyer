@@ -57,7 +57,7 @@ export function AdminDashboardScreen({
     counts.loading || count === undefined ? '—' : count.toLocaleString('tr-TR');
   return (
     <Screen>
-      <Brand />
+      <Brand mark={false} />
       <View style={styles.hero}>
         <View style={styles.glow} pointerEvents="none" />
         <Text style={styles.eyebrow}>{text.eyebrow}</Text>

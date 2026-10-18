@@ -1,16 +1,10 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { ArrowLeft, Gift } from 'lucide-react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { Gift } from 'lucide-react-native';
 import { colors, space } from '../../../styles/tokens';
 import { copy } from '../../../shared/lib/copy';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Button } from '../../../shared/ui/Button';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
@@ -30,19 +24,10 @@ export function GiftsScreen({
   const gifts = useGifts(service, token);
   return (
     <Screen>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={copy.gifts.back}
-        onPress={onBack}
-        style={styles.back}
-      >
-        <ArrowLeft size={18} color={colors.text} />
-        <Text style={styles.backText}>{copy.gifts.back}</Text>
-      </Pressable>
-      <PageHeader
-        eyebrow={copy.gifts.eyebrow}
+      <TopBar
         title={copy.gifts.title}
-        hint={copy.gifts.description}
+        onBack={onBack}
+        backLabel={copy.gifts.back}
       />
       {gifts.notice ? (
         <Text accessibilityRole="alert" style={styles.notice}>
@@ -81,14 +66,6 @@ export function GiftsScreen({
 }
 
 const styles = StyleSheet.create({
-  back: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    alignSelf: 'flex-start',
-    minHeight: 40,
-  },
-  backText: { color: colors.text, fontSize: 14, fontWeight: '700' },
   notice: {
     color: colors.success,
     fontSize: 13,

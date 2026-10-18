@@ -1,11 +1,10 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Medal } from 'lucide-react-native';
-import { BackLink } from '../../../shared/ui/BackLink';
 import { Button } from '../../../shared/ui/Button';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Screen } from '../../../shared/ui/Screen';
 import { copy } from '../../../shared/lib/copy';
 import { colors, space } from '../../../styles/tokens';
@@ -29,12 +28,7 @@ export function TournamentsScreen({
   const feed = useTournamentFeed(service, token);
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={text.eyebrow}
-        title={text.title}
-        hint={text.description}
-      />
+      <TopBar title={text.title} onBack={onBack} />
       {feed.loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : feed.error ? (

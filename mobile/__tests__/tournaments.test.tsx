@@ -46,6 +46,7 @@ jest.mock('lucide-react-native', () => ({
   Bell: () => null,
   CalendarDays: () => null,
   ChevronDown: () => null,
+  ChevronLeft: () => null,
   ChevronRight: () => null,
   ChevronUp: () => null,
   CircleAlert: () => null,
@@ -288,7 +289,7 @@ describe('organizer accounts', () => {
     await expect(authRepository.me('t')).rejects.toBeInstanceOf(ApiError);
   });
 
-  it('shows only account, notifications, news and tournaments in Diğer', () => {
+  it('shows only account, news and tournaments in Diğer', () => {
     const noop = jest.fn();
     let root!: ReactTestRenderer;
     act(() => {
@@ -297,11 +298,9 @@ describe('organizer accounts', () => {
           onSettings={noop}
           onDiscover={noop}
           onConnections={noop}
-          onProfile={noop}
           onTeamRequests={noop}
           onMyTeamApplications={noop}
           onBuyTeamRights={noop}
-          onNotifications={noop}
           onNews={noop}
           onGifts={noop}
           onSquad={noop}
@@ -311,7 +310,6 @@ describe('organizer accounts', () => {
           onTournaments={noop}
           onTournamentEntries={noop}
           onVisitors={noop}
-          unreadCount={2}
           isClub={false}
           isPlayer={false}
           isOrganizer
@@ -327,10 +325,9 @@ describe('organizer accounts', () => {
       )
       .map(node => node.props.accessibilityHint as string);
     expect(labels).toEqual([
-      copy.more.settingsHint,
-      copy.more.notificationsHint,
-      copy.more.newsHint,
       copy.more.tournamentsHint,
+      copy.more.newsHint,
+      copy.more.settingsHint,
     ]);
     const shown = texts(root);
     for (const hidden of [

@@ -35,3 +35,26 @@ func (s *Service) MarkRead(ctx context.Context, userID, notificationID string) e
 func (s *Service) MarkAllRead(ctx context.Context, userID string) error {
 	return s.repo.MarkAllRead(ctx, userID)
 }
+
+// MaxDeleteSelection bounds one "delete selected" request.
+const MaxDeleteSelection = 100
+
+// DeleteSelected removes the recipient's chosen notifications; unknown or
+// foreign ids are ignored so a stale selection still clears what it can.
+func (s *Service) DeleteSelected(ctx context.Context, userID string, ids []string) error {
+	if len(ids) == 0 || len(ids) > MaxDeleteSelection {
+		return auth.ValidationError{"ids": "1–100 bildirim seç."}
+	}
+	for _, id := range ids {
+		if !notificationIDPattern.MatchString(id) {
+			return auth.ValidationError{"ids": "Geçerli bildirimler seç."}
+		}
+	}
+	_, err := s.repo.Delete(ctx, userID, ids)
+	return err
+}
+
+func (s *Service) DeleteAll(ctx context.Context, userID string) error {
+	_, err := s.repo.Delete(ctx, userID, nil)
+	return err
+}

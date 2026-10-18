@@ -6,15 +6,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import {
-  ArrowLeft,
-  Check,
-  ClipboardList,
-  RefreshCw,
-  X,
-} from 'lucide-react-native';
+import { Check, ClipboardList, RefreshCw, X } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
@@ -60,19 +54,10 @@ export function TeamJoinRequestsScreen({
   }
   return (
     <Screen>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={copy.teams.requestsBack}
-        onPress={onBack}
-        style={styles.back}
-      >
-        <ArrowLeft size={18} color={colors.text} />
-        <Text style={styles.backText}>{copy.teams.requestsBack}</Text>
-      </Pressable>
-      <PageHeader
-        eyebrow={copy.teams.requestsEyebrow}
+      <TopBar
         title={copy.teams.requestsTitle}
-        hint={copy.teams.requestsDescription}
+        onBack={onBack}
+        backLabel={copy.teams.requestsBack}
       />
       <View style={styles.filters}>
         {(['pending', 'all', 'accepted', 'rejected'] as Filter[]).map(value => (
@@ -249,15 +234,6 @@ function PageButton({
 }
 
 const styles = StyleSheet.create({
-  back: {
-    minHeight: 44,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingRight: space.md,
-  },
-  backText: { color: colors.text, fontSize: 13, fontWeight: '700' },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   filter: {
     minHeight: 38,

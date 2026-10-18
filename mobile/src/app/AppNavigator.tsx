@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import {
   DarkTheme,
@@ -123,6 +123,7 @@ import {
   createPlayerProfileService,
   playerProfileRepository,
   playerMediaService,
+  type ProfileCounts,
 } from '../features/players';
 import { Medal } from 'lucide-react-native';
 import { Brand } from '../shared/ui/Brand';
@@ -139,17 +140,22 @@ import { FutTabBar } from './FutTabBar';
 import { MoreScreen } from './MoreScreen';
 import { AdminNavigator } from './AdminNavigator';
 import { AuthNavigator } from './AuthNavigator';
+import { useProfilePostsSlot } from './useProfilePostsSlot';
 
 type MainRoutes = {
   Home: undefined;
   Leagues: NavigatorScreenParams<LeaguesRoutes> | undefined;
-  Social: NavigatorScreenParams<SocialRoutes> | undefined;
   Teams: { open?: { id: string; at: number } } | undefined;
+  Social: NavigatorScreenParams<SocialRoutes> | undefined;
+  Profile: NavigatorScreenParams<ProfileRoutes> | undefined;
+  Notifications: undefined;
   More: NavigatorScreenParams<MoreRoutes> | undefined;
 };
 type ProfileRoutes = {
   ProfileHome: undefined;
   PlayerProfile: undefined;
+  PostThread: { id: string };
+  PostPublish: undefined;
 };
 type DiscoveryRoutes = {
   DiscoveryList: undefined;
@@ -157,7 +163,6 @@ type DiscoveryRoutes = {
 };
 type MoreRoutes = {
   MoreHome: undefined;
-  Profile: NavigatorScreenParams<ProfileRoutes> | undefined;
   Account: undefined;
   BlockedUsers: undefined;
   Discover: NavigatorScreenParams<DiscoveryRoutes> | undefined;
@@ -165,7 +170,6 @@ type MoreRoutes = {
   TeamJoinRequests: undefined;
   TeamApplications: undefined;
   TeamRights: undefined;
-  Notifications: undefined;
   News: NavigatorScreenParams<NewsRoutes> | undefined;
   Gifts: undefined;
   ClubProfileEdit: undefined;
@@ -211,8 +215,7 @@ const playerProfileService = createPlayerProfileService(
 );
 const navigationRef = createNavigationContainerRef<MainRoutes>();
 const openNotifications = () => {
-  if (navigationRef.isReady())
-    navigationRef.navigate('More', { screen: 'Notifications' });
+  if (navigationRef.isReady()) navigationRef.navigate('Notifications');
 };
 const notificationsService = createNotificationsService(
   notificationsRepository,
@@ -251,22 +254,41 @@ const theme = {
     notification: colors.brand,
   },
 };
-function renderTabBar(props: BottomTabBarProps) {
-  const route = props.state.routes[props.state.index];
-  if (
-    route.name === 'Social' &&
-    getFocusedRouteNameFromRoute(route) === 'SocialPublish'
-  )
-    return null;
-  return <FutTabBar {...props} />;
-}
 function MainTabs() {
   const { user, token } = useAuth();
   useStoreRecovery(storeCheckout, token);
   usePushRegistration(pushMessaging, pushRepository, token, openNotifications);
+  // Organizers have no player or club profile; their tab is left out.
+  const member = user?.role !== 'organizer';
+  // The Bildirimler tab badge is refreshed whenever any tab gains focus.
+  const [unreadCount, setUnreadCount] = useState<number | null>(null);
+  const refreshUnread = useCallback(() => {
+    if (!token) {
+      setUnreadCount(null);
+      return;
+    }
+    notificationsService
+      .unreadCount(token)
+      .then(setUnreadCount)
+      .catch(() => setUnreadCount(null));
+  }, [token]);
+  useEffect(refreshUnread, [refreshUnread]);
+  const renderTabBar = useCallback(
+    (props: BottomTabBarProps) => {
+      const route = props.state.routes[props.state.index];
+      if (
+        route.name === 'Social' &&
+        getFocusedRouteNameFromRoute(route) === 'SocialPublish'
+      )
+        return null;
+      return <FutTabBar {...props} badges={{ Notifications: unreadCount }} />;
+    },
+    [unreadCount],
+  );
   return (
     <Tabs.Navigator
       tabBar={renderTabBar}
+      screenListeners={{ focus: refreshUnread }}
       screenOptions={{
         headerShown: false,
         sceneStyle: { backgroundColor: colors.bg },
@@ -374,18 +396,8 @@ function MainTabs() {
                   initial: false,
                 })
               }
-              onNotifications={() =>
-                navigation.navigate('More', {
-                  screen: 'Notifications',
-                  initial: false,
-                })
-              }
-              onProfile={() =>
-                navigation.navigate('More', {
-                  screen: 'Profile',
-                  initial: false,
-                })
-              }
+              onNotifications={() => navigation.navigate('Notifications')}
+              onProfile={() => navigation.navigate('Profile')}
               onNews={() =>
                 navigation.navigate('More', {
                   screen: 'News',
@@ -408,11 +420,6 @@ function MainTabs() {
         component={LeaguesNavigator}
         options={{ popToTopOnBlur: true }}
       />
-      <Tabs.Screen
-        name="Social"
-        component={SocialNavigator}
-        options={{ popToTopOnBlur: true }}
-      />
       <Tabs.Screen name="Teams">
         {({ navigation, route }) => (
           <TeamsScreen
@@ -426,6 +433,17 @@ function MainTabs() {
           />
         )}
       </Tabs.Screen>
+      <Tabs.Screen
+        name="Social"
+        component={SocialNavigator}
+        options={{ popToTopOnBlur: true }}
+      />
+      {member ? (
+        <Tabs.Screen name="Profile" options={{ popToTopOnBlur: true }}>
+          {() => <ProfileNavigator />}
+        </Tabs.Screen>
+      ) : null}
+      <Tabs.Screen name="Notifications" component={NotificationsTab} />
       <Tabs.Screen
         name="More"
         component={MoreNavigator}
@@ -451,7 +469,6 @@ function MoreNavigator() {
         {({ navigation }) => (
           <MoreHomeRoute
             navigation={navigation}
-            token={token}
             isClub={user?.role === 'club'}
             isPlayer={user?.role === 'player'}
             isOrganizer={!member}
@@ -462,16 +479,6 @@ function MoreNavigator() {
         {({ navigation }) => (
           <NewsNavigator onBack={() => navigation.goBack()} />
         )}
-      </MoreStack.Screen>
-      <MoreStack.Screen name="Profile">
-        {({ navigation }) =>
-          member ? (
-            <ProfileNavigator
-              onAccount={() => navigation.navigate('Account')}
-              onBack={() => navigation.goBack()}
-            />
-          ) : null
-        }
       </MoreStack.Screen>
       <MoreStack.Screen name="Account">
         {({ navigation }) => (
@@ -736,103 +743,110 @@ function MoreNavigator() {
           ) : null
         }
       </MoreStack.Screen>
-      <MoreStack.Screen name="Notifications">
-        {({ navigation }) =>
-          token ? (
-            <NotificationsScreen
-              token={token}
-              service={notificationsService}
-              onBack={() => navigation.goBack()}
-              onOpenGifts={() => navigation.navigate('Gifts')}
-              onOpenConnections={() => navigation.navigate('Connections')}
-              onOpenListing={id =>
-                // Opportunity notifications also come from admin announcements;
-                // only an open listing is opened, otherwise the card just marks read.
-                listingsService
-                  .findOpen(token, id)
-                  .then(listing => {
-                    if (listing) navigation.navigate('ListingDetail', { id });
-                  })
-                  .catch(() => undefined)
-              }
-              onOpenTournament={resourceId =>
-                // New tournament notifications carry the tournament id; entry,
-                // decision and cancellation notifications carry an entry id.
-                tournamentsService
-                  .find(token, resourceId)
-                  .then(tournament => {
-                    if (user?.role === 'organizer') {
-                      if (tournament && tournament.organizerId === user.id) {
-                        navigation.navigate('OrganizerTournament', {
-                          id: tournament.id,
-                        });
-                      } else {
-                        navigation.getParent()?.navigate('Home');
-                      }
-                    } else if (tournament) {
-                      navigation.navigate('TournamentDetail', {
-                        id: tournament.id,
-                      });
-                    } else if (user?.role === 'club') {
-                      navigation.navigate('TournamentEntries');
-                    }
-                  })
-                  .catch(() => undefined)
-              }
-            />
-          ) : null
-        }
-      </MoreStack.Screen>
     </MoreStack.Navigator>
   );
 }
 
+// Notification cards open screens that live in the Diğer stack.
+function NotificationsTab({
+  navigation,
+}: {
+  navigation: BottomTabNavigationProp<MainRoutes, 'Notifications'>;
+}) {
+  const { token, user } = useAuth();
+  if (!token) return null;
+  const openMore = (route: MoreRoute) =>
+    navigation.navigate('More', { ...route, initial: false });
+  return (
+    <NotificationsScreen
+      token={token}
+      service={notificationsService}
+      onOpenGifts={() => openMore({ screen: 'Gifts' })}
+      onOpenConnections={() => openMore({ screen: 'Connections' })}
+      onOpenProfile={(id, role) =>
+        openMore({
+          screen: 'Discover',
+          params: {
+            screen: 'DiscoveryProfile',
+            params: {
+              id,
+              kind:
+                role === 'club'
+                  ? 'clubs'
+                  : role === 'coach'
+                  ? 'coaches'
+                  : 'players',
+            },
+          },
+        })
+      }
+      onFollowBack={id =>
+        socialService.follow(token, id, true).then(() => undefined)
+      }
+      onOpenListing={id =>
+        // Opportunity notifications also come from admin announcements;
+        // only an open listing is opened, otherwise the card just marks read.
+        listingsService
+          .findOpen(token, id)
+          .then(listing => {
+            if (listing) openMore({ screen: 'ListingDetail', params: { id } });
+          })
+          .catch(() => undefined)
+      }
+      onOpenTournament={resourceId =>
+        // New tournament notifications carry the tournament id; entry,
+        // decision and cancellation notifications carry an entry id.
+        tournamentsService
+          .find(token, resourceId)
+          .then(tournament => {
+            if (user?.role === 'organizer') {
+              if (tournament && tournament.organizerId === user.id) {
+                openMore({
+                  screen: 'OrganizerTournament',
+                  params: { id: tournament.id },
+                });
+              } else {
+                navigation.navigate('Home');
+              }
+            } else if (tournament) {
+              openMore({
+                screen: 'TournamentDetail',
+                params: { id: tournament.id },
+              });
+            } else if (user?.role === 'club') {
+              openMore({ screen: 'TournamentEntries' });
+            }
+          })
+          .catch(() => undefined)
+      }
+    />
+  );
+}
+type MoreRoute = {
+  [K in keyof MoreRoutes]: undefined extends MoreRoutes[K]
+    ? { screen: K; params?: MoreRoutes[K] }
+    : { screen: K; params: MoreRoutes[K] };
+}[keyof MoreRoutes];
+
 function MoreHomeRoute({
   navigation,
-  token,
   isClub,
   isPlayer,
   isOrganizer,
 }: {
   navigation: NativeStackNavigationProp<MoreRoutes, 'MoreHome'>;
-  token: string | null;
   isClub: boolean;
   isPlayer: boolean;
   isOrganizer: boolean;
 }) {
-  const [unreadCount, setUnreadCount] = useState<number | null>(null);
-  useFocusEffect(
-    useCallback(() => {
-      let current = true;
-      if (!token) {
-        setUnreadCount(null);
-        return () => {
-          current = false;
-        };
-      }
-      notificationsService
-        .unreadCount(token)
-        .then(value => {
-          if (current) setUnreadCount(value);
-        })
-        .catch(() => {
-          if (current) setUnreadCount(null);
-        });
-      return () => {
-        current = false;
-      };
-    }, [token]),
-  );
   return (
     <MoreScreen
-      onProfile={() => navigation.navigate('Profile')}
       onSettings={() => navigation.navigate('Account')}
       onDiscover={() => navigation.navigate('Discover')}
       onConnections={() => navigation.navigate('Connections')}
       onTeamRequests={() => navigation.navigate('TeamJoinRequests')}
       onMyTeamApplications={() => navigation.navigate('TeamApplications')}
       onBuyTeamRights={() => navigation.navigate('TeamRights')}
-      onNotifications={() => navigation.navigate('Notifications')}
       onNews={() => navigation.navigate('News')}
       onGifts={() => navigation.navigate('Gifts')}
       onSquad={() => navigation.navigate('Squad')}
@@ -842,7 +856,6 @@ function MoreHomeRoute({
       onTournaments={() => navigation.navigate('Tournaments')}
       onTournamentEntries={() => navigation.navigate('TournamentEntries')}
       onVisitors={() => navigation.navigate('Visitors')}
-      unreadCount={unreadCount}
       isClub={isClub}
       isPlayer={isPlayer}
       isOrganizer={isOrganizer}
@@ -879,6 +892,7 @@ function DiscoveryNavigator({ onBack }: { onBack(): void }) {
       <DiscoveryStack.Screen name="DiscoveryProfile">
         {({ navigation, route }) => (
           <DiscoveryProfileScreen
+            usePostsSlot={useDiscoveryPostsSlot}
             service={discoveryService}
             token={token}
             kind={route.params.kind}
@@ -905,15 +919,32 @@ function DiscoveryNavigator({ onBack }: { onBack(): void }) {
   );
 }
 
-function ProfileNavigator({
-  onAccount,
-  onBack,
-}: {
-  onAccount(): void;
-  onBack(): void;
-}) {
+// The Profil tab. Settings stay in Diğer; the header shows the owner's real
+// view and follow counts, refreshed whenever the tab gains focus.
+function ProfileNavigator() {
   const { token, user } = useAuth();
   const pro = useProStatus(proService, token);
+  const [counts, setCounts] = useState<ProfileCounts | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      let current = true;
+      if (token)
+        discoveryService
+          .insights(token)
+          .then(value => {
+            if (current)
+              setCounts({
+                views: value.profileViews,
+                followers: value.followers,
+                following: value.following,
+              });
+          })
+          .catch(() => undefined);
+      return () => {
+        current = false;
+      };
+    }, [token]),
+  );
   if (!user) {
     return null;
   }
@@ -927,20 +958,46 @@ function ProfileNavigator({
       <ProfileStack.Screen name="ProfileHome">
         {({ navigation }) =>
           user.role === 'player' ? (
-            <PlayerOverviewScreen
+            <OwnPlayerProfile
+              navigation={navigation}
+              userId={user.id}
               fullName={user.fullName}
               isPro={pro.isPro}
-              token={token}
-              service={playerProfileService}
-              userId={user.id}
-              media={playerMediaService}
-              onEdit={() => navigation.navigate('PlayerProfile')}
-              onAccount={onAccount}
-              onBack={onBack}
+              counts={counts}
             />
           ) : (
-            <AccountScreen onBack={onBack} settings={false} />
+            <AccountScreen settings={false} />
           )
+        }
+      </ProfileStack.Screen>
+      <ProfileStack.Screen name="PostThread">
+        {({ navigation, route }) =>
+          token ? (
+            <SocialThreadScreen
+              token={token}
+              name={user.fullName}
+              id={route.params.id}
+              service={socialService}
+              onBack={() => navigation.goBack()}
+            />
+          ) : null
+        }
+      </ProfileStack.Screen>
+      <ProfileStack.Screen
+        name="PostPublish"
+        options={{ gestureEnabled: false }}
+      >
+        {({ navigation }) =>
+          token ? (
+            <SocialPublishScreen
+              token={token}
+              name={user.fullName}
+              profileOption
+              service={socialService}
+              onBack={() => navigation.goBack()}
+              onPublished={() => navigation.popTo('ProfileHome')}
+            />
+          ) : null
         }
       </ProfileStack.Screen>
       <ProfileStack.Screen name="PlayerProfile">
@@ -953,6 +1010,59 @@ function ProfileNavigator({
       </ProfileStack.Screen>
     </ProfileStack.Navigator>
   );
+}
+// The player's own profile with the Gönderiler tab; posts open and are
+// written inside the Profil stack so Back returns here.
+function OwnPlayerProfile({
+  navigation,
+  userId,
+  fullName,
+  isPro,
+  counts,
+}: {
+  navigation: NativeStackNavigationProp<ProfileRoutes, 'ProfileHome'>;
+  userId: string;
+  fullName: string;
+  isPro: boolean;
+  counts: ProfileCounts | null;
+}) {
+  const { token } = useAuth();
+  const posts = useProfilePostsSlot({
+    service: socialService,
+    token,
+    userId,
+    onOpen: id => navigation.navigate('PostThread', { id }),
+    onCompose: () => navigation.navigate('PostPublish'),
+  });
+  return (
+    <PlayerOverviewScreen
+      fullName={fullName}
+      isPro={isPro}
+      token={token}
+      service={playerProfileService}
+      userId={userId}
+      media={playerMediaService}
+      onEdit={() => navigation.navigate('PlayerProfile')}
+      counts={counts}
+      posts={posts}
+    />
+  );
+}
+// Other players' profiles (discovery) list their posts too; a post opens in
+// the Sosyal tab.
+function useDiscoveryPostsSlot(userId: string) {
+  const { token } = useAuth();
+  return useProfilePostsSlot({
+    service: socialService,
+    token,
+    userId,
+    onOpen: id =>
+      navigationRef.navigate('Social', {
+        screen: 'SocialThread',
+        params: { id },
+        initial: false,
+      }),
+  });
 }
 // The social API rejects organizer accounts, so their Sosyal tab explains it
 // instead of showing a failing feed (this also hides the Oyunlar tab).
@@ -997,6 +1107,7 @@ function SocialNavigator() {
           <SocialPublishScreen
             token={token}
             name={user.fullName}
+            profileOption={user.role === 'player'}
             service={socialService}
             onBack={() => navigation.goBack()}
             onPublished={() =>

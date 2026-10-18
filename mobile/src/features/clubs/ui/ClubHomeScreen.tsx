@@ -55,7 +55,7 @@ export function ClubHomeScreen({
   const { user, token } = useAuth();
   return (
     <Screen>
-      <Brand />
+      <Brand mark={false} />
       <PageHeader
         eyebrow={copy.clubHome.eyebrow}
         title={copy.home.welcome(user?.fullName ?? '')}

@@ -2,11 +2,10 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Medal } from 'lucide-react-native';
 import { confirmAction } from '../../connections';
-import { BackLink } from '../../../shared/ui/BackLink';
 import { Button } from '../../../shared/ui/Button';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
-import { PageHeader } from '../../../shared/ui/PageHeader';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Screen } from '../../../shared/ui/Screen';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
@@ -79,12 +78,7 @@ export function TournamentEntriesScreen({
 
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={text.entriesEyebrow}
-        title={text.entriesTitle}
-        hint={text.entriesDescription}
-      />
+      <TopBar title={text.entriesTitle} onBack={onBack} />
       {notice ? (
         <Text accessibilityRole="alert" style={styles.notice}>
           {notice}

@@ -2,8 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { ShieldCheck } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
-import { PageHeader } from '../../../shared/ui/PageHeader';
-import { BackLink } from '../../../shared/ui/BackLink';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { Button } from '../../../shared/ui/Button';
 import { EmptyState } from '../../../shared/ui/EmptyState';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
@@ -44,12 +43,7 @@ export function BlockedUsersScreen({
   }
   return (
     <Screen>
-      <BackLink label={copy.form.back} onPress={onBack} />
-      <PageHeader
-        eyebrow={text.blockedEyebrow}
-        title={text.blockedTitle}
-        hint={text.blockedHint}
-      />
+      <TopBar title={text.blockedTitle} onBack={onBack} />
       <ErrorBanner message={error} />
       {state.loading ? (
         <ActivityIndicator color={colors.brand} />

@@ -7,6 +7,7 @@ export const notificationKinds = [
   'news_review',
   'connection',
   'tournament',
+  'follow',
 ] as const;
 
 export type NotificationKind = (typeof notificationKinds)[number];
@@ -30,6 +31,10 @@ export type AppNotification = {
   resourceId: string;
   createdAt: string;
   readAt: string | null;
+  // Follow notifications: resourceId is the follower; their role and whether
+  // the recipient follows them back.
+  actorRole?: 'player' | 'club' | 'coach';
+  followingBack?: boolean;
 };
 
 export type NotificationPage = {
@@ -46,4 +51,7 @@ export interface NotificationsRepository {
   unreadCount(token: string): Promise<number>;
   markRead(token: string, id: string): Promise<number>;
   markAllRead(token: string): Promise<void>;
+  // Both return the unread count left afterwards.
+  deleteSelected(token: string, ids: string[]): Promise<number>;
+  deleteAll(token: string): Promise<void>;
 }

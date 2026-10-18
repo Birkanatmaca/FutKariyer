@@ -7,8 +7,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import { ArrowLeft, Ellipsis } from 'lucide-react-native';
+import { Ellipsis } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
 import { copy } from '../../../shared/lib/copy';
@@ -16,7 +17,13 @@ import { colors, radius, space } from '../../../styles/tokens';
 import type { DiscoveryKind, DiscoveryProfile } from '../domain/models';
 import type { DiscoveryService } from '../application/discovery-service';
 import { DiscoveryProfileCard } from './DiscoveryProfileCard';
-import { PlayerProfileContent, playerMediaService } from '../../players';
+import {
+  PlayerProfileContent,
+  playerMediaService,
+  type ProfilePostsSlot,
+} from '../../players';
+
+const noPosts = (_ownerId: string): ProfilePostsSlot | undefined => undefined;
 import {
   ModerationSheet,
   moderationService,
@@ -29,6 +36,7 @@ export function DiscoveryProfileScreen({
   id,
   onBack,
   renderConnection,
+  usePostsSlot = noPosts,
 }: {
   service: DiscoveryService;
   token: string | null;
@@ -37,7 +45,10 @@ export function DiscoveryProfileScreen({
   onBack(): void;
   // The app shell supplies the introduction-request panel for this profile.
   renderConnection?(profile: DiscoveryProfile): React.ReactNode;
+  // The app shell adds the player's posts (Gönderiler tab, shared media).
+  usePostsSlot?(ownerId: string): ProfilePostsSlot | undefined;
 }) {
+  const posts = usePostsSlot(id);
   const [profile, setProfile] = useState<DiscoveryProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,36 +116,29 @@ export function DiscoveryProfileScreen({
   }
   return (
     <Screen>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.form.back}
-          onPress={onBack}
-          style={styles.back}
-        >
-          <ArrowLeft color={colors.text} size={20} />
-        </Pressable>
-        <Text accessibilityRole="header" style={styles.title}>
-          {copy.discover.profileTitle}
-        </Text>
-        {token && profile ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={copy.moderation.more(profile.fullName)}
-            onPress={() =>
-              setModerating({
-                kind: 'user',
-                id: profile.id,
-                userId: profile.id,
-                name: profile.fullName,
-              })
-            }
-            style={styles.back}
-          >
-            <Ellipsis color={colors.text} size={20} />
-          </Pressable>
-        ) : null}
-      </View>
+      <TopBar
+        title={copy.discover.profileTitle}
+        onBack={onBack}
+        accessory={
+          token && profile ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={copy.moderation.more(profile.fullName)}
+              onPress={() =>
+                setModerating({
+                  kind: 'user',
+                  id: profile.id,
+                  userId: profile.id,
+                  name: profile.fullName,
+                })
+              }
+              style={styles.more}
+            >
+              <Ellipsis color={colors.text} size={20} />
+            </Pressable>
+          ) : null
+        }
+      />
       {loading || loadedRevision !== revision ? (
         <ActivityIndicator color={colors.brand} />
       ) : error ? (
@@ -165,6 +169,7 @@ export function DiscoveryProfileScreen({
                 fullName={profile.fullName}
                 profile={profile.playerProfile}
                 isPro={profile.isPro}
+                posts={posts}
                 gallery={
                   token
                     ? {
@@ -203,8 +208,7 @@ export function DiscoveryProfileScreen({
   );
 }
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  back: {
+  more: {
     width: 44,
     height: 44,
     borderRadius: radius.pill,
@@ -212,7 +216,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  title: { color: colors.text, fontSize: 24, fontWeight: '800', flex: 1 },
   section: {
     gap: space.md,
     padding: space.xl,

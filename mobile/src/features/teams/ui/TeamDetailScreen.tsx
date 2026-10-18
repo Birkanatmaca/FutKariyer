@@ -6,14 +6,9 @@ import {
   Text,
   View,
 } from 'react-native';
-import {
-  ArrowLeft,
-  CalendarDays,
-  MapPin,
-  RefreshCw,
-  Shield,
-} from 'lucide-react-native';
+import { CalendarDays, MapPin, RefreshCw, Shield } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
+import { TopBar } from '../../../shared/ui/TopBar';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
 import { copy } from '../../../shared/lib/copy';
@@ -57,15 +52,11 @@ export function TeamDetailScreen({
   }
   return (
     <Screen>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={copy.teams.back}
-        onPress={onBack}
-        style={styles.back}
-      >
-        <ArrowLeft size={18} color={colors.text} />
-        <Text style={styles.backText}>{copy.teams.back}</Text>
-      </Pressable>
+      <TopBar
+        title={copy.teams.title}
+        onBack={onBack}
+        backLabel={copy.teams.back}
+      />
       {state.loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : state.error ? (
@@ -79,7 +70,6 @@ export function TeamDetailScreen({
             <View style={styles.badge}>
               <Shield size={28} color={colors.brand} />
             </View>
-            <Text style={styles.eyebrow}>{copy.teams.profileEyebrow}</Text>
             <Text style={styles.name}>{state.data.team.name}</Text>
             {state.data.team.footballType !== 'unknown' ? (
               <Text style={styles.teamType}>
@@ -208,15 +198,6 @@ function InfoCard({
 }
 
 const styles = StyleSheet.create({
-  back: {
-    minHeight: 44,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.sm,
-    paddingRight: space.md,
-  },
-  backText: { color: colors.text, fontSize: 13, fontWeight: '700' },
   hero: { alignItems: 'center', gap: space.sm, paddingVertical: space.lg },
   badge: {
     width: 72,
@@ -227,12 +208,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-  },
-  eyebrow: {
-    color: colors.brand,
-    fontSize: 10,
-    letterSpacing: 1.6,
-    fontWeight: '800',
   },
   name: {
     color: colors.text,

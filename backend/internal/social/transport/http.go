@@ -75,12 +75,12 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 		write(w, 200, out)
 	})
 	mux.HandleFunc("POST /v1/social/posts", func(w http.ResponseWriter, r *http.Request) {
-		body, media, err := readPost(w, r)
+		body, media, onProfile, err := readPost(w, r)
 		if err != nil {
 			failure(w, err)
 			return
 		}
-		out, err := service.CreatePost(r.Context(), viewerID(r), body, media)
+		out, err := service.CreatePost(r.Context(), viewerID(r), body, media, onProfile)
 		if err != nil {
 			failure(w, err)
 			return
@@ -104,6 +104,14 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 		}
 		w.Header().Set("Content-Type", media.MIME)
 		http.ServeContent(w, r, "media", time.Time{}, bytes.NewReader(media.Data))
+	})
+	mux.HandleFunc("GET /v1/social/users/{id}/posts", func(w http.ResponseWriter, r *http.Request) {
+		out, err := service.UserPosts(r.Context(), viewerID(r), r.PathValue("id"), r.URL.Query().Get("cursor"), r.URL.Query().Get("filter"))
+		if err != nil {
+			failure(w, err)
+			return
+		}
+		write(w, 200, out)
 	})
 	mux.HandleFunc("PUT /v1/social/users/{id}/follow", func(w http.ResponseWriter, r *http.Request) {
 		var in struct {
@@ -197,11 +205,13 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 	})
 }
 
-func readPost(w http.ResponseWriter, r *http.Request) (string, []byte, error) {
+// readPost returns the body, optional media and the "show on profile" choice
+// (multipart part showOnProfile = "true"; text-only JSON posts never show).
+func readPost(w http.ResponseWriter, r *http.Request) (string, []byte, bool, error) {
 	invalid := auth.ValidationError{"media": "Gönderi okunamadı. Tek görsel veya video seç."}
 	contentType, _, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
 	if err != nil {
-		return "", nil, invalid
+		return "", nil, false, invalid
 	}
 	if contentType == "application/json" {
 		var in struct {
@@ -210,21 +220,22 @@ func readPost(w http.ResponseWriter, r *http.Request) (string, []byte, error) {
 		d := json.NewDecoder(http.MaxBytesReader(w, r.Body, 8192))
 		d.DisallowUnknownFields()
 		if d.Decode(&in) != nil || d.Decode(&struct{}{}) != io.EOF {
-			return "", nil, invalid
+			return "", nil, false, invalid
 		}
-		return in.Body, nil, nil
+		return in.Body, nil, false, nil
 	}
 	if contentType != "multipart/form-data" {
-		return "", nil, invalid
+		return "", nil, false, invalid
 	}
 	extendMediaDeadline(w)
 	r.Body = http.MaxBytesReader(w, r.Body, application.MaxVideoBytes+16384)
 	reader, err := r.MultipartReader()
 	if err != nil {
-		return "", nil, invalid
+		return "", nil, false, invalid
 	}
 	var body string
 	var media []byte
+	onProfile := false
 	seen := map[string]bool{}
 	for {
 		part, err := reader.NextPart()
@@ -232,12 +243,12 @@ func readPost(w http.ResponseWriter, r *http.Request) (string, []byte, error) {
 			break
 		}
 		if err != nil {
-			return "", nil, invalid
+			return "", nil, false, invalid
 		}
 		name := part.FormName()
-		if seen[name] || (name != "body" && name != "media") {
+		if seen[name] || (name != "body" && name != "media" && name != "showOnProfile") {
 			part.Close()
-			return "", nil, invalid
+			return "", nil, false, invalid
 		}
 		seen[name] = true
 		limit := int64(8192)
@@ -247,18 +258,27 @@ func readPost(w http.ResponseWriter, r *http.Request) (string, []byte, error) {
 		value, err := io.ReadAll(io.LimitReader(part, limit+1))
 		part.Close()
 		if err != nil || int64(len(value)) > limit {
-			return "", nil, invalid
+			return "", nil, false, invalid
 		}
-		if name == "body" {
+		switch name {
+		case "body":
 			body = string(value)
-		} else {
+		case "showOnProfile":
+			switch string(value) {
+			case "true":
+				onProfile = true
+			case "false":
+			default:
+				return "", nil, false, invalid
+			}
+		default:
 			if len(value) == 0 {
-				return "", nil, invalid
+				return "", nil, false, invalid
 			}
 			media = value
 		}
 	}
-	return body, media, nil
+	return body, media, onProfile, nil
 }
 
 // Only authenticated, size-bounded media requests need a longer transfer deadline.

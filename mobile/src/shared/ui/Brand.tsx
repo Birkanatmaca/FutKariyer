@@ -6,13 +6,16 @@ import { Wordmark, type BrandSurface } from './Wordmark';
 
 // Mark + wordmark lockup with the proportions of assets/brand/logo-lockup-*.svg
 // (wordmark cap height 100/140 of the mark, gap 36/140), so the in-app logo
-// matches the native launch screen. size is the mark's edge in points.
+// matches the native launch screen. size is the mark's edge in points;
+// mark={false} keeps only the wordmark at the same height.
 export function Brand({
   size = 36,
   surface = 'dark',
+  mark = true,
 }: {
   size?: number;
   surface?: BrandSurface;
+  mark?: boolean;
 } = {}) {
   return (
     <View
@@ -21,7 +24,7 @@ export function Brand({
       accessibilityRole="image"
       accessibilityLabel={copy.brand}
     >
-      <LogoMark size={size} />
+      {mark ? <LogoMark size={size} /> : null}
       <Wordmark height={(size * 100) / 140} surface={surface} />
     </View>
   );

@@ -109,7 +109,7 @@ export function HomeScreen({
     <View style={styles.root}>
       <Screen>
         <View style={styles.header}>
-          <Brand />
+          <Brand mark={false} />
           <View style={styles.actions}>
             {rights !== null ? (
               <RightsBadge count={rights} onPress={onRights} />

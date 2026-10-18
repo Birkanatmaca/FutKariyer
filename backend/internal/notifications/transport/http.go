@@ -32,6 +32,8 @@ func New(authService *auth.Service, service *application.Service, push ...*appli
 	mux.HandleFunc("GET /v1/me/notifications/unread-count", h.unreadCount)
 	mux.HandleFunc("PUT /v1/me/notifications/read-all", h.markAllRead)
 	mux.HandleFunc("PUT /v1/me/notifications/{id}/read", h.markRead)
+	mux.HandleFunc("POST /v1/me/notifications/delete", h.deleteSelected)
+	mux.HandleFunc("DELETE /v1/me/notifications", h.deleteAll)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -139,6 +141,46 @@ func (h *Handler) markAllRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.service.MarkAllRead(r.Context(), userID); err != nil {
+		h.failure(w, err)
+		return
+	}
+	write(w, http.StatusOK, map[string]int{"unreadCount": 0})
+}
+
+// deleteSelected removes the chosen notifications and returns the new
+// unread count.
+func (h *Handler) deleteSelected(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.userID(w, r)
+	if !ok {
+		return
+	}
+	var input struct {
+		IDs []string `json:"ids"`
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 8192))
+	decoder.DisallowUnknownFields()
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") || decoder.Decode(&input) != nil {
+		h.failure(w, auth.ValidationError{"ids": "Geçerli bildirimler seç."})
+		return
+	}
+	if err := h.service.DeleteSelected(r.Context(), userID, input.IDs); err != nil {
+		h.failure(w, err)
+		return
+	}
+	count, err := h.service.UnreadCount(r.Context(), userID)
+	if err != nil {
+		h.failure(w, err)
+		return
+	}
+	write(w, http.StatusOK, map[string]int{"unreadCount": count})
+}
+
+func (h *Handler) deleteAll(w http.ResponseWriter, r *http.Request) {
+	userID, ok := h.userID(w, r)
+	if !ok {
+		return
+	}
+	if err := h.service.DeleteAll(r.Context(), userID); err != nil {
 		h.failure(w, err)
 		return
 	}
