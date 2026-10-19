@@ -19,11 +19,7 @@ export function TopBar({
 }) {
   return (
     <View style={styles.bar}>
-      <Text
-        accessibilityRole="header"
-        numberOfLines={1}
-        style={styles.title}
-      >
+      <Text accessibilityRole="header" numberOfLines={1} style={styles.title}>
         {title}
       </Text>
       <View style={styles.side}>

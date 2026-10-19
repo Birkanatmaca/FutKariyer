@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import {
   ArrowUpRight,
@@ -50,6 +50,7 @@ const metrics: {
 export function HomeProfileCard({
   name,
   initial,
+  avatarUri,
   insights,
   loading,
   error,
@@ -59,6 +60,7 @@ export function HomeProfileCard({
 }: {
   name: string;
   initial: string;
+  avatarUri?: string;
   insights?: Insights;
   loading: boolean;
   error: string | null;
@@ -95,7 +97,15 @@ export function HomeProfileCard({
       >
         <View style={styles.avatarRing}>
           <View style={styles.avatar}>
-            <Text style={styles.initial}>{initial}</Text>
+            {avatarUri ? (
+              <Image
+                source={{ uri: avatarUri }}
+                style={StyleSheet.absoluteFill}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={styles.initial}>{initial}</Text>
+            )}
           </View>
         </View>
         <View style={styles.greeting}>
@@ -188,6 +198,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.brandSoft,
+
+    overflow: 'hidden',
   },
   initial: { color: colors.brand, fontSize: 22, fontWeight: '800' },
   greeting: { flex: 1, gap: 2 },

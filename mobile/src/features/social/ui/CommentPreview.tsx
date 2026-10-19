@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 import { copy } from '../../../shared/lib/copy';
+import { Avatar } from '../../../shared/ui/Avatar';
+import { avatarUrl } from '../../../shared/lib/avatar';
 import { colors, radius, space, type } from '../../../styles/tokens';
 import type { SocialService } from '../application/social-service';
 import type { SocialReply } from '../domain/models';
@@ -51,7 +53,6 @@ export function CommentPreview({
     };
   }, [service, token, postId, replyCount, key]);
   if (!reply) return null;
-  const initial = Array.from(reply.author.fullName.trim())[0] ?? '';
   return (
     <Pressable
       accessibilityRole="button"
@@ -61,9 +62,11 @@ export function CommentPreview({
       onPress={onPress}
       style={({ pressed }) => [styles.box, pressed && styles.pressed]}
     >
-      <View style={styles.avatar}>
-        <Text style={styles.initial}>{initial.toLocaleUpperCase('tr-TR')}</Text>
-      </View>
+      <Avatar
+        name={reply.author.fullName}
+        uri={avatarUrl(reply.author.id, reply.author.avatarVersion)}
+        size={24}
+      />
       <Text numberOfLines={2} style={styles.text}>
         <Text style={styles.name}>{reply.author.fullName} </Text>
         {reply.body}
@@ -82,15 +85,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.raised,
   },
   pressed: { opacity: 0.8 },
-  avatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.overlay,
-  },
-  initial: { color: colors.text, fontSize: 11, fontWeight: '800' },
   text: {
     flex: 1,
     ...type.body,

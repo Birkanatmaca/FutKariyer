@@ -25,6 +25,7 @@ type Profile struct {
 	Verified      bool
 	IsPro         bool
 	District      string
+	AvatarVersion int
 	PlayerProfile *players.Profile
 }
 

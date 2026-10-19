@@ -20,7 +20,7 @@ func New(db *sql.DB) *Postgres { return &Postgres{db: db} }
 const joins = ` FROM users u LEFT JOIN player_profiles p ON p.user_id=u.id LEFT JOIN clubs c ON c.user_id=u.id`
 const visible = `u.active AND u.city='Ankara' AND u.role=$1 AND
 	((u.role='player' AND p.discoverable) OR (u.role IN ('club','coach') AND u.verified))`
-const columns = `u.id,u.full_name,u.role,u.verified,EXISTS(SELECT 1 FROM pro_memberships pm WHERE pm.user_id=u.id AND pm.expires_at>now()) AS is_pro,COALESCE(c.district,'') AS district,
+const columns = `u.id,u.full_name,u.role,u.verified,EXISTS(SELECT 1 FROM pro_memberships pm WHERE pm.user_id=u.id AND pm.expires_at>now()) AS is_pro,COALESCE(NULLIF(c.district,''),u.district,'') AS district,u.avatar_version,
 	COALESCE(p.position,'') AS position,COALESCE(p.dominant_foot,'') AS dominant_foot,COALESCE(p.experience_years,0) AS experience_years,
 	COALESCE(p.current_club,'') AS current_club,COALESCE(p.availability,'not_available') AS availability,COALESCE(p.football_type,'unknown') AS football_type,COALESCE(p.license_status,'unknown') AS license_status,p.updated_at`
 
@@ -30,7 +30,7 @@ func scan(row scanner) (domain.Profile, error) {
 	var profile domain.Profile
 	var player players.Profile
 	var updated sql.NullTime
-	err := row.Scan(&profile.ID, &profile.FullName, &profile.Role, &profile.Verified, &profile.IsPro, &profile.District,
+	err := row.Scan(&profile.ID, &profile.FullName, &profile.Role, &profile.Verified, &profile.IsPro, &profile.District, &profile.AvatarVersion,
 		&player.Position, &player.DominantFoot, &player.ExperienceYears, &player.CurrentClub, &player.Availability, &player.FootballType, &player.LicenseStatus, &updated)
 	if errors.Is(err, sql.ErrNoRows) {
 		return profile, domain.ErrNotFound
@@ -77,7 +77,7 @@ func (r *Postgres) List(ctx context.Context, q domain.Query) (domain.Page, error
 					+ (CASE WHEN p.license_status=v.license_status AND v.license_status<>'unknown' THEN 2 ELSE 0 END) DESC,u.created_at DESC,u.id DESC) AS category_rank
 		`+joins+` CROSS JOIN viewer v`+where+`
 	)
-	SELECT id,full_name,role,verified,is_pro,district,position,dominant_foot,experience_years,current_club,availability,football_type,license_status,updated_at
+	SELECT id,full_name,role,verified,is_pro,district,avatar_version,position,dominant_foot,experience_years,current_club,availability,football_type,license_status,updated_at
 	FROM candidates ORDER BY CASE WHEN $1='player' THEN category_rank END ASC NULLS LAST,relevance DESC,created_at DESC,id DESC LIMIT $9 OFFSET $10`, args...)
 	if err != nil {
 		return result, err

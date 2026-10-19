@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   LayoutAnimation,
   NativeScrollEvent,
@@ -13,7 +14,12 @@ import {
   UIManager,
   View,
 } from 'react-native';
-import { ImagePlus, Users } from 'lucide-react-native';
+import {
+  HeartHandshake,
+  ImagePlus,
+  PanelLeft,
+  Users,
+} from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
@@ -27,6 +33,7 @@ import { SocialPostCard } from './SocialPostCard';
 import { DeleteContentPrompt } from './DeleteContentPrompt';
 import { useAuth } from '../../auth';
 import { Wordmark } from '../../../shared/ui/Wordmark';
+import { useReducedMotion } from '../../../shared/lib/useReducedMotion';
 import { GamesScreen } from '../../games';
 import {
   ModerationSheet,
@@ -46,12 +53,23 @@ export function SocialFeedScreen({
   publishedAt,
   onOpen,
   onCompose,
+  requestCount = 0,
+  requestsLoadedAt = 0,
+  onRequests,
+  onMenu,
 }: {
   token: string;
   service: SocialService;
   publishedAt?: number;
   onOpen(id: string): void;
   onCompose(): void;
+  // Header shortcuts (moved here from Diğer › Futbol ağı, 19 Oct 2026):
+  // requests on the right; the left button opens the app's side panel.
+  requestCount?: number;
+  // Changes on each fresh count; a pending count shows a one-second hint.
+  requestsLoadedAt?: number;
+  onRequests(): void;
+  onMenu(): void;
 }) {
   const [scope, setScope] = useState<FeedScope | 'games'>('explore');
   const { user } = useAuth();
@@ -177,14 +195,45 @@ export function SocialFeedScreen({
   }, [revealing, feed.loadingMore, feed.items.length, feed.hasMore, visible]);
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safe}>
-      <View
-        style={styles.brand}
-        accessible
-        accessibilityRole="header"
-        accessibilityLabel={copy.brand}
-      >
-        <Wordmark height={26} />
+      <View style={styles.brand}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={copy.social.sidebar.open}
+          onPress={onMenu}
+          hitSlop={6}
+          style={styles.headerButton}
+        >
+          <PanelLeft size={20} color={colors.text} />
+        </Pressable>
+        <View
+          accessible
+          accessibilityRole="header"
+          accessibilityLabel={copy.brand}
+        >
+          <Wordmark height={26} />
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={copy.social.requests}
+          accessibilityHint={
+            requestCount ? copy.social.requestsBadge(requestCount) : undefined
+          }
+          onPress={onRequests}
+          hitSlop={6}
+          style={styles.headerButton}
+        >
+          <HeartHandshake size={20} color={colors.text} />
+          {requestCount > 0 ? (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {requestCount > 99 ? '99+' : requestCount}
+              </Text>
+            </View>
+          ) : null}
+        </Pressable>
+        <RequestsHint count={requestCount} loadedAt={requestsLoadedAt} />
       </View>
+
       {tabsShown ? (
         <View style={styles.tabs}>
           {(['explore', 'following', 'games'] as const).map(value => (
@@ -365,11 +414,119 @@ export function SocialFeedScreen({
     </SafeAreaView>
   );
 }
+// A small bubble under the requests button that says how many requests are
+// waiting, shown for about a second each time a fresh count arrives.
+function RequestsHint({
+  count,
+  loadedAt,
+}: {
+  count: number;
+  loadedAt: number;
+}) {
+  const show = useRef(new Animated.Value(0)).current;
+  const reduced = useReducedMotion();
+  useEffect(() => {
+    if (!loadedAt || count <= 0) return;
+    show.setValue(0);
+    const step = reduced ? 0 : 180;
+    const animation = Animated.sequence([
+      Animated.timing(show, {
+        toValue: 1,
+        duration: step,
+        useNativeDriver: true,
+      }),
+      Animated.delay(1000),
+      Animated.timing(show, {
+        toValue: 0,
+        duration: step,
+        useNativeDriver: true,
+      }),
+    ]);
+    animation.start();
+    return () => animation.stop();
+  }, [count, loadedAt, reduced, show]);
+  if (count <= 0) return null;
+  return (
+    <Animated.View
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[
+        styles.hint,
+        {
+          opacity: show,
+          transform: [
+            {
+              translateY: show.interpolate({
+                inputRange: [0, 1],
+                outputRange: [-6, 0],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      <View style={styles.hintArrow} />
+      <View style={styles.hintBubble}>
+        <Text style={styles.hintText}>{copy.social.requestsHint(count)}</Text>
+      </View>
+    </Animated.View>
+  );
+}
+
 function Separator() {
   return <View style={styles.separator} />;
 }
 const styles = StyleSheet.create({
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.raised,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: space.xs,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.brand,
+  },
+  badgeText: { color: colors.brandInk, fontSize: 10, fontWeight: '800' },
+  hint: {
+    position: 'absolute',
+    right: space.xl - space.sm,
+    top: '100%',
+    alignItems: 'flex-end',
+    zIndex: 10,
+  },
+  hintArrow: {
+    width: 12,
+    height: 12,
+    marginRight: 14,
+    marginBottom: -6,
+    transform: [{ rotate: '45deg' }],
+    backgroundColor: colors.brand,
+  },
+  hintBubble: {
+    paddingHorizontal: space.md,
+    paddingVertical: space.sm,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brand,
+  },
+  hintText: { color: colors.brandInk, fontSize: 12, fontWeight: '800' },
   brand: {
+    zIndex: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: space.xl,
     paddingTop: space.md,

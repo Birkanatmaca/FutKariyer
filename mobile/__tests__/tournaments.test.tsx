@@ -296,8 +296,6 @@ describe('organizer accounts', () => {
       root = create(
         <MoreScreen
           onSettings={noop}
-          onDiscover={noop}
-          onConnections={noop}
           onTeamRequests={noop}
           onMyTeamApplications={noop}
           onBuyTeamRights={noop}
@@ -309,7 +307,6 @@ describe('organizer accounts', () => {
           onMemberships={noop}
           onTournaments={noop}
           onTournamentEntries={noop}
-          onVisitors={noop}
           isClub={false}
           isPlayer={false}
           isOrganizer

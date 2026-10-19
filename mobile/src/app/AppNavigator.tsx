@@ -37,6 +37,7 @@ import {
   ConnectionsScreen,
   connectionsRepository,
   createConnectionsService,
+  useIncomingCount,
 } from '../features/connections';
 import {
   GiftsScreen,
@@ -136,6 +137,13 @@ import { colors, space } from '../styles/tokens';
 import { HomeScreen } from './HomeScreen';
 import { LeaguesHomeScreen } from './LeaguesHomeScreen';
 import { LeaguesSearchScreen } from './LeaguesSearchScreen';
+import {
+  AccountProfileScreen,
+  accountRepository,
+  avatarUrl,
+  useAccountProfile,
+} from '../features/account';
+import { SocialSidebar } from './SocialSidebar';
 import { FutTabBar } from './FutTabBar';
 import { MoreScreen } from './MoreScreen';
 import { AdminNavigator } from './AdminNavigator';
@@ -153,6 +161,7 @@ type MainRoutes = {
 };
 type ProfileRoutes = {
   ProfileHome: undefined;
+  AccountProfile: undefined;
   PlayerProfile: undefined;
   PostThread: { id: string };
   PostPublish: undefined;
@@ -199,6 +208,11 @@ type SocialRoutes = {
   SocialFeed: { publishedAt?: number } | undefined;
   SocialThread: { id: string };
   SocialPublish: undefined;
+  // Header shortcuts (19 Oct 2026): open inside the Social stack so back
+  // returns to the feed and the Social tab stays selected.
+  SocialConnections: undefined;
+  SocialDiscover: NavigatorScreenParams<DiscoveryRoutes> | undefined;
+  SocialVisitors: undefined;
 };
 const SocialStack = createNativeStackNavigator<SocialRoutes>();
 const NewsStack = createNativeStackNavigator<NewsRoutes>();
@@ -842,8 +856,6 @@ function MoreHomeRoute({
   return (
     <MoreScreen
       onSettings={() => navigation.navigate('Account')}
-      onDiscover={() => navigation.navigate('Discover')}
-      onConnections={() => navigation.navigate('Connections')}
       onTeamRequests={() => navigation.navigate('TeamJoinRequests')}
       onMyTeamApplications={() => navigation.navigate('TeamApplications')}
       onBuyTeamRights={() => navigation.navigate('TeamRights')}
@@ -855,7 +867,6 @@ function MoreHomeRoute({
       onMemberships={() => navigation.navigate('Memberships')}
       onTournaments={() => navigation.navigate('Tournaments')}
       onTournamentEntries={() => navigation.navigate('TournamentEntries')}
-      onVisitors={() => navigation.navigate('Visitors')}
       isClub={isClub}
       isPlayer={isPlayer}
       isOrganizer={isOrganizer}
@@ -924,6 +935,10 @@ function DiscoveryNavigator({ onBack }: { onBack(): void }) {
 function ProfileNavigator() {
   const { token, user } = useAuth();
   const pro = useProStatus(proService, token);
+  const account = useAccountProfile(accountRepository, token);
+  const avatar = account.profile
+    ? avatarUrl(account.profile.id, account.profile.avatarVersion)
+    : '';
   const [counts, setCounts] = useState<ProfileCounts | null>(null);
   useFocusEffect(
     useCallback(() => {
@@ -961,12 +976,17 @@ function ProfileNavigator() {
             <OwnPlayerProfile
               navigation={navigation}
               userId={user.id}
-              fullName={user.fullName}
+              fullName={account.profile?.fullName ?? user.fullName}
+              avatar={avatar}
               isPro={pro.isPro}
               counts={counts}
             />
           ) : (
-            <AccountScreen settings={false} />
+            <AccountScreen
+              settings={false}
+              avatarUri={avatar}
+              onEditProfile={() => navigation.navigate('AccountProfile')}
+            />
           )
         }
       </ProfileStack.Screen>
@@ -1000,6 +1020,23 @@ function ProfileNavigator() {
           ) : null
         }
       </ProfileStack.Screen>
+      <ProfileStack.Screen name="AccountProfile">
+        {({ navigation }) =>
+          token ? (
+            <AccountProfileScreen
+              token={token}
+              repository={accountRepository}
+              onChange={account.setProfile}
+              onBack={() => navigation.goBack()}
+              onFootball={
+                user.role === 'player'
+                  ? () => navigation.navigate('PlayerProfile')
+                  : undefined
+              }
+            />
+          ) : null
+        }
+      </ProfileStack.Screen>
       <ProfileStack.Screen name="PlayerProfile">
         {({ navigation }) => (
           <PlayerProfileScreen
@@ -1017,12 +1054,14 @@ function OwnPlayerProfile({
   navigation,
   userId,
   fullName,
+  avatar,
   isPro,
   counts,
 }: {
   navigation: NativeStackNavigationProp<ProfileRoutes, 'ProfileHome'>;
   userId: string;
   fullName: string;
+  avatar: string;
   isPro: boolean;
   counts: ProfileCounts | null;
 }) {
@@ -1042,7 +1081,8 @@ function OwnPlayerProfile({
       service={playerProfileService}
       userId={userId}
       media={playerMediaService}
-      onEdit={() => navigation.navigate('PlayerProfile')}
+      avatarUri={avatar}
+      onEdit={() => navigation.navigate('AccountProfile')}
       counts={counts}
       posts={posts}
     />
@@ -1077,6 +1117,58 @@ function OrganizerSocialNotice() {
     </Screen>
   );
 }
+// The Social feed with its header shortcuts; requests, discovery and visitors
+// live in the More stack and open on top of it.
+function SocialFeedRoute({
+  token,
+  publishedAt,
+  onOpen,
+  onCompose,
+  onRequests,
+  onOpenProfile,
+  onVisitors,
+  onUpgrade,
+}: {
+  token: string;
+  publishedAt?: number;
+  onOpen(id: string): void;
+  onCompose(): void;
+  onRequests(): void;
+  onOpenProfile(kind: DiscoveryKind, id: string): void;
+  onVisitors(): void;
+  onUpgrade(): void;
+}) {
+  const { user } = useAuth();
+  const requests = useIncomingCount(connectionsService, token);
+  const [menuOpen, setMenuOpen] = useState(false);
+  return (
+    <>
+      <SocialFeedScreen
+        token={token}
+        service={socialService}
+        publishedAt={publishedAt}
+        onOpen={onOpen}
+        onCompose={onCompose}
+        requestCount={requests.count}
+        requestsLoadedAt={requests.loadedAt}
+        onRequests={onRequests}
+        onMenu={() => setMenuOpen(true)}
+      />
+      <SocialSidebar
+        visible={menuOpen}
+        token={token}
+        role={user?.role ?? 'player'}
+        discovery={discoveryService}
+        pro={proService}
+        onClose={() => setMenuOpen(false)}
+        onOpenProfile={onOpenProfile}
+        onVisitors={onVisitors}
+        onUpgrade={onUpgrade}
+      />
+    </>
+  );
+}
+
 function SocialNavigator() {
   const { token, user } = useAuth();
   if (!token || !user) return null;
@@ -1090,12 +1182,27 @@ function SocialNavigator() {
     >
       <SocialStack.Screen name="SocialFeed">
         {({ navigation, route }) => (
-          <SocialFeedScreen
+          <SocialFeedRoute
             token={token}
-            service={socialService}
             publishedAt={route.params?.publishedAt}
             onOpen={id => navigation.navigate('SocialThread', { id })}
             onCompose={() => navigation.navigate('SocialPublish')}
+            onRequests={() => navigation.navigate('SocialConnections')}
+            onOpenProfile={(kind, id) =>
+              navigation.navigate('SocialDiscover', {
+                screen: 'DiscoveryProfile',
+                params: { kind, id },
+                initial: false,
+              })
+            }
+            onVisitors={() => navigation.navigate('SocialVisitors')}
+            onUpgrade={() =>
+              (
+                navigation.getParent() as
+                  | BottomTabNavigationProp<MainRoutes>
+                  | undefined
+              )?.navigate('More', { screen: 'Pro', initial: false })
+            }
           />
         )}
       </SocialStack.Screen>
@@ -1112,6 +1219,44 @@ function SocialNavigator() {
             onBack={() => navigation.goBack()}
             onPublished={() =>
               navigation.popTo('SocialFeed', { publishedAt: Date.now() })
+            }
+          />
+        )}
+      </SocialStack.Screen>
+      <SocialStack.Screen name="SocialConnections">
+        {({ navigation }) => (
+          <ConnectionsScreen
+            token={token}
+            service={connectionsService}
+            onBack={() => navigation.goBack()}
+            onDiscover={() => navigation.navigate('SocialDiscover')}
+          />
+        )}
+      </SocialStack.Screen>
+      <SocialStack.Screen name="SocialDiscover">
+        {({ navigation }) => (
+          <DiscoveryNavigator onBack={() => navigation.goBack()} />
+        )}
+      </SocialStack.Screen>
+      <SocialStack.Screen name="SocialVisitors">
+        {({ navigation }) => (
+          <VisitorsScreen
+            token={token}
+            service={proService}
+            onBack={() => navigation.goBack()}
+            onUpgrade={() =>
+              (
+                navigation.getParent() as
+                  | BottomTabNavigationProp<MainRoutes>
+                  | undefined
+              )?.navigate('More', { screen: 'Pro', initial: false })
+            }
+            onOpenProfile={(kind, id) =>
+              navigation.navigate('SocialDiscover', {
+                screen: 'DiscoveryProfile',
+                params: { kind, id },
+                initial: false,
+              })
             }
           />
         )}

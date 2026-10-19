@@ -15,6 +15,8 @@ export type DiscoveryProfile = {
   verified: boolean;
   // Server-evaluated Pro membership; shown as the PRO pill.
   isPro?: boolean;
+  // 0 without a profile photo (older servers omit it).
+  avatarVersion?: number;
   district: string;
   playerProfile: PlayerProfile | null;
   isFollowing: boolean;

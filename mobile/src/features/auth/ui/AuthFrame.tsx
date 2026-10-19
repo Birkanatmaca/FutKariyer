@@ -1,15 +1,11 @@
 import React, { type PropsWithChildren } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Info } from 'lucide-react-native';
+import {
+  KeyboardAwareScrollView,
+  keyboardOffset,
+} from '../../../shared/ui/keyboard';
 import { Floodlight } from '../../../shared/ui/Floodlight';
 import { Brand } from '../../../shared/ui/Brand';
 import { copy } from '../../../shared/lib/copy';
@@ -41,73 +37,70 @@ export function AuthFrame({
   return (
     <SafeAreaView style={styles.safe}>
       <Floodlight height={step ? 300 : 420} />
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
+        bottomOffset={keyboardOffset}
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.content}
-        >
-          <View style={styles.top}>
-            <View style={styles.slot}>
-              {onBack ? (
-                <Pressable
-                  onPress={onBack}
-                  accessibilityLabel={copy.form.back}
-                  accessibilityRole="button"
-                  hitSlop={8}
-                  style={styles.iconButton}
-                >
-                  <ArrowLeft size={20} color={colors.text} />
-                </Pressable>
-              ) : null}
-            </View>
-            {step ? (
-              <View
-                style={styles.progress}
-                accessible
-                accessibilityRole="progressbar"
-                accessibilityLabel={copy.authStep(step, STEPS)}
+        <View style={styles.top}>
+          <View style={styles.slot}>
+            {onBack ? (
+              <Pressable
+                onPress={onBack}
+                accessibilityLabel={copy.form.back}
+                accessibilityRole="button"
+                hitSlop={8}
+                style={styles.iconButton}
               >
-                {Array.from({ length: STEPS }, (_, index) => (
-                  <View
-                    key={index}
-                    style={[styles.segment, index < step && styles.segmentOn]}
-                  />
-                ))}
-              </View>
+                <ArrowLeft size={20} color={colors.text} />
+              </Pressable>
             ) : null}
-            <View style={[styles.slot, styles.slotEnd]}>
-              {onInfo ? (
-                <Pressable
-                  onPress={onInfo}
-                  accessibilityLabel={copy.onboarding.open}
-                  accessibilityRole="button"
-                  hitSlop={8}
-                  style={styles.iconButton}
-                >
-                  <Info size={20} color={colors.secondary} />
-                </Pressable>
-              ) : null}
-            </View>
           </View>
-          {step ? null : (
-            <View style={styles.brand}>
-              <Brand size={48} />
+          {step ? (
+            <View
+              style={styles.progress}
+              accessible
+              accessibilityRole="progressbar"
+              accessibilityLabel={copy.authStep(step, STEPS)}
+            >
+              {Array.from({ length: STEPS }, (_, index) => (
+                <View
+                  key={index}
+                  style={[styles.segment, index < step && styles.segmentOn]}
+                />
+              ))}
             </View>
-          )}
-          <View style={[styles.hero, step ? styles.heroStep : null]}>
-            <Text accessibilityRole="header" style={styles.title}>
-              {title}
-            </Text>
-            <Text style={styles.description}>{description}</Text>
+          ) : null}
+          <View style={[styles.slot, styles.slotEnd]}>
+            {onInfo ? (
+              <Pressable
+                onPress={onInfo}
+                accessibilityLabel={copy.onboarding.open}
+                accessibilityRole="button"
+                hitSlop={8}
+                style={styles.iconButton}
+              >
+                <Info size={20} color={colors.secondary} />
+              </Pressable>
+            ) : null}
           </View>
-          {children}
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+        {step ? null : (
+          <View style={styles.brand}>
+            <Brand size={48} />
+          </View>
+        )}
+        <View style={[styles.hero, step ? styles.heroStep : null]}>
+          <Text accessibilityRole="header" style={styles.title}>
+            {title}
+          </Text>
+          <Text style={styles.description}>{description}</Text>
+        </View>
+        {children}
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

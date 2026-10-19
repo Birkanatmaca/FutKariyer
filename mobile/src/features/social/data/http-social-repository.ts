@@ -30,6 +30,9 @@ function authorValid(value: unknown): value is SocialAuthor {
     ['player', 'club', 'coach'].includes(author.role) &&
     typeof author.verified === 'boolean' &&
     (author.isPro === undefined || typeof author.isPro === 'boolean') &&
+    (author.avatarVersion === undefined ||
+      (Number.isSafeInteger(author.avatarVersion) &&
+        author.avatarVersion >= 0)) &&
     typeof author.following === 'boolean' &&
     (author.footballType === undefined ||
       ['unknown', 'amateur', 'professional', 'halisaha'].includes(

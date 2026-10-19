@@ -13,6 +13,8 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import { ProBadge } from '../../../shared/ui/ProBadge';
+import { Avatar } from '../../../shared/ui/Avatar';
+import { avatarUrl } from '../../../shared/lib/avatar';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import { PostMedia } from './PostMedia';
@@ -47,23 +49,15 @@ export function SocialPostCard({
   framed?: boolean;
 }) {
   const post = 'likeCount' in item ? item : null;
-  const [first, second] = item.author.fullName.trim().split(/\s+/);
-  const initials = [first, second]
-    .filter(Boolean)
-    .map(value => Array.from(value)[0])
-    .join('')
-    .toLocaleUpperCase('tr-TR');
   return (
     <View style={[styles.card, framed && styles.framed]}>
       <View style={styles.row}>
-        <View
-          style={[
-            styles.avatar,
-            item.author.role === 'club' && styles.clubAvatar,
-          ]}
-        >
-          <Text style={styles.initials}>{initials}</Text>
-        </View>
+        <Avatar
+          name={item.author.fullName}
+          uri={avatarUrl(item.author.id, item.author.avatarVersion)}
+          size={44}
+          square={item.author.role === 'club'}
+        />
         <View style={styles.identity}>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{item.author.fullName}</Text>
@@ -207,16 +201,6 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.raised,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  clubAvatar: { borderRadius: radius.sm },
-  initials: { color: colors.text, fontSize: 14, fontWeight: '800' },
   identity: { flex: 1, gap: space.xs },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   name: { color: colors.text, fontSize: 14, fontWeight: '700', flexShrink: 1 },

@@ -12,6 +12,9 @@ import (
 	"syscall"
 	"time"
 
+	accountapplication "futcareer/backend/internal/account/application"
+	accountdata "futcareer/backend/internal/account/data"
+	accounttransport "futcareer/backend/internal/account/transport"
 	adminapplication "futcareer/backend/internal/admin/application"
 	admindata "futcareer/backend/internal/admin/data"
 	admintransport "futcareer/backend/internal/admin/transport"
@@ -152,6 +155,10 @@ func run() error {
 	routes.Handle("/v1/football/", footballtransport.New(authService, footballService))
 	// Kafa Kafaya builds its rounds from the same cached major league standings.
 	routes.Handle("/v1/games/", gametransport.New(authService, gameapplication.New(gamedata.New(db), gameBank, footballService)))
+	accountHandler := accounttransport.New(authService, accountapplication.New(accountdata.New(db)))
+	routes.Handle("/v1/me/profile", accountHandler)
+	routes.Handle("/v1/me/avatar", accountHandler)
+	routes.Handle("/v1/users/{id}/avatar", accountHandler)
 	ratingService := ratingapplication.New(ratingdata.New(db))
 	ratingHandler := ratingtransport.New(authService, ratingService)
 	routes.Handle("/v1/rating", ratingHandler)

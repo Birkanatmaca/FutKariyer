@@ -22,6 +22,11 @@ import {
 import type { DiscoveryService } from '../features/discovery';
 import { Screen } from '../shared/ui/Screen';
 import { HomeProfileCard } from './HomeProfileCard';
+import {
+  accountRepository,
+  avatarUrl,
+  useAccountProfile,
+} from '../features/account';
 import { HomeHeaderButton } from './HomeHeaderButton';
 import { HomeQuickActions } from './HomeQuickActions';
 import { Brand } from '../shared/ui/Brand';
@@ -74,6 +79,7 @@ export function HomeScreen({
     ),
   );
   const rights = useRightsBalance(teamsService, token, true);
+  const account = useAccountProfile(accountRepository, token);
   const unread = useFocusedResource(
     useCallback(
       () =>
@@ -139,6 +145,11 @@ export function HomeScreen({
         <HomeProfileCard
           name={displayName}
           initial={user?.fullName.charAt(0).toLocaleUpperCase('tr-TR') ?? ''}
+          avatarUri={
+            account.profile
+              ? avatarUrl(account.profile.id, account.profile.avatarVersion)
+              : undefined
+          }
           insights={insights.data ?? undefined}
           loading={insights.loading}
           error={insights.error}

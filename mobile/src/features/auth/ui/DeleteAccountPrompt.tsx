@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, StyleSheet, Text, View } from 'react-native';
 import { LockKeyhole, TriangleAlert } from 'lucide-react-native';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Field } from '../../../shared/ui/Field';
 import { ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
+import {
+  KeyboardAwareScrollView,
+  keyboardOffset,
+} from '../../../shared/ui/keyboard';
 import { colors, radius, space, type } from '../../../styles/tokens';
 
 const text = copy.account;
@@ -64,7 +68,8 @@ export function DeleteAccountPrompt({
     >
       <View style={styles.backdrop}>
         <View accessibilityViewIsModal style={styles.dialog}>
-          <ScrollView
+          <KeyboardAwareScrollView
+            bottomOffset={keyboardOffset}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.content}
           >
@@ -99,7 +104,7 @@ export function DeleteAccountPrompt({
               disabled={busy}
               onPress={onCancel}
             />
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
       </View>
     </Modal>

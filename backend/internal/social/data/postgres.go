@@ -22,7 +22,7 @@ const activeAuthor = `u.active AND u.role IN ('player','club','coach')`
 // visibleToViewer hides authors the viewer ($1) blocked or was blocked by.
 var visibleToViewer = moderation.NotBlocked("$1", "u.id")
 
-const postColumns = `p.id,u.id,u.full_name,u.role,u.verified,
+const postColumns = `p.id,u.id,u.full_name,u.role,u.verified,u.avatar_version,
  CASE WHEN u.role='club' THEN COALESCE((SELECT football_type FROM clubs WHERE user_id=u.id),'unknown')
   WHEN u.role='player' THEN COALESCE((SELECT CASE WHEN discoverable THEN football_type ELSE 'unknown' END FROM player_profiles WHERE user_id=u.id),'unknown')
   ELSE 'unknown' END,
@@ -43,7 +43,7 @@ type queryer interface {
 func scanPost(row scanner) (domain.Post, error) {
 	var p domain.Post
 	var media domain.Media
-	err := row.Scan(&p.ID, &p.Author.ID, &p.Author.FullName, &p.Author.Role, &p.Author.Verified, &p.Author.FootballType, &p.Author.LicenseStatus, &p.Body, &p.CreatedAt, &p.LikeCount, &p.ReplyCount, &p.Liked, &p.Owned, &p.Author.Following, &media.Kind, &media.MIME, &media.Size, &media.Width, &media.Height, &p.Author.IsPro, &p.ShowOnProfile)
+	err := row.Scan(&p.ID, &p.Author.ID, &p.Author.FullName, &p.Author.Role, &p.Author.Verified, &p.Author.AvatarVersion, &p.Author.FootballType, &p.Author.LicenseStatus, &p.Body, &p.CreatedAt, &p.LikeCount, &p.ReplyCount, &p.Liked, &p.Owned, &p.Author.Following, &media.Kind, &media.MIME, &media.Size, &media.Width, &media.Height, &p.Author.IsPro, &p.ShowOnProfile)
 	if errors.Is(err, sql.ErrNoRows) {
 		return p, domain.ErrNotFound
 	}
@@ -125,7 +125,7 @@ func (r *Postgres) Feed(ctx context.Context, userID string, after domain.FeedCur
 }
 func lockActor(ctx context.Context, tx *sql.Tx, userID string) (domain.Author, error) {
 	var a domain.Author
-	err := tx.QueryRowContext(ctx, `SELECT id,full_name,role,verified FROM users WHERE id=$1 AND active AND role IN ('player','club','coach') FOR UPDATE`, userID).Scan(&a.ID, &a.FullName, &a.Role, &a.Verified)
+	err := tx.QueryRowContext(ctx, `SELECT id,full_name,role,verified,avatar_version FROM users WHERE id=$1 AND active AND role IN ('player','club','coach') FOR UPDATE`, userID).Scan(&a.ID, &a.FullName, &a.Role, &a.Verified, &a.AvatarVersion)
 	if errors.Is(err, sql.ErrNoRows) {
 		return a, domain.ErrForbidden
 	}
@@ -222,7 +222,7 @@ func (r *Postgres) SetLike(ctx context.Context, userID, id string, liked bool) (
 }
 func scanReply(row scanner) (domain.Reply, error) {
 	var p domain.Reply
-	err := row.Scan(&p.ID, &p.PostID, &p.Author.ID, &p.Author.FullName, &p.Author.Role, &p.Author.Verified, &p.Body, &p.CreatedAt, &p.Owned)
+	err := row.Scan(&p.ID, &p.PostID, &p.Author.ID, &p.Author.FullName, &p.Author.Role, &p.Author.Verified, &p.Author.AvatarVersion, &p.Body, &p.CreatedAt, &p.Owned)
 	p.CreatedAt = p.CreatedAt.UTC()
 	return p, err
 }
@@ -230,7 +230,7 @@ func (r *Postgres) Replies(ctx context.Context, userID, postID string, after dom
 	if _, err := r.GetPost(ctx, userID, postID); err != nil {
 		return nil, err
 	}
-	rows, err := r.db.QueryContext(ctx, `SELECT r.id,r.post_id,u.id,u.full_name,u.role,u.verified,r.body,r.created_at,r.author_id=$1 FROM social_replies r JOIN users u ON u.id=r.author_id JOIN social_posts p ON p.id=r.post_id JOIN users pu ON pu.id=p.author_id WHERE r.post_id=$2 AND `+activeAuthor+` AND `+visibleToViewer+` AND pu.active AND pu.role IN ('player','club','coach') AND ($3='' OR (r.created_at,r.id)<($4::timestamptz,$3)) ORDER BY r.created_at DESC,r.id DESC LIMIT $5`, userID, postID, after.ID, after.CreatedAt, domain.PageSize+1)
+	rows, err := r.db.QueryContext(ctx, `SELECT r.id,r.post_id,u.id,u.full_name,u.role,u.verified,u.avatar_version,r.body,r.created_at,r.author_id=$1 FROM social_replies r JOIN users u ON u.id=r.author_id JOIN social_posts p ON p.id=r.post_id JOIN users pu ON pu.id=p.author_id WHERE r.post_id=$2 AND `+activeAuthor+` AND `+visibleToViewer+` AND pu.active AND pu.role IN ('player','club','coach') AND ($3='' OR (r.created_at,r.id)<($4::timestamptz,$3)) ORDER BY r.created_at DESC,r.id DESC LIMIT $5`, userID, postID, after.ID, after.CreatedAt, domain.PageSize+1)
 	if err != nil {
 		return nil, err
 	}

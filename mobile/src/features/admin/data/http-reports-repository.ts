@@ -66,7 +66,9 @@ export function createReportsRepository(
       // Each queue only carries reports in its own state.
       if (
         !isPage(result, isContentReport, page, reportPageSize) ||
-        !result.items.every(item => (item.status === 'open') === (queue === 'open'))
+        !result.items.every(
+          item => (item.status === 'open') === (queue === 'open'),
+        )
       )
         unexpected();
       return result;

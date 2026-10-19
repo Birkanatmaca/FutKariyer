@@ -34,6 +34,7 @@ export type SocialAuthor = {
   role: AccountRole;
   verified: boolean;
   isPro?: boolean;
+  avatarVersion?: number;
   following: boolean;
   footballType?: FootballType;
   licenseStatus?: LicenseStatus;

@@ -5,6 +5,7 @@ export {
   createConnectionsService,
   type ConnectionsService,
 } from './application/connections-service';
+export { useIncomingCount } from './application/useIncomingCount';
 export { connectionsRepository } from './data/http-connections-repository';
 export {
   canRequestConnection,

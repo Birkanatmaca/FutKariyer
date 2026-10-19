@@ -42,9 +42,7 @@ const statusTone: Record<ReportStatus, Tone> = {
 type Busy = { id: string; action: ReportAction } | null;
 
 function roleLabel(role: string) {
-  return role in copy.admin.roles
-    ? copy.admin.roles[role as ManagedRole]
-    : '';
+  return role in copy.admin.roles ? copy.admin.roles[role as ManagedRole] : '';
 }
 
 export function ReportsScreen({

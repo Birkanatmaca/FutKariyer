@@ -21,6 +21,11 @@ function isProfile(
     typeof profile.district !== 'string' ||
     typeof profile.verified !== 'boolean' ||
     (profile.isPro !== undefined && typeof profile.isPro !== 'boolean') ||
+    (profile.avatarVersion !== undefined &&
+      !(
+        Number.isSafeInteger(profile.avatarVersion) &&
+        profile.avatarVersion >= 0
+      )) ||
     typeof profile.isFollowing !== 'boolean'
   ) {
     return false;

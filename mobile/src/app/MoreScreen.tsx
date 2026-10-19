@@ -2,9 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   ChevronRight,
-  Compass,
   ClipboardList,
-  MessagesSquare,
   ShoppingBag,
   Settings,
   Newspaper,
@@ -13,7 +11,6 @@ import {
   Megaphone,
   Shield,
   Users,
-  Eye,
   type LucideIcon,
 } from 'lucide-react-native';
 import { Screen } from '../shared/ui/Screen';
@@ -31,8 +28,6 @@ type Section = { title: string; entries: Entry[] };
 
 export function MoreScreen({
   onSettings,
-  onDiscover,
-  onConnections,
   onTeamRequests,
   onMyTeamApplications,
   onBuyTeamRights,
@@ -44,14 +39,11 @@ export function MoreScreen({
   onMemberships,
   onTournaments,
   onTournamentEntries,
-  onVisitors,
   isClub,
   isPlayer,
   isOrganizer = false,
 }: {
   onSettings(): void;
-  onDiscover(): void;
-  onConnections(): void;
   onTeamRequests(): void;
   onMyTeamApplications(): void;
   onBuyTeamRights(): void;
@@ -63,7 +55,6 @@ export function MoreScreen({
   onMemberships(): void;
   onTournaments(): void;
   onTournamentEntries(): void;
-  onVisitors(): void;
   isClub: boolean;
   isPlayer: boolean;
   // Organizers only see tournaments, news and account; the other entries
@@ -90,25 +81,13 @@ export function MoreScreen({
     Settings,
     onSettings,
   );
-  const network: Section = {
-    title: text.sections.network,
-    entries: [
-      entry(text.discover, text.discoverHint, Compass, onDiscover),
-      entry(
-        text.connections,
-        text.connectionsHint,
-        MessagesSquare,
-        onConnections,
-      ),
-      entry(text.visitors, text.visitorsHint, Eye, onVisitors),
-    ],
-  };
   const explore: Section = { title: text.sections.explore, entries: [news] };
   const account: Section = {
     title: text.sections.account,
     entries: [settings],
   };
-  // Grouped by what the account does most, then network, rewards and account.
+  // Grouped by what the account does most, then rewards and account. Discovery,
+  // requests and visitors moved to the Social header (19 Oct 2026).
   const sections: Section[] = isOrganizer
     ? [
         { title: text.sections.tournaments, entries: [tournaments] },
@@ -147,7 +126,6 @@ export function MoreScreen({
             ),
           ],
         },
-        network,
         {
           title: text.sections.rewards,
           entries: [entry(text.gifts, text.giftsHint, Gift, onGifts)],
@@ -179,7 +157,6 @@ export function MoreScreen({
             tournaments,
           ],
         },
-        network,
         {
           title: text.sections.rewards,
           entries: [

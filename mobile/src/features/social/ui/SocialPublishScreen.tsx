@@ -1,11 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Image,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Switch,
   Text,
@@ -21,6 +18,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Globe2, ImagePlus, Video, X } from 'lucide-react-native';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
+import {
+  KeyboardAwareScrollView,
+  keyboardOffset,
+} from '../../../shared/ui/keyboard';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import { maxPostLength, type SelectedMedia } from '../domain/models';
@@ -126,157 +127,153 @@ export function SocialPublishScreen({
   }
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safe}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.safe}
+      <KeyboardAwareScrollView
+        bottomOffset={keyboardOffset}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.content}
-        >
-          <View style={styles.header}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={copy.social.back}
-              disabled={busy || picking}
-              onPress={onBack}
-              style={styles.back}
-            >
-              <ArrowLeft size={22} color={colors.text} />
-            </Pressable>
-            <Text style={styles.title}>{copy.social.composeTitle}</Text>
-          </View>
-          <View style={styles.identity}>
-            <View style={styles.avatar}>
-              <Text style={styles.initials}>
-                {Array.from(name.trim())[0]?.toLocaleUpperCase('tr-TR')}
-              </Text>
-            </View>
-            <View style={styles.identityText}>
-              <Text style={styles.name}>{name}</Text>
-              <View style={styles.audience}>
-                <Globe2 size={13} color={colors.muted} />
-                <Text style={styles.caption}>{copy.social.audience}</Text>
-              </View>
-            </View>
-          </View>
-          {error ? <ErrorBanner message={error} /> : null}
-          <TextInput
-            accessibilityLabel={copy.social.placeholder}
-            placeholder={copy.social.placeholder}
-            placeholderTextColor={colors.muted}
-            multiline
-            maxLength={maxPostLength * 2}
-            value={body}
-            editable={!busy && !picking}
-            onChangeText={setBody}
-            style={styles.input}
-            textAlignVertical="top"
-          />
-          <View style={styles.counterRow}>
-            <Text style={styles.hint}>{copy.social.textHint}</Text>
-            <Text
-              style={[styles.counter, count > maxPostLength && styles.invalid]}
-            >
-              {count}/{maxPostLength}
+        <View style={styles.header}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={copy.social.back}
+            disabled={busy || picking}
+            onPress={onBack}
+            style={styles.back}
+          >
+            <ArrowLeft size={22} color={colors.text} />
+          </Pressable>
+          <Text style={styles.title}>{copy.social.composeTitle}</Text>
+        </View>
+        <View style={styles.identity}>
+          <View style={styles.avatar}>
+            <Text style={styles.initials}>
+              {Array.from(name.trim())[0]?.toLocaleUpperCase('tr-TR')}
             </Text>
           </View>
-          {media ? (
-            <View style={styles.media}>
-              <View style={styles.mediaHeader}>
-                <Text numberOfLines={1} style={styles.file}>
-                  {media.name}
-                </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel={copy.social.removeMedia}
-                  disabled={busy || picking}
-                  onPress={() => changeMedia(null)}
-                  style={styles.back}
-                >
-                  <X size={19} color={colors.secondary} />
-                </Pressable>
-              </View>
-              {previewError ? (
-                <Text style={styles.mediaError}>{copy.social.mediaFailed}</Text>
-              ) : media.kind === 'image' ? (
-                <Image
-                  source={{ uri: media.uri }}
-                  accessibilityLabel={copy.social.imagePreview}
-                  resizeMode="contain"
-                  onError={() => setPreviewError(true)}
-                  style={styles.image}
-                />
-              ) : (
-                <VideoPlayer
-                  source={{ uri: media.uri }}
-                  onError={() => setPreviewError(true)}
-                />
-              )}
-              <Text style={styles.mediaHint}>
-                {media.kind === 'image'
-                  ? copy.social.imageHint
-                  : copy.social.videoHint}
-              </Text>
+          <View style={styles.identityText}>
+            <Text style={styles.name}>{name}</Text>
+            <View style={styles.audience}>
+              <Globe2 size={13} color={colors.muted} />
+              <Text style={styles.caption}>{copy.social.audience}</Text>
             </View>
-          ) : null}
-          {media && profileOption ? (
-            <View style={styles.profileRow}>
-              <View style={styles.profileText}>
-                <Text style={styles.profileTitle}>
-                  {copy.social.showOnProfile}
-                </Text>
-                <Text style={styles.hint}>
-                  {media.kind === 'image'
-                    ? copy.social.showOnProfileImage
-                    : copy.social.showOnProfileVideo}
-                </Text>
-              </View>
-              <Switch
-                accessibilityLabel={copy.social.showOnProfile}
-                value={showOnProfile}
+          </View>
+        </View>
+        {error ? <ErrorBanner message={error} /> : null}
+        <TextInput
+          accessibilityLabel={copy.social.placeholder}
+          placeholder={copy.social.placeholder}
+          placeholderTextColor={colors.muted}
+          multiline
+          maxLength={maxPostLength * 2}
+          value={body}
+          editable={!busy && !picking}
+          onChangeText={setBody}
+          style={styles.input}
+          textAlignVertical="top"
+        />
+        <View style={styles.counterRow}>
+          <Text style={styles.hint}>{copy.social.textHint}</Text>
+          <Text
+            style={[styles.counter, count > maxPostLength && styles.invalid]}
+          >
+            {count}/{maxPostLength}
+          </Text>
+        </View>
+        {media ? (
+          <View style={styles.media}>
+            <View style={styles.mediaHeader}>
+              <Text numberOfLines={1} style={styles.file}>
+                {media.name}
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={copy.social.removeMedia}
                 disabled={busy || picking}
-                onValueChange={setShowOnProfile}
-                trackColor={{ false: colors.overlay, true: colors.brand }}
-                thumbColor={colors.text}
-              />
+                onPress={() => changeMedia(null)}
+                style={styles.back}
+              >
+                <X size={19} color={colors.secondary} />
+              </Pressable>
             </View>
-          ) : null}
-          <View style={styles.tools}>
-            <Pressable
-              accessibilityRole="button"
-              disabled={busy || picking}
-              accessibilityState={{ disabled: busy || picking }}
-              onPress={() => choose('image')}
-              style={styles.tool}
-            >
-              <ImagePlus size={22} color={colors.brand} />
-              <Text style={styles.toolText}>{copy.social.addImage}</Text>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              disabled={busy || picking}
-              accessibilityState={{ disabled: busy || picking }}
-              onPress={() => choose('video')}
-              style={styles.tool}
-            >
-              <Video size={22} color={colors.brand} />
-              <Text style={styles.toolText}>{copy.social.addVideo}</Text>
-            </Pressable>
-          </View>
-          <Button
-            label={copy.social.publish}
-            loading={busy}
-            disabled={picking || !dirty || count > maxPostLength}
-            onPress={() => publish()}
-          />
-          {busy ? (
-            <Text accessibilityRole="alert" style={styles.caption}>
-              {copy.social.uploading}
+            {previewError ? (
+              <Text style={styles.mediaError}>{copy.social.mediaFailed}</Text>
+            ) : media.kind === 'image' ? (
+              <Image
+                source={{ uri: media.uri }}
+                accessibilityLabel={copy.social.imagePreview}
+                resizeMode="contain"
+                onError={() => setPreviewError(true)}
+                style={styles.image}
+              />
+            ) : (
+              <VideoPlayer
+                source={{ uri: media.uri }}
+                onError={() => setPreviewError(true)}
+              />
+            )}
+            <Text style={styles.mediaHint}>
+              {media.kind === 'image'
+                ? copy.social.imageHint
+                : copy.social.videoHint}
             </Text>
-          ) : null}
-        </ScrollView>
-      </KeyboardAvoidingView>
+          </View>
+        ) : null}
+        {media && profileOption ? (
+          <View style={styles.profileRow}>
+            <View style={styles.profileText}>
+              <Text style={styles.profileTitle}>
+                {copy.social.showOnProfile}
+              </Text>
+              <Text style={styles.hint}>
+                {media.kind === 'image'
+                  ? copy.social.showOnProfileImage
+                  : copy.social.showOnProfileVideo}
+              </Text>
+            </View>
+            <Switch
+              accessibilityLabel={copy.social.showOnProfile}
+              value={showOnProfile}
+              disabled={busy || picking}
+              onValueChange={setShowOnProfile}
+              trackColor={{ false: colors.overlay, true: colors.brand }}
+              thumbColor={colors.text}
+            />
+          </View>
+        ) : null}
+        <View style={styles.tools}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={busy || picking}
+            accessibilityState={{ disabled: busy || picking }}
+            onPress={() => choose('image')}
+            style={styles.tool}
+          >
+            <ImagePlus size={22} color={colors.brand} />
+            <Text style={styles.toolText}>{copy.social.addImage}</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={busy || picking}
+            accessibilityState={{ disabled: busy || picking }}
+            onPress={() => choose('video')}
+            style={styles.tool}
+          >
+            <Video size={22} color={colors.brand} />
+            <Text style={styles.toolText}>{copy.social.addVideo}</Text>
+          </Pressable>
+        </View>
+        <Button
+          label={copy.social.publish}
+          loading={busy}
+          disabled={picking || !dirty || count > maxPostLength}
+          onPress={() => publish()}
+        />
+        {busy ? (
+          <Text accessibilityRole="alert" style={styles.caption}>
+            {copy.social.uploading}
+          </Text>
+        ) : null}
+      </KeyboardAwareScrollView>
       <Modal
         visible={!!pending}
         transparent

@@ -21,6 +21,7 @@ type Profile struct {
 	Verified      bool             `json:"verified"`
 	IsPro         bool             `json:"isPro"`
 	District      string           `json:"district"`
+	AvatarVersion int `json:"avatarVersion"`
 	PlayerProfile *players.Profile `json:"playerProfile"`
 	IsFollowing   bool             `json:"isFollowing"`
 }
@@ -50,7 +51,7 @@ func authorize(viewer domain.Viewer, role string) error {
 }
 
 func dto(profile domain.Profile) Profile {
-	result := Profile{ID: profile.ID, FullName: profile.FullName, Role: profile.Role, Verified: profile.Verified, IsPro: profile.IsPro, District: profile.District}
+	result := Profile{ID: profile.ID, FullName: profile.FullName, Role: profile.Role, Verified: profile.Verified, IsPro: profile.IsPro, District: profile.District, AvatarVersion: profile.AvatarVersion}
 	if profile.PlayerProfile != nil {
 		player := players.Public(*profile.PlayerProfile)
 		result.PlayerProfile = &player

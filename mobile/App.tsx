@@ -1,6 +1,7 @@
 import React from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KeyboardProvider } from './src/shared/ui/keyboard';
 import {
   AuthProvider,
   authRepository,
@@ -12,9 +13,11 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle="light-content" />
-      <AuthProvider repository={authRepository} storage={sessionStorage}>
-        <AppNavigator />
-      </AuthProvider>
+      <KeyboardProvider>
+        <AuthProvider repository={authRepository} storage={sessionStorage}>
+          <AppNavigator />
+        </AuthProvider>
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }

@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ban, Check, Flag, type LucideIcon } from 'lucide-react-native';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Field } from '../../../shared/ui/Field';
 import { copy } from '../../../shared/lib/copy';
+import {
+  KeyboardAwareScrollView,
+  keyboardOffset,
+} from '../../../shared/ui/keyboard';
 import { colors, radius, space, type } from '../../../styles/tokens';
 import type { ModerationService } from '../application/moderation-service';
 import {
@@ -73,7 +70,8 @@ export function ModerationSheet({
     <Modal visible transparent animationType="fade" onRequestClose={close}>
       <View style={styles.backdrop}>
         <View accessibilityViewIsModal style={styles.sheet}>
-          <ScrollView
+          <KeyboardAwareScrollView
+            bottomOffset={keyboardOffset}
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={styles.content}
           >
@@ -193,7 +191,7 @@ export function ModerationSheet({
                 <Button label={text.done} onPress={onClose} />
               </>
             )}
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </View>
       </View>
     </Modal>

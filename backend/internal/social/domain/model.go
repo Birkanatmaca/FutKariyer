@@ -24,6 +24,7 @@ type Author struct {
 	Following     bool   `json:"following"`
 	FootballType  string `json:"footballType,omitempty"`
 	LicenseStatus string `json:"licenseStatus,omitempty"`
+	AvatarVersion int    `json:"avatarVersion"`
 }
 
 type Media struct {

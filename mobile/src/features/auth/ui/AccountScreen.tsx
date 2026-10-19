@@ -5,6 +5,7 @@ import { Screen } from '../../../shared/ui/Screen';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { TopBar } from '../../../shared/ui/TopBar';
+import { Avatar } from '../../../shared/ui/Avatar';
 import { confirmSignOut } from './confirm-sign-out';
 import { DeleteAccountPrompt } from './DeleteAccountPrompt';
 import { copy } from '../../../shared/lib/copy';
@@ -15,6 +16,8 @@ export function AccountScreen({
   settings = !!onBack,
   extra,
   onBlockedUsers,
+  avatarUri,
+  onEditProfile,
 }: {
   onBack?: () => void;
   settings?: boolean;
@@ -22,6 +25,9 @@ export function AccountScreen({
   extra?: React.ReactNode;
   // Opens the blocked accounts list (moderation feature).
   onBlockedUsers?: () => void;
+  // Profile photo and the Profili düzenle entry (19 Oct 2026).
+  avatarUri?: string;
+  onEditProfile?: () => void;
 } = {}) {
   const { user, signOut, deleteAccount } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -30,13 +36,6 @@ export function AccountScreen({
   if (!user) {
     return null;
   }
-  const initials = user.fullName
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map(name => name[0])
-    .join('')
-    .toLocaleUpperCase('tr-TR');
   async function logout() {
     if (busy || !(await confirmSignOut())) {
       return;
@@ -78,14 +77,25 @@ export function AccountScreen({
         {settings ? copy.playerOverview.settingsHint : copy.profile.description}
       </Text>
       <View style={styles.identity}>
-        <View style={styles.avatar}>
-          <Text style={styles.initials}>{initials}</Text>
-        </View>
+        <Avatar
+          name={user.fullName}
+          uri={avatarUri}
+          size={72}
+          square={user.role === 'club'}
+          style={styles.avatar}
+        />
         <View style={styles.identityCopy}>
           <Text style={styles.name}>{user.fullName}</Text>
           <Text style={styles.role}>{copy.roles[user.role]}</Text>
         </View>
       </View>
+      {onEditProfile ? (
+        <Button
+          label={copy.accountProfile.edit}
+          secondary
+          onPress={onEditProfile}
+        />
+      ) : null}
       <View style={styles.details}>
         <Text style={styles.eyebrow}>{copy.profile.account}</Text>
         {details.map(([label, value]) => (
@@ -155,17 +165,7 @@ const styles = StyleSheet.create({
     paddingVertical: space.sm,
   },
   identityCopy: { flex: 1, gap: space.sm },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: radius.pill,
-    backgroundColor: colors.brandWash,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  initials: { fontSize: 24, fontWeight: '800', color: colors.brand },
+  avatar: { borderWidth: 2, borderColor: colors.brand },
   name: {
     fontSize: 22,
     lineHeight: 28,

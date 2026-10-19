@@ -341,6 +341,42 @@ export const copy = {
     refresh: 'Akışı yenile',
     loadMore: 'Daha fazla gönderi',
     loadingMore: 'Yükleniyor…',
+    requests: 'İstekler',
+    requestsBadge: (count: number) => count + ' bekleyen istek',
+    requestsHint: (count: number) =>
+      count === 1 ? '1 yeni bağlantı isteği' : count + ' yeni bağlantı isteği',
+    sidebar: {
+      open: 'Futbol ağı menüsünü aç',
+      close: 'Menüyü kapat',
+      title: 'Futbol ağı',
+      searchHint: 'Sporcu, kulüp veya antrenör ara',
+      discover: 'Kişi ara',
+      discoverHint: 'Futbol ağındaki profilleri keşfet',
+      visitors: 'Ziyaretçiler',
+      visitorsHint: 'Profiline kimlerin baktığını gör',
+      upgrade: 'Pro’ya geç, hepsini gör',
+      searchTitle: 'Kişi ara',
+      searchBodyAll: 'Oyuncu, kulüp ve antrenörleri adıyla bul',
+      searchBodyPlayers: 'Oyuncuları adıyla bul',
+      visitorsPanel: {
+        eyebrow: 'PROFİL ZİYARETÇİLERİ',
+        seeAll: 'Tümünü gör',
+        thisWeek: 'kişi bu hafta profiline baktı',
+        windowTotals: (days: number, visitors: number, visits: number) =>
+          'Son ' +
+          days +
+          ' gün · ' +
+          visitors +
+          ' ziyaretçi · ' +
+          visits +
+          ' görüntüleme',
+        recent: 'Son ziyaretler',
+        proTitle: 'Seni kim inceliyor?',
+        proBody:
+          'Profiline bakan kulüpleri ve oyuncuları adıyla gör, gizli gezin, her ay +3 başvuru hakkı kazan.',
+        proCta: 'Pro’ya geç',
+      },
+    },
     loadMoreReplies: 'Daha fazla yanıt',
     emptyTitle: 'İlk sözü sen söyle',
     emptyBody:
@@ -489,6 +525,44 @@ export const copy = {
       pick: (name: string) => name + ' seç',
       value: (name: string, value: string) => name + ': ' + value,
       league: (name: string) => 'Lig: ' + name,
+    },
+  },
+  accountProfile: {
+    title: 'Profili düzenle',
+    edit: 'Profili düzenle',
+    addPhoto: 'Fotoğraf ekle',
+    changePhoto: 'Fotoğrafı değiştir',
+    removePhoto: 'Fotoğrafı kaldır',
+    photoHint:
+      'Profil fotoğrafın herkese görünür. JPEG veya PNG, en fazla 4 MiB.',
+    photoSaved: 'Profil fotoğrafın güncellendi.',
+    photoRemoved: 'Profil fotoğrafın kaldırıldı.',
+    personal: 'Kişisel bilgiler',
+    fullName: 'Ad soyad',
+    username: 'Kullanıcı adı',
+    usernamePlaceholder: 'ornek.ad',
+    email: 'E-posta',
+    emailHint:
+      'E-posta adresin giriş için kullanılır ve burada değiştirilemez.',
+    birthDate: 'Doğum tarihi',
+    birthDatePlaceholder: 'GG.AA.YYYY',
+    city: 'Şehir',
+    district: 'İlçe',
+    districtPlaceholder: 'Örn. Çankaya',
+    bio: 'Hakkında',
+    bioPlaceholder: 'Kendini birkaç cümleyle anlat.',
+    bioCount: (n: number, max: number) => n + '/' + max,
+    physical: 'Fiziksel bilgiler',
+    height: 'Boy (cm)',
+    weight: 'Kilo (kg)',
+    football: 'Futbol bilgileri',
+    footballHint: 'Mevki, ayak, deneyim, kulüp ve müsaitlik',
+    save: 'Kaydet',
+    saved: 'Profilin kaydedildi.',
+    errors: {
+      birthDate: 'Doğum tarihini GG.AA.YYYY biçiminde gir.',
+      height: 'Boy 120–230 cm arasında olmalı.',
+      weight: 'Kilo 35–160 kg arasında olmalı.',
     },
   },
   rating: {
@@ -844,6 +918,11 @@ export const copy = {
     shortcuts: 'SANA ÖZEL ALAN',
   },
   discover: {
+    placeholderAll: 'Oyuncular, kulüpler, antrenörler',
+    placeholderPlayers: 'Oyuncu ara',
+    clearSearch: 'Aramayı temizle',
+    noResults: 'Sonuç bulunamadı',
+    searchError: 'Arama yapılamadı. Bağlantını kontrol edip tekrar dene.',
     follow: 'Takip et',
     unfollow: 'Takibi bırak',
     eyebrow: 'FUTBOL AĞIN',

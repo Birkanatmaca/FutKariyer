@@ -30,6 +30,7 @@ export function PlayerOverviewScreen({
   isPro = false,
   userId,
   media,
+  avatarUri,
 }: {
   fullName: string;
   // The owner's id and gallery service enable uploads on the own profile.
@@ -42,6 +43,7 @@ export function PlayerOverviewScreen({
   onBack?(): void;
   counts?: ProfileCounts | null;
   posts?: ProfilePostsSlot;
+  avatarUri?: string;
 }) {
   const { profile, error, loading, retry } = usePlayerProfile(service, token);
   return (
@@ -72,6 +74,7 @@ export function PlayerOverviewScreen({
             fullName={fullName}
             profile={profile}
             onEdit={onEdit}
+            avatarSource={avatarUri ? { uri: avatarUri } : undefined}
             counts={counts}
             posts={posts}
             isPro={isPro}
