@@ -30,6 +30,7 @@ func New(service *application.Service) http.Handler {
 	mux.HandleFunc("GET /v1/auth/me", h.me)
 	mux.HandleFunc("POST /v1/auth/logout", h.logout)
 	mux.HandleFunc("DELETE /v1/auth/account", h.deleteAccount)
+	mux.HandleFunc("POST /v1/auth/switch", h.switchToClub)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -94,6 +95,8 @@ func failure(w http.ResponseWriter, err error) {
 		writeError(w, 403, "application_rejected", "Başvurun onaylanmadı. Ayrıntı için Fut Career ekibiyle iletişime geç.", nil)
 	case errors.Is(err, domain.ErrUsernameExists):
 		writeError(w, 409, "username_exists", "Bu kullanıcı adı kullanımda.", map[string]string{"username": "Bu kullanıcı adı zaten kullanımda."})
+	case errors.Is(err, domain.ErrForbidden):
+		writeError(w, 403, "forbidden", "Bu işlem için yetkin yok.", nil)
 	case errors.Is(err, domain.ErrWrongPortal):
 		writeError(w, 403, "wrong_portal", "Yönetici hesabıyla webde /securityadmin adresinden giriş yap.", nil)
 	default:
@@ -157,6 +160,22 @@ func (h *Handler) logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// switchToClub gives a staff coach a session for the club (POST {clubId}).
+func (h *Handler) switchToClub(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		ClubID string `json:"clubId"`
+	}
+	if !decode(w, r, &in) {
+		return
+	}
+	result, err := h.service.SwitchToClub(r.Context(), bearer(r), strings.TrimSpace(in.ClubID))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, result)
 }
 
 func (h *Handler) deleteAccount(w http.ResponseWriter, r *http.Request) {

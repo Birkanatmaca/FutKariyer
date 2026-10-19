@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { useAuth } from '../../auth';
+import { useAuth, type StaffPermission } from '../../auth';
 import type { ContentService } from '../../content';
 import type { DiscoveryService } from '../../discovery';
 import type { TeamsService } from '../../teams';
@@ -53,6 +53,12 @@ export function ClubHomeScreen({
   onTournamentEntries(): void;
 }) {
   const { user, token } = useAuth();
+  // A coach running the club account only gets shortcuts to the sections the
+  // club gave them; the server rejects the rest anyway.
+  const can = (section: StaffPermission) =>
+    !user?.delegate || user.delegate.permissions.includes(section);
+  const allowed = (section: StaffPermission, action: () => void) =>
+    can(section) ? action : undefined;
   return (
     <Screen>
       <Brand mark={false} />
@@ -64,33 +70,37 @@ export function ClubHomeScreen({
         <ClubCenterSection
           token={token}
           service={clubService}
-          onProfile={onProfile}
-          onApplications={onTeamRequests}
-          onNews={onMyNews}
+          onProfile={allowed('profile', onProfile)}
+          onApplications={allowed('applications', onTeamRequests)}
+          onNews={allowed('news', onMyNews)}
           onLeagues={onLeagues}
         />
         <ClubProfileSection
           token={token}
           service={clubService}
-          onEdit={onProfile}
+          onEdit={allowed('profile', onProfile)}
         />
         <ClubNewsSection
           token={token}
           service={contentService}
           onNews={onNews}
-          onCompose={onComposeNews}
-          onMine={onMyNews}
+          onCompose={allowed('news', onComposeNews)}
+          onMine={allowed('news', onMyNews)}
         />
         <ClubPlayersSection
           token={token}
           teamsService={teamsService}
           discoveryService={discoveryService}
+          applications={can('applications')}
           onDiscover={onDiscover}
         />
-        <ClubSquadSection onSquad={onSquad} onListings={onListings} />
+        <ClubSquadSection
+          onSquad={allowed('squad', onSquad)}
+          onListings={allowed('listings', onListings)}
+        />
         <ClubTournamentsSection
           onTournaments={onTournaments}
-          onEntries={onTournamentEntries}
+          onEntries={allowed('tournaments', onTournamentEntries)}
         />
       </View>
     </Screen>

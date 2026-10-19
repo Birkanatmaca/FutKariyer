@@ -49,6 +49,7 @@ export function HomeScreen({
   onTeams,
   onLeagues,
   onDiscover,
+  headerAction,
 }: {
   contentService: ContentService;
   discoveryService: DiscoveryService;
@@ -65,6 +66,8 @@ export function HomeScreen({
   onTeams(): void;
   onLeagues(): void;
   onDiscover(): void;
+  // Replaces the team-rights shortcut, e.g. a coach's "Geçiş yap" button.
+  headerAction?: React.ReactNode;
 }) {
   const { user, token } = useAuth();
   const gifts = useGifts(giftsService, token);
@@ -78,7 +81,12 @@ export function HomeScreen({
       [discoveryService, token],
     ),
   );
-  const rights = useRightsBalance(teamsService, token, true);
+  // Team application rights belong to players only.
+  const rights = useRightsBalance(
+    teamsService,
+    token,
+    user?.role === 'player' && !headerAction,
+  );
   const account = useAccountProfile(accountRepository, token);
   const unread = useFocusedResource(
     useCallback(
@@ -117,7 +125,9 @@ export function HomeScreen({
         <View style={styles.header}>
           <Brand mark={false} />
           <View style={styles.actions}>
-            {rights !== null ? (
+            {headerAction ? (
+              headerAction
+            ) : user?.role !== 'player' ? null : rights !== null ? (
               <RightsBadge count={rights} onPress={onRights} />
             ) : (
               <HomeHeaderButton

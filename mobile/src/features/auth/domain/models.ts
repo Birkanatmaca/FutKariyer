@@ -1,9 +1,34 @@
 // Organizer accounts are opened by the admin and sign in with a username.
 export type AccountRole = 'player' | 'coach' | 'club' | 'organizer';
 import type {
+  DeclaredCoachLicense,
   DeclaredLicenseStatus,
   PlayerFootballType,
 } from '../../../shared/domain/football';
+// Club sections a club opens to a staff coach who switches into it.
+export type StaffPermission =
+  | 'applications'
+  | 'squad'
+  | 'listings'
+  | 'news'
+  | 'tournaments'
+  | 'profile'
+  | 'social';
+export const staffPermissions: StaffPermission[] = [
+  'applications',
+  'squad',
+  'listings',
+  'news',
+  'tournaments',
+  'profile',
+  'social',
+];
+// Set while a coach runs a club account after "Geçiş yap".
+export type Delegate = {
+  coachId: string;
+  coachName: string;
+  permissions: StaffPermission[];
+};
 export type User = {
   id: string;
   fullName: string;
@@ -14,6 +39,7 @@ export type User = {
   role: AccountRole;
   city: string;
   createdAt: string;
+  delegate?: Delegate;
 };
 export type AuthSession = { token: string; expiresAt: string; user: User };
 // Admin accounts sign in from the same screen but receive a separate session
@@ -43,14 +69,18 @@ export interface SessionStorage {
   clear(): Promise<void>;
 }
 export type LoginInput = { identifier: string; password: string };
-export type RegisterInput = {
+// Players and (since 19 Oct 2026) coaches open their own accounts. Players say
+// whether they hold a licence, coaches which licence level they hold.
+export type SignUpRole = Extract<AccountRole, 'player' | 'coach'>;
+type RegisterBase = {
   email: string;
   password: string;
   fullName: string;
-  role: AccountRole;
   footballType: PlayerFootballType;
-  licenseStatus: DeclaredLicenseStatus;
 };
+export type RegisterInput =
+  | (RegisterBase & { role: 'player'; licenseStatus: DeclaredLicenseStatus })
+  | (RegisterBase & { role: 'coach'; licenseLevel: DeclaredCoachLicense });
 // Club and organizer accounts apply here and wait for admin approval.
 export type ApplicationRole = Extract<AccountRole, 'club' | 'organizer'>;
 export type AccountApplicationInput = {
@@ -77,4 +107,6 @@ export interface AuthRepository {
   adminLogin(input: LoginInput): Promise<AdminSession>;
   adminMe(token: string): Promise<AdminUser>;
   adminLogout(token: string): Promise<void>;
+  // A staff coach opens a session for a club that authorized them.
+  switchToClub(token: string, clubId: string): Promise<AuthSession>;
 }

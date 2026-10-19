@@ -69,13 +69,16 @@ export function AccountProfileScreen({
   repository,
   onBack,
   onFootball,
+  footballLink,
   onChange,
 }: {
   token: string;
   repository: AccountRepository;
   onBack(): void;
-  // Players: opens the football profile (position, foot, availability…).
+  // Players: opens the football profile (position, foot, availability…);
+  // coaches: their coach details, with footballLink naming the page.
   onFootball?(): void;
+  footballLink?: { title: string; hint: string };
   // Lets the screens behind this one show the new name and photo at once.
   onChange?(profile: AccountProfile): void;
 }) {
@@ -400,8 +403,12 @@ export function AccountProfileScreen({
           style={({ pressed }) => [styles.link, pressed && styles.pressed]}
         >
           <View style={styles.linkBody}>
-            <Text style={styles.linkTitle}>{text.football}</Text>
-            <Text style={styles.linkHint}>{text.footballHint}</Text>
+            <Text style={styles.linkTitle}>
+              {footballLink?.title ?? text.football}
+            </Text>
+            <Text style={styles.linkHint}>
+              {footballLink?.hint ?? text.footballHint}
+            </Text>
           </View>
           <ChevronRight size={18} color={colors.muted} />
         </Pressable>

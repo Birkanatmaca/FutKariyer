@@ -4,7 +4,7 @@ Futbolcuları, kulüpleri ve antrenörleri bir araya getiren futbol ağı. React
 
 ## Bu sürüm
 
-- Yaş sınırı olmadan herkese açık sporcu kaydı; yönetici tarafından açılan kulüp/antrenör hesapları
+- Yaş sınırı olmadan herkese açık sporcu ve antrenör kaydı; kulüp/organizasyon başvurusu; yönetici tarafından da açılabilen kulüp/antrenör hesapları
 - Kayıt, giriş, oturum geri yükleme, hesap bilgileri ve çıkış
 - Profesyonel koyu mobil tema; Ana Sayfa, Ligler, Bildirimler ve Diğer sekmeleri; ortada Sosyal, Profil, Takımlar ve Oyunlar'ı açan 66 piksel futbol topu merkez düğmesi, Diğer içinde Ayarlar ve Haberler
 - Kalıcı PostgreSQL kullanıcı/oturum verisi; bcrypt şifre hash'i, rastgele bearer token ve sunucuda yalnızca token hash'i
@@ -29,7 +29,29 @@ Futbolcuları, kulüpleri ve antrenörleri bir araya getiren futbol ağı. React
 
 Oyuncu profili temel alanları Go API üzerinden kaydedilir. Keşifte görünme tercihi liste ve detay erişimini kontrol eder. Sporcular doğrulanmış kulüp/antrenörleri; doğrulanmış kulüp/antrenörler görünür oyuncuları keşfeder. Sporcu profil galerisine fotoğraf/video yüklenebilir; sosyal gönderi medyası da bağlıdır. E-posta doğrulama ve şifre kurtarma henüz eklenmemiştir. Kullanıcı kararıyla üyelik yaş sınırı ve yaş onayı kaldırılmıştır.
 
-## Güncel geliştirme durumu — 15 Ekim 2026: Mağaza satın alma, moderasyon, profil galerisi, push
+## Güncel geliştirme durumu — 19 Ekim 2026: Antrenör profili, teknik ekip ve kulüp hesabına geçiş
+
+Ürün kuralları PROJECT.md "Antrenör profili ve kulüp teknik ekibi" bölümündedir. Teknik özet:
+
+- **Migration:** `00035_coach_profiles_and_club_staff.sql` — `coach_profiles` (dört `show_*` görünürlük anahtarı varsayılan kapalı), `club_staff` (davet/aktif, görev, bölüm izinleri), `sessions.acting_user_id`/`acting_auth_version` (kulüp adına açılan oturum) ve `staff` bildirim türü.
+- **Backend:** `internal/coaches` modülü; `POST /v1/auth/switch` ve tüm API'yi saran `auth/transport.DelegationGuard`. Geçişli oturumda yazma varsayılan kapalıdır; bölüm kuralları okuma ve yazmayı birlikte açar.
+- **Antrenör kaydı:** `POST /v1/auth/register` artık `role: coach` ve `licenseLevel` kabul eder; hesap hemen açılır (doğrulanmamış) ve `coach_profiles` aynı transaction'da futbol türü ve lisansla yazılır. Mobilde Hesap oluştur'da Antrenör seçeneği vardır.
+- **Mobil:** `features/coaches` (antrenör profili ve bilgileri, Kulüplerim, Teknik ekip, izin sayfası, Geçiş yap düğmesi, kulüp şeridi). Kulüp oturumu ikinci Keychain servisinde tutulur; `NavigationContainer` hesap kimliğiyle anahtarlanır.
+
+| Metot | Yol | İşlev |
+|---|---|---|
+| GET/PUT | /v1/me/coach-profile | Antrenörün kendi bilgileri ve görünürlük anahtarları |
+| GET | /v1/me/staff | Kulübün teknik ekibi ve sınırı (`{ staff, limit }`); yalnızca kulübün kendi oturumu |
+| GET | /v1/me/staff/candidates?q= | Davet için antrenör arama (en az 2 harf) |
+| POST | /v1/me/staff | `{ coachId, role, permissions }` ile davet; aynı antrenöre ikinci davet 409 |
+| PUT/DELETE | /v1/me/staff/{coachId} | Görev/izin güncelleme; daveti iptal etme veya ekipten çıkarma |
+| GET | /v1/me/coach-clubs | Antrenörün davetleri ve aktif kulüpleri |
+| PUT | /v1/me/coach-clubs/{clubId} | `{ accept: true/false }` ile daveti yanıtlama |
+| DELETE | /v1/me/coach-clubs/{clubId} | Kulüpten ayrılma |
+| GET | /v1/staff/clubs/{clubId}, /v1/staff/coaches/{coachId} | Kulübün aktif teknik ekibi; antrenör kartı (kulüp ve antrenörün kendisi tamamını, diğerleri yalnızca açık grupları görür) |
+| POST | /v1/auth/switch | `{ clubId }` ile kulüp adına oturum; yalnızca antrenörün kendi oturumundan ve aktif ekip kaydıyla |
+
+## Önceki geliştirme durumu — 15 Ekim 2026: Mağaza satın alma, moderasyon, profil galerisi, push
 
 Ürün kuralları PROJECT.md içindedir ("Mağaza içi satın alma", "Bildirme, engelleme ve hesap silme", "Oyuncu profili dilimi", "Bildirim merkezi"). Teknik özet:
 
@@ -389,7 +411,7 @@ Takım API yolları mobil bearer oturumu ister. Başvuru oluşturma ve oyuncunun
 
 Bildirim yolları mobil bearer oturumu ister ve her kullanıcıya yalnızca kendi kayıtlarını gösterir. Yeni takım başvurusu kulüp hesabına; kabul/ret kararı oyuncuya; ödeme durumu değişikliği sipariş sahibine bildirim oluşturur. Bildirim, ilgili başvuru veya ödeme işlemiyle aynı PostgreSQL transaction'ında yazılır. Okundu durumu kullanıcıya özeldir ve tümünü okundu işaretleme de desteklenir. Bu dilim uygulama içi merkezdir; harici push servisi seçilmemiştir.
 
-Kayıt gövdesi fullName, email, password ve role alanlarını içerir; yaş onayı gönderilmez. Herkese açık kayıt yalnızca role: player kabul eder. Kulüp/antrenör/yönetici rolü bu yoldan açılamaz. Mobil giriş gövdesi identifier ve password içerir; identifier sporcu/antrenör için e-posta, kulüp için kullanıcı adıdır. Yönetici bu uç noktadan oturum açamaz (403). Önceki email + password giriş gövdesi de desteklenir. Başarılı mobil kayıt/giriş token, expiresAt ve user döndürür. user alanında username, active ve verified de bulunur; şifre veya hash döndürülmez. Mobil özel isteklerde Authorization: Bearer <token> başlığı gerekir.
+Kayıt gövdesi fullName, email, password ve role alanlarını içerir; yaş onayı gönderilmez. Herkese açık kayıt role: player veya coach kabul eder; ikisi de footballType (amateur, professional, halisaha) ister, sporcu licenseStatus (licensed/unlicensed), antrenör licenseLevel (uefa_pro, uefa_a, uefa_b, uefa_c, grassroots, none) gönderir. Kulüp/organizasyon/yönetici rolü bu yoldan açılamaz. Mobil giriş gövdesi identifier ve password içerir; identifier sporcu/antrenör için e-posta, kulüp için kullanıcı adıdır. Yönetici bu uç noktadan oturum açamaz (403). Önceki email + password giriş gövdesi de desteklenir. Başarılı mobil kayıt/giriş token, expiresAt ve user döndürür. user alanında username, active ve verified de bulunur; şifre veya hash döndürülmez. Mobil özel isteklerde Authorization: Bearer <token> başlığı gerekir.
 
 ### Yönetici API'si
 
@@ -441,6 +463,10 @@ Liste parametreleri: page (varsayılan 1, üst sınır 1000000), pageSize (varsa
 Yanıt items, page, pageSize, total ve totalPages içerir. createdAt ve id azalan sıralama kullanılır; sayı ve sayfa aynı veritabanı snapshot'ından okunur. Profil alanları id, fullName, role, verified, district, playerProfile ve isFollowing'dir; oyuncuda kanonik futbol profili, kulüp/antrenörde playerProfile: null döner. isFollowing detayda oturum sahibinin gerçek takip tercihini gösterir; listede kullanılmaz. Varsayılan şehir mobilde gösterilmez. Tüm keşif yanıtları no-store kullanır. Gizli, silinmiş, erişimi kapalı, pilot dışı veya doğru türde olmayan profil detayda 404 döner.
 
 ## Kontroller
+
+### Antrenör ve teknik ekip — 19 Ekim 2026
+
+Go: `go vet ./...` ve TEST_DATABASE_URL ile `go test ./... -count=1` başarılı (Windows App Control'ün engellediği test ikilileri `golang:1.26` Docker kapsayıcısında çalıştırıldı). Yeni entegrasyon testleri antrenör kaydını (kulüp kaydının reddi, lisanssız antrenörün reddi, doğrulanmamış ve hemen açılan hesap, kayıttaki bilgilerin gizli başlaması, aynı e-postanın ikinci kaydının 409'u), görünürlük kurallarını, aday aramayı, davet ve yinelenen davette 409'u, kabulden önce geçişte 403'ü, kabul ve iki bildirimi, geçiş ve `/me` delegate alanını, geçişten ikinci geçişin reddini, bölüm denetimini, geçişli oturumda hesap silmenin 403'ünü, izin değişikliğinin hemen geçerli olmasını ve ekipten çıkarmada kulüp oturumunun 401 alıp kapanmasını (antrenörün kendi oturumu korunur) kapsar; migration sayısı 35. Mobil: TypeScript, ESLint ve Jest başarılı; yeni testler antrenör kaydını (hesap türü seçeneği, lisans düzeyi zorunluluğu ve isteğin gövdesi), geçiş/geri dönüşü, kulüp oturumunun ayrı depoda tutulmasını, geçişli Diğer menüsünün süzülmesini, sahip ve antrenör girişlerini, kapalı bilgilerin herkese açık profilde görünmemesini ve izin sayfasının seçimi göndermesini kapsar. Android emülatörde yerel API'ye karşı uçtan uca denendi: davet, bildirim, kabul, iki yoldan geçiş, şerit, süzülmüş menü ve ana sayfa, Kadrom, geri dönüş, antrenör bilgileri ve görünürlük.
 
 ### Pro üyelik ve ziyaretçiler — 15 Ekim 2026
 

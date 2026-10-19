@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
+  ArrowLeftRight,
   ChevronRight,
   ClipboardList,
   ShoppingBag,
@@ -10,7 +11,9 @@ import {
   Medal,
   Megaphone,
   Shield,
+  Undo2,
   Users,
+  UsersRound,
   type LucideIcon,
 } from 'lucide-react-native';
 import { Screen } from '../shared/ui/Screen';
@@ -52,6 +55,9 @@ export function MoreScreen({
   isClub,
   isPlayer,
   isOrganizer = false,
+  onStaff,
+  onCoachClubs,
+  delegate,
 }: {
   // Organizers have no profile, so they get no card.
   profile?: MoreProfile | null;
@@ -73,7 +79,19 @@ export function MoreScreen({
   // Organizers only see tournaments, news and account; the other entries
   // open player or club features the server rejects for them.
   isOrganizer?: boolean;
+  // Club owner: Teknik ekip. Coach: Kulüplerim.
+  onStaff?(): void;
+  onCoachClubs?(): void;
+  // A coach running a club account sees only the sections the club opened,
+  // and a way back instead of the account settings.
+  delegate?: {
+    coachName: string;
+    permissions: string[];
+    onBack(): void;
+  } | null;
 }) {
+  const allowed = (permission: string) =>
+    !delegate || delegate.permissions.includes(permission);
   const text = copy.more;
   const entry = (
     title: string,
@@ -97,7 +115,16 @@ export function MoreScreen({
   const explore: Section = { title: text.sections.explore, entries: [news] };
   const account: Section = {
     title: text.sections.account,
-    entries: [settings],
+    entries: delegate
+      ? [
+          entry(
+            copy.coaches.backTo(delegate.coachName),
+            copy.coaches.backHint,
+            Undo2,
+            delegate.onBack,
+          ),
+        ]
+      : [settings],
   };
   // Grouped by what the account does most, then rewards and account. Discovery,
   // requests and visitors moved to the Social header (19 Oct 2026).
@@ -112,37 +139,65 @@ export function MoreScreen({
         {
           title: text.sections.club,
           entries: [
-            entry(
-              text.teamRequests,
-              text.teamRequestsHint,
-              ClipboardList,
-              onTeamRequests,
-            ),
-            entry(text.squad, text.squadHint, Users, onSquad),
-            entry(
-              text.clubListings,
-              text.clubListingsHint,
-              Megaphone,
-              onClubListings,
-            ),
+            ...(allowed('applications')
+              ? [
+                  entry(
+                    text.teamRequests,
+                    text.teamRequestsHint,
+                    ClipboardList,
+                    onTeamRequests,
+                  ),
+                ]
+              : []),
+            ...(allowed('squad')
+              ? [entry(text.squad, text.squadHint, Users, onSquad)]
+              : []),
+            ...(allowed('listings')
+              ? [
+                  entry(
+                    text.clubListings,
+                    text.clubListingsHint,
+                    Megaphone,
+                    onClubListings,
+                  ),
+                ]
+              : []),
+            ...(onStaff && !delegate
+              ? [
+                  entry(
+                    copy.coaches.staff,
+                    copy.coaches.staffHint,
+                    UsersRound,
+                    onStaff,
+                  ),
+                ]
+              : []),
           ],
         },
         {
           title: text.sections.tournaments,
           entries: [
             tournaments,
-            entry(
-              text.tournamentEntries,
-              text.tournamentEntriesHint,
-              ClipboardList,
-              onTournamentEntries,
-            ),
+            ...(allowed('tournaments')
+              ? [
+                  entry(
+                    text.tournamentEntries,
+                    text.tournamentEntriesHint,
+                    ClipboardList,
+                    onTournamentEntries,
+                  ),
+                ]
+              : []),
           ],
         },
-        {
-          title: text.sections.rewards,
-          entries: [entry(text.gifts, text.giftsHint, Gift, onGifts)],
-        },
+        ...(delegate
+          ? []
+          : [
+              {
+                title: text.sections.rewards,
+                entries: [entry(text.gifts, text.giftsHint, Gift, onGifts)],
+              },
+            ]),
         explore,
         account,
       ]
@@ -150,6 +205,16 @@ export function MoreScreen({
         {
           title: text.sections.career,
           entries: [
+            ...(onCoachClubs
+              ? [
+                  entry(
+                    copy.coaches.myClubs,
+                    copy.coaches.myClubsHint,
+                    ArrowLeftRight,
+                    onCoachClubs,
+                  ),
+                ]
+              : []),
             entry(text.listings, text.listingsHint, Megaphone, onListings),
             ...(isPlayer
               ? [
@@ -189,6 +254,7 @@ export function MoreScreen({
         explore,
         account,
       ];
+  const shown = sections.filter(section => section.entries.length > 0);
   return (
     <Screen>
       <Brand mark={false} />
@@ -220,7 +286,7 @@ export function MoreScreen({
           <ChevronRight size={20} color={colors.muted} />
         </Pressable>
       ) : null}
-      {sections.map(section => (
+      {shown.map(section => (
         <View key={section.title} style={styles.section}>
           <Text accessibilityRole="header" style={styles.sectionTitle}>
             {section.title}

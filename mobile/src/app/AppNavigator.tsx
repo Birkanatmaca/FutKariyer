@@ -18,6 +18,16 @@ import type {
   BottomTabNavigationProp,
 } from '@react-navigation/bottom-tabs';
 import { AccountScreen, useAuth } from '../features/auth';
+import {
+  CoachClubsScreen,
+  CoachOverviewScreen,
+  CoachProfileEditScreen,
+  CoachPublicCard,
+  DelegateBanner,
+  StaffScreen,
+  SwitchClubButton,
+  coachRepository,
+} from '../features/coaches';
 import { BlockedUsersScreen, moderationService } from '../features/moderation';
 import {
   DiscoverScreen,
@@ -165,6 +175,7 @@ type ProfileRoutes = {
   ProfileHome: undefined;
   AccountProfile: undefined;
   PlayerProfile: undefined;
+  CoachProfile: undefined;
   PostThread: { id: string };
   PostPublish: undefined;
 };
@@ -197,6 +208,9 @@ type MoreRoutes = {
   OrganizerTournament: { id: string };
   Visitors: undefined;
   Pro: undefined;
+  // Coach: club invitations and switching; club owner: technical staff.
+  CoachClubs: undefined;
+  Staff: undefined;
 };
 type LeaguesRoutes = {
   LeaguesHome: undefined;
@@ -271,9 +285,16 @@ const theme = {
   },
 };
 function MainTabs() {
-  const { user, token } = useAuth();
-  useStoreRecovery(storeCheckout, token);
-  usePushRegistration(pushMessaging, pushRepository, token, openNotifications);
+  const { user, token, delegate, switchToClub, switchBack } = useAuth();
+  // A coach running a club account buys nothing and registers no device for
+  // the club's pushes.
+  useStoreRecovery(storeCheckout, delegate ? null : token);
+  usePushRegistration(
+    pushMessaging,
+    pushRepository,
+    delegate ? null : token,
+    openNotifications,
+  );
   // Organizers have no profile and the social and games APIs reject them, so
   // their hub only holds Takımlar.
   const member = user?.role !== 'organizer';
@@ -303,182 +324,200 @@ function MainTabs() {
     [unreadCount],
   );
   return (
-    <Tabs.Navigator
-      tabBar={renderTabBar}
-      screenListeners={{ focus: refreshUnread }}
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: { backgroundColor: colors.bg },
-      }}
-    >
-      <Tabs.Screen name="Home">
-        {({ navigation }) =>
-          user?.role === 'organizer' ? (
-            <OrganizerHomeScreen
-              service={tournamentsService}
-              onOpen={id =>
-                navigation.navigate('More', {
-                  screen: 'OrganizerTournament',
-                  params: { id },
-                  initial: false,
-                })
-              }
-            />
-          ) : user?.role === 'club' ? (
-            <ClubHomeScreen
-              clubService={clubService}
-              contentService={contentService}
-              teamsService={teamsService}
-              discoveryService={discoveryService}
-              onProfile={() =>
-                navigation.navigate('More', {
-                  screen: 'ClubProfileEdit',
-                  initial: false,
-                })
-              }
-              onLeagues={() => navigation.navigate('Leagues')}
-              onTeamRequests={() =>
-                navigation.navigate('More', {
-                  screen: 'TeamJoinRequests',
-                  initial: false,
-                })
-              }
-              onNews={() =>
-                navigation.navigate('More', {
-                  screen: 'News',
-                  params: { screen: 'NewsList' },
-                  initial: false,
-                })
-              }
-              onComposeNews={() =>
-                navigation.navigate('More', {
-                  screen: 'ClubNewsCompose',
-                  initial: false,
-                })
-              }
-              onMyNews={() =>
-                navigation.navigate('More', {
-                  screen: 'ClubNewsMine',
-                  initial: false,
-                })
-              }
-              onDiscover={() =>
-                navigation.navigate('More', {
-                  screen: 'Discover',
-                  initial: false,
-                })
-              }
-              onSquad={() =>
-                navigation.navigate('More', {
-                  screen: 'Squad',
-                  initial: false,
-                })
-              }
-              onListings={() =>
-                navigation.navigate('More', {
-                  screen: 'ClubListings',
-                  initial: false,
-                })
-              }
-              onTournaments={() =>
-                navigation.navigate('More', {
-                  screen: 'Tournaments',
-                  initial: false,
-                })
-              }
-              onTournamentEntries={() =>
-                navigation.navigate('More', {
-                  screen: 'TournamentEntries',
-                  initial: false,
-                })
-              }
-            />
-          ) : (
-            <HomeScreen
-              contentService={contentService}
-              discoveryService={discoveryService}
-              giftsService={giftsService}
-              notificationsService={notificationsService}
-              onTeams={() => navigation.navigate('Teams')}
-              onLeagues={() => navigation.navigate('Leagues')}
-              onDiscover={() =>
-                navigation.navigate('More', {
-                  screen: 'Discover',
-                  initial: false,
-                })
-              }
-              onRights={() =>
+    <View style={styles.main}>
+      {delegate && user ? (
+        <DelegateBanner
+          clubName={user.fullName}
+          coachName={delegate.coachName}
+          onBack={switchBack}
+        />
+      ) : null}
+      <Tabs.Navigator
+        tabBar={renderTabBar}
+        screenListeners={{ focus: refreshUnread }}
+        screenOptions={{
+          headerShown: false,
+          sceneStyle: { backgroundColor: colors.bg },
+        }}
+      >
+        <Tabs.Screen name="Home">
+          {({ navigation }) =>
+            user?.role === 'organizer' ? (
+              <OrganizerHomeScreen
+                service={tournamentsService}
+                onOpen={id =>
+                  navigation.navigate('More', {
+                    screen: 'OrganizerTournament',
+                    params: { id },
+                    initial: false,
+                  })
+                }
+              />
+            ) : user?.role === 'club' ? (
+              <ClubHomeScreen
+                clubService={clubService}
+                contentService={contentService}
+                teamsService={teamsService}
+                discoveryService={discoveryService}
+                onProfile={() =>
+                  navigation.navigate('More', {
+                    screen: 'ClubProfileEdit',
+                    initial: false,
+                  })
+                }
+                onLeagues={() => navigation.navigate('Leagues')}
+                onTeamRequests={() =>
+                  navigation.navigate('More', {
+                    screen: 'TeamJoinRequests',
+                    initial: false,
+                  })
+                }
+                onNews={() =>
+                  navigation.navigate('More', {
+                    screen: 'News',
+                    params: { screen: 'NewsList' },
+                    initial: false,
+                  })
+                }
+                onComposeNews={() =>
+                  navigation.navigate('More', {
+                    screen: 'ClubNewsCompose',
+                    initial: false,
+                  })
+                }
+                onMyNews={() =>
+                  navigation.navigate('More', {
+                    screen: 'ClubNewsMine',
+                    initial: false,
+                  })
+                }
+                onDiscover={() =>
+                  navigation.navigate('More', {
+                    screen: 'Discover',
+                    initial: false,
+                  })
+                }
+                onSquad={() =>
+                  navigation.navigate('More', {
+                    screen: 'Squad',
+                    initial: false,
+                  })
+                }
+                onListings={() =>
+                  navigation.navigate('More', {
+                    screen: 'ClubListings',
+                    initial: false,
+                  })
+                }
+                onTournaments={() =>
+                  navigation.navigate('More', {
+                    screen: 'Tournaments',
+                    initial: false,
+                  })
+                }
+                onTournamentEntries={() =>
+                  navigation.navigate('More', {
+                    screen: 'TournamentEntries',
+                    initial: false,
+                  })
+                }
+              />
+            ) : (
+              <HomeScreen
+                headerAction={
+                  user?.role === 'coach' && token ? (
+                    <SwitchClubButton
+                      token={token}
+                      service={coachRepository}
+                      onSwitch={switchToClub}
+                    />
+                  ) : undefined
+                }
+                contentService={contentService}
+                discoveryService={discoveryService}
+                giftsService={giftsService}
+                notificationsService={notificationsService}
+                onTeams={() => navigation.navigate('Teams')}
+                onLeagues={() => navigation.navigate('Leagues')}
+                onDiscover={() =>
+                  navigation.navigate('More', {
+                    screen: 'Discover',
+                    initial: false,
+                  })
+                }
+                onRights={() =>
+                  navigation.navigate('More', {
+                    screen: 'TeamRights',
+                    initial: false,
+                  })
+                }
+                onNotifications={() => navigation.navigate('Notifications')}
+                onProfile={() => navigation.navigate('Profile')}
+                onNews={() =>
+                  navigation.navigate('More', {
+                    screen: 'News',
+                    params: { screen: 'NewsList' },
+                    initial: false,
+                  })
+                }
+                onVisitors={() =>
+                  navigation.navigate('More', {
+                    screen: 'Visitors',
+                    initial: false,
+                  })
+                }
+              />
+            )
+          }
+        </Tabs.Screen>
+        <Tabs.Screen
+          name="Leagues"
+          component={LeaguesNavigator}
+          options={{ popToTopOnBlur: true }}
+        />
+        {member ? (
+          <Tabs.Screen
+            name="Social"
+            component={SocialNavigator}
+            options={{ popToTopOnBlur: true }}
+          />
+        ) : null}
+        {member && !delegate ? (
+          <Tabs.Screen name="Profile" options={{ popToTopOnBlur: true }}>
+            {() => <ProfileNavigator />}
+          </Tabs.Screen>
+        ) : null}
+        <Tabs.Screen name="Teams">
+          {({ navigation, route }) => (
+            <TeamsScreen
+              open={route.params?.open}
+              onOpenRights={() =>
                 navigation.navigate('More', {
                   screen: 'TeamRights',
                   initial: false,
                 })
               }
-              onNotifications={() => navigation.navigate('Notifications')}
-              onProfile={() => navigation.navigate('Profile')}
-              onNews={() =>
-                navigation.navigate('More', {
-                  screen: 'News',
-                  params: { screen: 'NewsList' },
-                  initial: false,
-                })
-              }
-              onVisitors={() =>
-                navigation.navigate('More', {
-                  screen: 'Visitors',
-                  initial: false,
-                })
-              }
             />
-          )
-        }
-      </Tabs.Screen>
-      <Tabs.Screen
-        name="Leagues"
-        component={LeaguesNavigator}
-        options={{ popToTopOnBlur: true }}
-      />
-      {member ? (
+          )}
+        </Tabs.Screen>
+        {member && !delegate ? (
+          <Tabs.Screen name="Games">
+            {() => (token ? <GamesTab token={token} /> : null)}
+          </Tabs.Screen>
+        ) : null}
+        <Tabs.Screen name="Notifications" component={NotificationsTab} />
         <Tabs.Screen
-          name="Social"
-          component={SocialNavigator}
+          name="More"
+          component={MoreNavigator}
           options={{ popToTopOnBlur: true }}
         />
-      ) : null}
-      {member ? (
-        <Tabs.Screen name="Profile" options={{ popToTopOnBlur: true }}>
-          {() => <ProfileNavigator />}
-        </Tabs.Screen>
-      ) : null}
-      <Tabs.Screen name="Teams">
-        {({ navigation, route }) => (
-          <TeamsScreen
-            open={route.params?.open}
-            onOpenRights={() =>
-              navigation.navigate('More', {
-                screen: 'TeamRights',
-                initial: false,
-              })
-            }
-          />
-        )}
-      </Tabs.Screen>
-      {member ? (
-        <Tabs.Screen name="Games">
-          {() => (token ? <GamesTab token={token} /> : null)}
-        </Tabs.Screen>
-      ) : null}
-      <Tabs.Screen name="Notifications" component={NotificationsTab} />
-      <Tabs.Screen
-        name="More"
-        component={MoreNavigator}
-        options={{ popToTopOnBlur: true }}
-      />
-    </Tabs.Navigator>
+      </Tabs.Navigator>
+    </View>
   );
 }
 
 function MoreNavigator() {
-  const { token, user } = useAuth();
+  const { token, user, delegate, switchToClub } = useAuth();
   // Organizers are rejected by the social, discovery, connection and gift
   // endpoints; their routes render nothing even if reached directly.
   const member = user?.role !== 'organizer';
@@ -498,6 +537,29 @@ function MoreNavigator() {
             isOrganizer={!member}
           />
         )}
+      </MoreStack.Screen>
+      <MoreStack.Screen name="CoachClubs">
+        {({ navigation }) =>
+          token && user?.role === 'coach' ? (
+            <CoachClubsScreen
+              token={token}
+              service={coachRepository}
+              onBack={() => navigation.goBack()}
+              onSwitch={switchToClub}
+            />
+          ) : null
+        }
+      </MoreStack.Screen>
+      <MoreStack.Screen name="Staff">
+        {({ navigation }) =>
+          token && user?.role === 'club' && !delegate ? (
+            <StaffScreen
+              token={token}
+              service={coachRepository}
+              onBack={() => navigation.goBack()}
+            />
+          ) : null
+        }
       </MoreStack.Screen>
       <MoreStack.Screen name="News">
         {({ navigation }) => (
@@ -787,6 +849,13 @@ function NotificationsTab({
       service={notificationsService}
       onOpenGifts={() => openMore({ screen: 'Gifts' })}
       onOpenConnections={() => openMore({ screen: 'Connections' })}
+      onOpenStaff={() =>
+        user?.role === 'coach'
+          ? openMore({ screen: 'CoachClubs' })
+          : user?.role === 'club' && !user.delegate
+          ? openMore({ screen: 'Staff' })
+          : undefined
+      }
       onOpenProfile={(id, role) =>
         openMore({
           screen: 'Discover',
@@ -863,10 +932,12 @@ function MoreHomeRoute({
   isPlayer: boolean;
   isOrganizer: boolean;
 }) {
-  const { token, user } = useAuth();
+  const { token, user, delegate, switchBack } = useAuth();
   const account = useAccountProfile(accountRepository, token);
+  // A switched coach sees no club profile card: the club's account is the
+  // owner's to edit.
   const profile =
-    user && !isOrganizer
+    user && !isOrganizer && !delegate
       ? {
           name: account.profile?.fullName ?? user.fullName,
           role: copy.roles[user.role],
@@ -901,6 +972,23 @@ function MoreHomeRoute({
       isClub={isClub}
       isPlayer={isPlayer}
       isOrganizer={isOrganizer}
+      onStaff={
+        isClub && !delegate ? () => navigation.navigate('Staff') : undefined
+      }
+      onCoachClubs={
+        user?.role === 'coach'
+          ? () => navigation.navigate('CoachClubs')
+          : undefined
+      }
+      delegate={
+        delegate
+          ? {
+              coachName: delegate.coachName,
+              permissions: delegate.permissions,
+              onBack: switchBack,
+            }
+          : null
+      }
     />
   );
 }
@@ -942,16 +1030,25 @@ function DiscoveryNavigator({ onBack }: { onBack(): void }) {
             onBack={() => navigation.goBack()}
             renderConnection={profile =>
               token ? (
-                <ConnectionPanel
-                  token={token}
-                  service={connectionsService}
-                  viewer={viewer}
-                  profile={{
-                    id: profile.id,
-                    name: profile.fullName,
-                    role: profile.role,
-                  }}
-                />
+                <>
+                  {profile.role === 'coach' ? (
+                    <CoachPublicCard
+                      token={token}
+                      coachId={profile.id}
+                      service={coachRepository}
+                    />
+                  ) : null}
+                  <ConnectionPanel
+                    token={token}
+                    service={connectionsService}
+                    viewer={viewer}
+                    profile={{
+                      id: profile.id,
+                      name: profile.fullName,
+                      role: profile.role,
+                    }}
+                  />
+                </>
               ) : null
             }
           />
@@ -1012,6 +1109,17 @@ function ProfileNavigator() {
               isPro={pro.isPro}
               counts={counts}
             />
+          ) : user.role === 'coach' && token ? (
+            <OwnCoachProfile
+              navigation={navigation}
+              token={token}
+              userId={user.id}
+              fullName={account.profile?.fullName ?? user.fullName}
+              avatar={avatar}
+              verified={user.verified}
+              isPro={pro.isPro}
+              counts={counts}
+            />
           ) : (
             <AccountScreen
               settings={false}
@@ -1043,7 +1151,7 @@ function ProfileNavigator() {
             <SocialPublishScreen
               token={token}
               name={user.fullName}
-              profileOption
+              profileOption={user.role === 'player'}
               service={socialService}
               onBack={() => navigation.goBack()}
               onPublished={() => navigation.popTo('ProfileHome')}
@@ -1062,8 +1170,29 @@ function ProfileNavigator() {
               onFootball={
                 user.role === 'player'
                   ? () => navigation.navigate('PlayerProfile')
+                  : user.role === 'coach'
+                  ? () => navigation.navigate('CoachProfile')
                   : undefined
               }
+              footballLink={
+                user.role === 'coach'
+                  ? {
+                      title: copy.coaches.editTitle,
+                      hint: copy.coaches.editHint,
+                    }
+                  : undefined
+              }
+            />
+          ) : null
+        }
+      </ProfileStack.Screen>
+      <ProfileStack.Screen name="CoachProfile">
+        {({ navigation }) =>
+          token ? (
+            <CoachProfileEditScreen
+              token={token}
+              service={coachRepository}
+              onBack={() => navigation.goBack()}
             />
           ) : null
         }
@@ -1117,6 +1246,49 @@ function OwnPlayerProfile({
       onEdit={() => navigation.navigate('AccountProfile')}
       counts={counts}
       posts={posts}
+    />
+  );
+}
+// The coach's own profile; posts open and are written inside the Profil stack.
+function OwnCoachProfile({
+  navigation,
+  token,
+  userId,
+  fullName,
+  avatar,
+  verified,
+  isPro,
+  counts,
+}: {
+  navigation: NativeStackNavigationProp<ProfileRoutes, 'ProfileHome'>;
+  token: string;
+  userId: string;
+  fullName: string;
+  avatar: string;
+  verified: boolean;
+  isPro: boolean;
+  counts: ProfileCounts | null;
+}) {
+  const posts = useProfilePostsSlot({
+    service: socialService,
+    token,
+    userId,
+    onOpen: id => navigation.navigate('PostThread', { id }),
+    onCompose: () => navigation.navigate('PostPublish'),
+  });
+  return (
+    <CoachOverviewScreen
+      token={token}
+      userId={userId}
+      service={coachRepository}
+      fullName={fullName}
+      avatarUri={avatar}
+      verified={verified}
+      isPro={isPro}
+      counts={counts}
+      onEdit={() => navigation.navigate('AccountProfile')}
+      onEditCoach={() => navigation.navigate('CoachProfile')}
+      posts={posts?.postsTab}
     />
   );
 }
@@ -1445,13 +1617,21 @@ export function AppNavigator() {
       </View>
     );
   }
+  // Keyed by account: the container keeps navigation state across its
+  // children, so a switch to or from a club account must start a fresh tree
+  // on its own Ana Sayfa instead of restoring the other account's screens.
   return (
-    <NavigationContainer theme={theme} ref={navigationRef}>
+    <NavigationContainer
+      key={admin ? 'admin' : user?.id ?? 'guest'}
+      theme={theme}
+      ref={navigationRef}
+    >
       {admin ? <AdminNavigator /> : user ? <MainTabs /> : <AuthNavigator />}
     </NavigationContainer>
   );
 }
 const styles = StyleSheet.create({
+  main: { flex: 1, backgroundColor: colors.bg },
   startup: {
     flex: 1,
     backgroundColor: colors.bg,

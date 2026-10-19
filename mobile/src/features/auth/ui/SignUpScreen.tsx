@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LockKeyhole, Mail, UserRound } from 'lucide-react-native';
 import { AuthFrame } from './AuthFrame';
-import { FootballTypePicker, LicenseCheck } from './FootballChoices';
+import {
+  CoachLicensePicker,
+  FootballTypePicker,
+  LicenseCheck,
+} from './FootballChoices';
 import { Field } from '../../../shared/ui/Field';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
@@ -10,23 +14,31 @@ import { ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
 import { colors, space } from '../../../styles/tokens';
 import type {
+  DeclaredCoachLicense,
   DeclaredLicenseStatus,
   PlayerFootballType,
 } from '../../../shared/domain/football';
 import { useAuth } from '../application/AuthProvider';
 import {
+  toRegisterInput,
   validateRegistration,
   type FieldErrors,
 } from '../application/validation';
+import type { SignUpRole } from '../domain/models';
+// Players and coaches open their accounts here; the form differs only in the
+// licence question.
 export function SignUpScreen({
+  role = 'player',
   onBack,
   onInfo,
   onSignIn,
 }: {
+  role?: SignUpRole;
   onBack?: () => void;
   onInfo?: () => void;
   onSignIn(): void;
 }) {
+  const coach = role === 'coach';
   const { signUp } = useAuth();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -35,30 +47,41 @@ export function SignUpScreen({
   // Unchecked license box means no active license, so this always has a value.
   const [licenseStatus, setLicenseStatus] =
     useState<DeclaredLicenseStatus>('unlicensed');
+  const [licenseLevel, setLicenseLevel] = useState<DeclaredCoachLicense | ''>(
+    '',
+  );
   const [fields, setFields] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  function chooseFootballType(value: PlayerFootballType) {
-    setFootballType(value);
+  function clearField(name: string) {
     setFields(current => {
       const next = { ...current };
-      delete next.footballType;
+      delete next[name];
       return next;
     });
+  }
+  function chooseFootballType(value: PlayerFootballType) {
+    setFootballType(value);
+    clearField('footballType');
+  }
+  function chooseLicenseLevel(value: DeclaredCoachLicense) {
+    setLicenseLevel(value);
+    clearField('licenseLevel');
   }
   async function submit() {
     if (busy) {
       return;
     }
-    const input = {
+    const draft = {
       fullName,
-      email: email.trim(),
+      email,
       password,
-      role: 'player' as const,
+      role,
       footballType,
       licenseStatus,
+      licenseLevel,
     };
-    const errors = validateRegistration(input);
+    const errors = validateRegistration(draft);
     setFields(errors);
     setError(null);
     if (Object.keys(errors).length) {
@@ -67,11 +90,7 @@ export function SignUpScreen({
     Keyboard.dismiss();
     setBusy(true);
     try {
-      await signUp({
-        ...input,
-        footballType: footballType as PlayerFootballType,
-        licenseStatus,
-      });
+      await signUp(toRegisterInput(draft));
     } catch (failure) {
       if (failure instanceof ApiError) {
         setFields(failure.fields);
@@ -86,7 +105,9 @@ export function SignUpScreen({
   return (
     <AuthFrame
       title={copy.signUp.title}
-      description={copy.signUp.description}
+      description={
+        coach ? copy.signUp.coachDescription : copy.signUp.description
+      }
       onBack={onBack ?? onSignIn}
       onInfo={onInfo}
       step={2}
@@ -138,14 +159,25 @@ export function SignUpScreen({
           disabled={busy}
           onChange={chooseFootballType}
         />
-        <LicenseCheck
-          checked={licenseStatus === 'licensed'}
-          disabled={busy}
-          onChange={checked =>
-            setLicenseStatus(checked ? 'licensed' : 'unlicensed')
-          }
-        />
-        <Text style={styles.privacy}>{copy.signUp.privacy}</Text>
+        {coach ? (
+          <CoachLicensePicker
+            value={licenseLevel}
+            error={fields.licenseLevel}
+            disabled={busy}
+            onChange={chooseLicenseLevel}
+          />
+        ) : (
+          <LicenseCheck
+            checked={licenseStatus === 'licensed'}
+            disabled={busy}
+            onChange={checked =>
+              setLicenseStatus(checked ? 'licensed' : 'unlicensed')
+            }
+          />
+        )}
+        <Text style={styles.privacy}>
+          {coach ? copy.signUp.coachPrivacy : copy.signUp.privacy}
+        </Text>
         <ErrorBanner message={error} />
         <Button label={copy.signUp.button} onPress={submit} loading={busy} />
         <View style={styles.switch}>

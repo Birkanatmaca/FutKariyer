@@ -7,12 +7,14 @@ import React, {
   useState,
   type PropsWithChildren,
 } from 'react';
+import { AppState } from 'react-native';
 import { ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
 import type {
   AccountApplicationInput,
   AdminUser,
   AuthRepository,
+  Delegate,
   LoginInput,
   RegisterInput,
   SavedSession,
@@ -43,7 +45,14 @@ type AuthContextValue = {
   deleteAccount(password: string): Promise<void>;
   // Called when an admin endpoint answers 401 (expired or revoked session).
   expireAdminSession(): Promise<void>;
+  // Club staff switch (19 Oct 2026): while a coach runs a club account, user
+  // is the club with a delegate and coach is the coach's own account.
+  delegate: Delegate | null;
+  coach: User | null;
+  switchToClub(clubId: string): Promise<void>;
+  switchBack(): Promise<void>;
 };
+type Home = { saved: SavedSession; user: User };
 type Current =
   | { kind: 'user'; saved: SavedSession; user: User }
   | { kind: 'admin'; saved: SavedSession; admin: AdminUser };
@@ -52,8 +61,16 @@ export function AuthProvider({
   children,
   repository,
   storage,
-}: PropsWithChildren<{ repository: AuthRepository; storage: SessionStorage }>) {
+  clubStorage,
+}: PropsWithChildren<{
+  repository: AuthRepository;
+  storage: SessionStorage;
+  // Holds the club session a staff coach switched into.
+  clubStorage?: SessionStorage;
+}>) {
   const [current, setCurrentState] = useState<Current | null>(null);
+  // The coach's own session while they run a club account.
+  const [home, setHome] = useState<Home | null>(null);
   // Mirrors the state so an expiry callback can tell which session is active.
   const currentRef = useRef<Current | null>(null);
   const setCurrent = useCallback((value: Current | null) => {
@@ -63,16 +80,48 @@ export function AuthProvider({
   const [restoring, setRestoring] = useState(true);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
+  // A coach who closed the app inside a club account returns to it, unless
+  // the club has since taken the permission back.
+  const restoreClub = useCallback(
+    async (coach: Home) => {
+      const club = await clubStorage?.get().catch(() => null);
+      if (!club) return;
+      try {
+        if (Date.parse(club.expiresAt) <= Date.now())
+          throw new ApiError('', 401);
+        const user = await repository.me(club.token);
+        if (user.delegate?.coachId !== coach.user.id)
+          throw new ApiError('', 401);
+        setHome(coach);
+        setCurrent({ kind: 'user', saved: club, user });
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          await clubStorage?.clear().catch(() => {});
+        }
+      }
+    },
+    [clubStorage, repository, setCurrent],
+  );
+  // A club session never outlives the coach's own session on this device:
+  // once that is gone, the stored club session is closed and forgotten.
+  const dropClub = useCallback(async () => {
+    const club = await clubStorage?.get().catch(() => null);
+    if (!club) return;
+    await repository.logout(club.token).catch(() => {});
+    await clubStorage?.clear().catch(() => {});
+  }, [clubStorage, repository]);
   const retryRestore = useCallback(async () => {
     setRestoring(true);
     setRestoreError(null);
     try {
       const local = await storage.get();
       if (!local) {
+        await dropClub();
         return;
       }
       if (Date.parse(local.expiresAt) <= Date.now()) {
         await storage.clear();
+        await dropClub();
         if (local.kind === 'admin') {
           setSessionNotice(copy.admin.session.expired);
         }
@@ -85,10 +134,14 @@ export function AuthProvider({
         } else {
           const user = await repository.me(local.token);
           setCurrent({ kind: 'user', saved: local, user });
+          if (user.role === 'coach') {
+            await restoreClub({ saved: local, user });
+          }
         }
       } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
           await storage.clear();
+          await dropClub();
           if (local.kind === 'admin') {
             setSessionNotice(copy.admin.session.expired);
           }
@@ -103,7 +156,7 @@ export function AuthProvider({
     } finally {
       setRestoring(false);
     }
-  }, [repository, storage, setCurrent]);
+  }, [repository, storage, setCurrent, restoreClub, dropClub]);
   useEffect(() => {
     retryRestore();
   }, [retryRestore]);
@@ -172,11 +225,17 @@ export function AuthProvider({
     await repository.apply(input);
   }
   async function signOut() {
-    if (current) {
+    if (home) {
+      await switchBack();
+    }
+    const signedIn = home
+      ? { kind: 'user' as const, saved: home.saved }
+      : current;
+    if (signedIn) {
       try {
-        await (current.kind === 'admin'
-          ? repository.adminLogout(current.saved.token)
-          : repository.logout(current.saved.token));
+        await (signedIn.kind === 'admin'
+          ? repository.adminLogout(signedIn.saved.token)
+          : repository.logout(signedIn.saved.token));
       } catch (error) {
         if (!(error instanceof ApiError && error.status === 401)) {
           throw error;
@@ -187,7 +246,8 @@ export function AuthProvider({
     setCurrent(null);
   }
   async function deleteAccount(password: string) {
-    if (current?.kind !== 'user') return;
+    // The club account is never deleted from a switched session.
+    if (current?.kind !== 'user' || home) return;
     await repository.deleteAccount(current.saved.token, password);
     await storage.clear().catch(() => {});
     setCurrent(null);
@@ -201,6 +261,52 @@ export function AuthProvider({
     setSessionNotice(copy.admin.session.expired);
     await storage.clear().catch(() => {});
   }, [storage, setCurrent]);
+  async function switchToClub(clubId: string) {
+    if (current?.kind !== 'user' || home || current.user.role !== 'coach') {
+      return;
+    }
+    const result = await repository.switchToClub(current.saved.token, clubId);
+    const saved = {
+      token: result.token,
+      expiresAt: result.expiresAt,
+      kind: 'user' as SessionKind,
+    };
+    try {
+      await clubStorage?.save(saved);
+    } catch {
+      await repository.logout(saved.token).catch(() => {});
+      throw new ApiError(copy.form.sessionError);
+    }
+    setHome({ saved: current.saved, user: current.user });
+    setCurrent({ kind: 'user', saved, user: result.user });
+  }
+  async function switchBack() {
+    if (!home) return;
+    const club = currentRef.current;
+    if (club?.kind === 'user') {
+      await repository.logout(club.saved.token).catch(() => {});
+    }
+    await clubStorage?.clear().catch(() => {});
+    setCurrent({ kind: 'user', saved: home.saved, user: home.user });
+    setHome(null);
+  }
+  // Back in the foreground, a club session the club has revoked ends and the
+  // coach lands in their own account.
+  useEffect(() => {
+    if (!home) return;
+    const subscription = AppState.addEventListener('change', state => {
+      const club = currentRef.current;
+      if (state !== 'active' || club?.kind !== 'user') return;
+      repository.me(club.saved.token).catch(error => {
+        if (error instanceof ApiError && error.status === 401) {
+          clubStorage?.clear().catch(() => {});
+          setCurrent({ kind: 'user', saved: home.saved, user: home.user });
+          setHome(null);
+        }
+      });
+    });
+    return () => subscription.remove();
+  }, [home, repository, clubStorage, setCurrent]);
   return (
     <AuthContext.Provider
       value={{
@@ -218,6 +324,11 @@ export function AuthProvider({
         signOut,
         deleteAccount,
         expireAdminSession,
+        delegate:
+          current?.kind === 'user' ? current.user.delegate ?? null : null,
+        coach: home?.user ?? null,
+        switchToClub,
+        switchBack,
       }}
     >
       {children}

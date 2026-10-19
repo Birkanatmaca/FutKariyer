@@ -4,10 +4,13 @@ import type {
   ApplicationRole,
   LoginInput,
   RegisterInput,
+  SignUpRole,
 } from '../domain/models';
-import type {
-  DeclaredLicenseStatus,
-  PlayerFootballType,
+import {
+  declaredCoachLicenses,
+  type DeclaredCoachLicense,
+  type DeclaredLicenseStatus,
+  type PlayerFootballType,
 } from '../../../shared/domain/football';
 
 export type FieldErrors = Record<string, string>;
@@ -37,13 +40,18 @@ export function validateLogin(input: LoginInput): FieldErrors {
   }
   return fields;
 }
-type RegistrationDraft = Omit<
-  RegisterInput,
-  'footballType' | 'licenseStatus'
-> & {
+// The sign-up form before it is valid; players answer licenseStatus, coaches
+// licenseLevel.
+export type RegistrationDraft = {
+  fullName: string;
+  email: string;
+  password: string;
+  role: SignUpRole;
   footballType: PlayerFootballType | '';
-  licenseStatus: DeclaredLicenseStatus | '';
+  licenseStatus?: DeclaredLicenseStatus | '';
+  licenseLevel?: DeclaredCoachLicense | '';
 };
+// Mirrors POST /v1/auth/register: only players and coaches sign up here.
 export function validateRegistration(input: RegistrationDraft): FieldErrors {
   const fields = validateLogin({
     identifier: input.email,
@@ -53,14 +61,21 @@ export function validateRegistration(input: RegistrationDraft): FieldErrors {
   if (!emailPattern.test(input.email.trim())) {
     fields.email = copy.form.emailError;
   }
-  if (input.role !== 'player') {
-    fields.role = copy.signUp.playerOnly;
+  if (input.role === 'player') {
+    if (!['licensed', 'unlicensed'].includes(input.licenseStatus ?? '')) {
+      fields.licenseStatus = copy.signUp.licenseStatusError;
+    }
+  } else if (input.role === 'coach') {
+    if (
+      !declaredCoachLicenses.includes(input.licenseLevel as DeclaredCoachLicense)
+    ) {
+      fields.licenseLevel = copy.signUp.coachLicenseError;
+    }
+  } else {
+    fields.role = copy.signUp.roleError;
   }
   if (!['amateur', 'professional', 'halisaha'].includes(input.footballType)) {
     fields.footballType = copy.signUp.footballTypeError;
-  }
-  if (!['licensed', 'unlicensed'].includes(input.licenseStatus)) {
-    fields.licenseStatus = copy.signUp.licenseStatusError;
   }
   const nameLength = Array.from(input.fullName.trim()).length;
   if (nameLength < 2 || nameLength > 80) {
@@ -73,6 +88,27 @@ export function validateRegistration(input: RegistrationDraft): FieldErrors {
     fields.password = copy.form.passwordMax;
   }
   return fields;
+}
+// Builds the request body from a valid draft; each role sends only its own
+// licence answer.
+export function toRegisterInput(input: RegistrationDraft): RegisterInput {
+  const base = {
+    fullName: input.fullName,
+    email: input.email.trim(),
+    password: input.password,
+    footballType: input.footballType as PlayerFootballType,
+  };
+  return input.role === 'coach'
+    ? {
+        ...base,
+        role: 'coach',
+        licenseLevel: input.licenseLevel as DeclaredCoachLicense,
+      }
+    : {
+        ...base,
+        role: 'player',
+        licenseStatus: input.licenseStatus as DeclaredLicenseStatus,
+      };
 }
 
 export type ApplicationDraft = {

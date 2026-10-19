@@ -7,6 +7,7 @@ import {
   AccountTypeScreen,
   ApplicationScreen,
   type ApplicationRole,
+  type SignUpRole,
 } from '../features/auth';
 import {
   OnboardingScreen,
@@ -22,7 +23,7 @@ type AuthRoutes = {
   OnboardingInfo: undefined;
   SignIn: undefined;
   AccountType: undefined;
-  SignUp: undefined;
+  SignUp: { role: SignUpRole } | undefined;
   Application: { role: ApplicationRole };
 };
 const Stack = createNativeStackNavigator<AuthRoutes>();
@@ -81,16 +82,17 @@ export function AuthNavigator({
             onBack={() => navigation.goBack()}
             onInfo={() => navigation.navigate('OnboardingInfo')}
             onSelect={kind =>
-              kind === 'player'
-                ? navigation.navigate('SignUp')
+              kind === 'player' || kind === 'coach'
+                ? navigation.navigate('SignUp', { role: kind })
                 : navigation.navigate('Application', { role: kind })
             }
           />
         )}
       </Stack.Screen>
       <Stack.Screen name="SignUp">
-        {({ navigation }) => (
+        {({ navigation, route }) => (
           <SignUpScreen
+            role={route.params?.role}
             onBack={() => navigation.goBack()}
             onInfo={() => navigation.navigate('OnboardingInfo')}
             onSignIn={() => navigation.popTo('SignIn')}

@@ -14,6 +14,7 @@ import type {
 import { AccountTypeScreen } from '../src/features/auth/ui/AccountTypeScreen';
 import { ApplicationScreen } from '../src/features/auth/ui/ApplicationScreen';
 import { SignInScreen } from '../src/features/auth/ui/SignInScreen';
+import { SignUpScreen } from '../src/features/auth/ui/SignUpScreen';
 import { ApiError } from '../src/shared/api/client';
 import { copy } from '../src/shared/lib/copy';
 
@@ -26,18 +27,23 @@ jest.mock('lucide-react-native', () => ({
   ArrowLeft: () => null,
   ArrowUpRight: () => null,
   AtSign: () => null,
+  Check: () => null,
   ChevronRight: () => null,
+  ClipboardList: () => null,
   CircleAlert: () => null,
   CircleCheck: () => null,
   ContactRound: () => null,
   Eye: () => null,
   EyeOff: () => null,
+  IdCard: () => null,
   Info: () => null,
+  LandPlot: () => null,
   LockKeyhole: () => null,
   Mail: () => null,
   MapPin: () => null,
   Phone: () => null,
   Shield: () => null,
+  Shirt: () => null,
   Trophy: () => null,
   UserRound: () => null,
 }));
@@ -278,7 +284,7 @@ async function fill(root: ReactTestRenderer, values: Record<string, string>) {
 }
 
 describe('sign-up screens', () => {
-  test('account type step lists player, club and organizer', async () => {
+  test('account type step lists player, coach, club and organizer', async () => {
     const onSelect = jest.fn();
     const root = await render(
       <AccountTypeScreen onBack={jest.fn()} onSelect={onSelect} />,
@@ -290,6 +296,8 @@ describe('sign-up screens', () => {
       expect.arrayContaining([
         copy.accountType.player,
         copy.accountType.playerDescription,
+        copy.accountType.coach,
+        copy.accountType.coachDescription,
         copy.accountType.club,
         copy.accountType.clubDescription,
         copy.accountType.organizer,
@@ -303,6 +311,74 @@ describe('sign-up screens', () => {
       ).props.onPress(),
     );
     expect(onSelect).toHaveBeenCalledWith('club');
+    await act(async () =>
+      pressable(
+        root,
+        copy.accountType.coach + ', ' + copy.accountType.coachDescription,
+      ).props.onPress(),
+    );
+    expect(onSelect).toHaveBeenLastCalledWith('coach');
+  });
+
+  test('a coach signs up with a licence level and gets a session at once', async () => {
+    const later = new Date(Date.now() + 3600_000).toISOString();
+    const repository = makeRepository({
+      register: jest.fn().mockResolvedValue({
+        token: 't'.repeat(43),
+        expiresAt: later,
+        user: {
+          id: 'c'.repeat(32),
+          fullName: 'Ayşe Hoca',
+          email: 'ayse@example.com',
+          username: '',
+          active: true,
+          verified: false,
+          role: 'coach',
+          city: 'Ankara',
+          createdAt: '2026-10-19T00:00:00Z',
+        },
+      }),
+    });
+    const storage = makeStorage();
+    const root = await render(
+      <SignUpScreen role="coach" onSignIn={jest.fn()} />,
+      repository,
+      storage,
+    );
+    const shown = texts(root);
+    expect(shown).toEqual(
+      expect.arrayContaining([
+        copy.signUp.coachDescription,
+        copy.signUp.coachLicense,
+        copy.signUp.coachPrivacy,
+      ]),
+    );
+    expect(shown).not.toContain(copy.signUp.license);
+    await fill(root, {
+      [copy.signUp.name]: 'Ayşe Hoca',
+      [copy.form.email]: ' ayse@example.com ',
+      [copy.form.password]: 'strong-password',
+    });
+    await act(async () =>
+      pressable(root, copy.football.types.halisaha).props.onPress(),
+    );
+    await act(async () => pressable(root, copy.signUp.button).props.onPress());
+    expect(repository.register).not.toHaveBeenCalled();
+    expect(texts(root)).toContain(copy.signUp.coachLicenseError);
+
+    await act(async () => pressable(root, 'UEFA B').props.onPress());
+    await act(async () => pressable(root, copy.signUp.button).props.onPress());
+    expect(repository.register).toHaveBeenCalledWith({
+      role: 'coach',
+      fullName: 'Ayşe Hoca',
+      email: 'ayse@example.com',
+      password: 'strong-password',
+      footballType: 'halisaha',
+      licenseLevel: 'uefa_b',
+    });
+    expect(storage.save).toHaveBeenCalledWith(
+      expect.objectContaining({ token: 't'.repeat(43) }),
+    );
   });
 
   test('club application submits, shows success and stores no session', async () => {

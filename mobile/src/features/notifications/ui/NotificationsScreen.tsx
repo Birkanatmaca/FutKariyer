@@ -35,6 +35,7 @@ export function NotificationsScreen({
   onBack,
   onOpenGifts,
   onOpenConnections,
+  onOpenStaff,
   onOpenListing,
   onOpenTournament,
   onOpenProfile,
@@ -45,6 +46,8 @@ export function NotificationsScreen({
   onBack?(): void;
   onOpenGifts?(): void;
   onOpenConnections?(): void;
+  // Staff notifications open Kulüplerim (coach) or Teknik ekip (club).
+  onOpenStaff?(): void;
   onOpenListing?(id: string): void;
   onOpenTournament?(resourceId: string): void;
   // Follow notifications: open the follower's profile and follow them back.
@@ -96,6 +99,7 @@ export function NotificationsScreen({
       onOpenProfile?.(item.resourceId, item.actorRole);
     else if (item.kind === 'gift') onOpenGifts?.();
     else if (item.kind === 'connection') onOpenConnections?.();
+    else if (item.kind === 'staff') onOpenStaff?.();
     else if (item.kind === 'opportunity' && target)
       onOpenListing?.(item.resourceId);
     else if (item.kind === 'tournament' && target)

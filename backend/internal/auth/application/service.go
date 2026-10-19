@@ -9,11 +9,13 @@ import (
 	"errors"
 	"net/mail"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 	"unicode/utf8"
 
 	"futcareer/backend/internal/auth/domain"
+	coachdomain "futcareer/backend/internal/coaches/domain"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,6 +23,8 @@ type ValidationError map[string]string
 
 func (e ValidationError) Error() string { return "Bilgilerini kontrol edip tekrar dene." }
 
+// RegisterInput is a self sign-up. Players declare whether they hold a licence
+// (LicenseStatus), coaches their licence level (LicenseLevel).
 type RegisterInput struct {
 	FullName      string `json:"fullName"`
 	Email         string `json:"email"`
@@ -28,6 +32,7 @@ type RegisterInput struct {
 	Role          string `json:"role"`
 	FootballType  string `json:"footballType"`
 	LicenseStatus string `json:"licenseStatus"`
+	LicenseLevel  string `json:"licenseLevel"`
 }
 type LoginInput struct {
 	Identifier string `json:"identifier"`
@@ -44,7 +49,24 @@ type PublicUser struct {
 	Role      string    `json:"role"`
 	City      string    `json:"city"`
 	CreatedAt time.Time `json:"createdAt"`
+	// Delegate is set while a coach runs this club account after switching.
+	Delegate *Delegate `json:"delegate,omitempty"`
 }
+
+// Delegate describes the coach behind a switched club session and the club
+// sections the club opened to them.
+type Delegate struct {
+	CoachID     string   `json:"coachId"`
+	CoachName   string   `json:"coachName"`
+	Permissions []string `json:"permissions"`
+}
+
+// Can reports whether the session may use a club section; the account owner
+// always can, a switched coach only where the club allowed it.
+func (u PublicUser) Can(permission string) bool {
+	return u.Delegate == nil || slices.Contains(u.Delegate.Permissions, permission)
+}
+
 type AuthResult struct {
 	Token     string     `json:"token"`
 	ExpiresAt time.Time  `json:"expiresAt"`
@@ -82,14 +104,23 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	if utf8.RuneCountInString(in.Password) < 10 || len(in.Password) > 72 {
 		fields["password"] = "Şifren en az 10 karakter olmalı ve 72 bayttan uzun olmamalı."
 	}
-	if in.Role != "player" {
-		fields["role"] = "Kendi kaydını yalnızca sporcu olarak oluşturabilirsin."
+	// Players and coaches open their own accounts; clubs and organizers apply.
+	switch in.Role {
+	case "player":
+		if in.LicenseStatus != "licensed" && in.LicenseStatus != "unlicensed" {
+			fields["licenseStatus"] = "Lisans durumunu seç."
+		}
+		in.LicenseLevel = ""
+	case "coach":
+		if in.LicenseLevel == "unknown" || !slices.Contains(coachdomain.LicenseLevels, in.LicenseLevel) {
+			fields["licenseLevel"] = "Antrenör lisansını seç."
+		}
+		in.LicenseStatus = ""
+	default:
+		fields["role"] = "Kendi kaydını sporcu veya antrenör olarak oluşturabilirsin."
 	}
 	if in.FootballType != "amateur" && in.FootballType != "professional" && in.FootballType != "halisaha" {
 		fields["footballType"] = "Futbol türünü seç."
-	}
-	if in.LicenseStatus != "licensed" && in.LicenseStatus != "unlicensed" {
-		fields["licenseStatus"] = "Lisans durumunu seç."
 	}
 	if len(fields) > 0 {
 		return AuthResult{}, fields
@@ -102,7 +133,7 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	if _, err = rand.Read(idBytes); err != nil {
 		return AuthResult{}, err
 	}
-	user := domain.User{ID: hex.EncodeToString(idBytes), FullName: in.FullName, Email: in.Email, PasswordHash: string(hash), Role: in.Role, City: "Ankara", FootballType: in.FootballType, LicenseStatus: in.LicenseStatus, Active: true, CreatedAt: s.now().UTC()}
+	user := domain.User{ID: hex.EncodeToString(idBytes), FullName: in.FullName, Email: in.Email, PasswordHash: string(hash), Role: in.Role, City: "Ankara", FootballType: in.FootballType, LicenseStatus: in.LicenseStatus, LicenseLevel: in.LicenseLevel, Active: true, CreatedAt: s.now().UTC()}
 	token, session, err := s.newSession(user.ID)
 	if err != nil {
 		return AuthResult{}, err
@@ -191,7 +222,108 @@ func (s *Service) me(ctx context.Context, token, audience string) (PublicUser, e
 	if !user.Active || session.AuthVersion != user.AuthVersion || (user.Role == "admin") != (audience == "admin") {
 		return PublicUser{}, domain.ErrUnauthorized
 	}
-	return Public(user), nil
+	public := Public(user)
+	if session.ActingUserID != "" {
+		delegate, err := s.delegate(ctx, user.ID, session.ActingUserID, session.ActingAuthVersion)
+		if err != nil {
+			return PublicUser{}, err
+		}
+		public.Delegate = delegate
+	}
+	return public, nil
+}
+
+// delegate re-checks a switched session on every request: the coach is still
+// active with unchanged credentials and still active staff of the club.
+func (s *Service) delegate(ctx context.Context, clubID, coachID string, authVersion int) (*Delegate, error) {
+	coach, err := s.repo.UserByID(ctx, coachID)
+	if errors.Is(err, domain.ErrNotFound) {
+		return nil, domain.ErrUnauthorized
+	}
+	if err != nil {
+		return nil, err
+	}
+	if !coach.Active || coach.Role != "coach" || coach.AuthVersion != authVersion {
+		return nil, domain.ErrUnauthorized
+	}
+	permissions, err := s.repo.StaffPermissions(ctx, clubID, coachID)
+	if errors.Is(err, domain.ErrNotFound) {
+		return nil, domain.ErrUnauthorized
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &Delegate{CoachID: coach.ID, CoachName: coach.FullName, Permissions: permissions}, nil
+}
+
+// Delegation returns the club sections a switched (coach-as-club) session may
+// use, with ok=false for every other request. It is the cheap first check of
+// the API guard; Me still validates the whole session in each handler.
+func (s *Service) Delegation(ctx context.Context, token string) (permissions []string, ok bool, err error) {
+	if len(token) != 43 {
+		return nil, false, nil
+	}
+	session, err := s.repo.SessionByHash(ctx, HashToken(token))
+	if errors.Is(err, domain.ErrNotFound) {
+		return nil, false, nil
+	}
+	if err != nil || session.ActingUserID == "" {
+		return nil, false, err
+	}
+	permissions, err = s.repo.StaffPermissions(ctx, session.UserID, session.ActingUserID)
+	if errors.Is(err, domain.ErrNotFound) {
+		return nil, true, domain.ErrUnauthorized
+	}
+	return permissions, true, err
+}
+
+// SwitchToClub opens a club session for a coach who is active staff of that
+// club. It needs the coach's own session; a switched session cannot switch
+// again. The coach keeps their session and returns by dropping this one.
+func (s *Service) SwitchToClub(ctx context.Context, token, clubID string) (AuthResult, error) {
+	coach, err := s.Me(ctx, token)
+	if err != nil {
+		return AuthResult{}, err
+	}
+	if coach.Role != "coach" || coach.Delegate != nil {
+		return AuthResult{}, domain.ErrForbidden
+	}
+	if _, err := s.repo.StaffPermissions(ctx, clubID, coach.ID); errors.Is(err, domain.ErrNotFound) {
+		return AuthResult{}, domain.ErrForbidden
+	} else if err != nil {
+		return AuthResult{}, err
+	}
+	coachUser, err := s.repo.UserByID(ctx, coach.ID)
+	if err != nil {
+		return AuthResult{}, err
+	}
+	club, err := s.repo.UserByID(ctx, clubID)
+	if errors.Is(err, domain.ErrNotFound) {
+		return AuthResult{}, domain.ErrForbidden
+	}
+	if err != nil {
+		return AuthResult{}, err
+	}
+	if club.Role != "club" || !club.Active {
+		return AuthResult{}, domain.ErrForbidden
+	}
+	clubToken, session, err := s.newSession(club.ID)
+	if err != nil {
+		return AuthResult{}, err
+	}
+	session.AuthVersion = club.AuthVersion
+	session.ActingUserID = coachUser.ID
+	session.ActingAuthVersion = coachUser.AuthVersion
+	if err := s.repo.CreateSession(ctx, session); errors.Is(err, domain.ErrUnauthorized) {
+		return AuthResult{}, domain.ErrForbidden
+	} else if err != nil {
+		return AuthResult{}, err
+	}
+	public, err := s.Me(ctx, clubToken)
+	if err != nil {
+		return AuthResult{}, err
+	}
+	return AuthResult{Token: clubToken, ExpiresAt: session.ExpiresAt, User: public}, nil
 }
 
 // DeleteAccount permanently removes the signed-in mobile account after the
@@ -201,6 +333,10 @@ func (s *Service) DeleteAccount(ctx context.Context, token, password string) err
 	public, err := s.Me(ctx, token)
 	if err != nil {
 		return err
+	}
+	// A coach acting for a club can never delete the club.
+	if public.Delegate != nil {
+		return domain.ErrForbidden
 	}
 	user, err := s.repo.UserByID(ctx, public.ID)
 	if err != nil {

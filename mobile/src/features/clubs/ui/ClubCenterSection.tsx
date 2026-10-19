@@ -44,9 +44,10 @@ export function ClubCenterSection({
 }: {
   token: string | null;
   service: ClubService;
-  onProfile(): void;
-  onApplications(): void;
-  onNews(): void;
+  // Left out when a switched coach lacks that section.
+  onProfile?(): void;
+  onApplications?(): void;
+  onNews?(): void;
   onLeagues(): void;
 }) {
   const state = useFocusedResource(
@@ -83,7 +84,7 @@ function CompletenessCard({
   onProfile,
 }: {
   center: ClubCenter;
-  onProfile(): void;
+  onProfile?(): void;
 }) {
   const view = completenessView(center);
   return (
@@ -114,11 +115,13 @@ function CompletenessCard({
               </View>
             ))}
           </View>
-          <Button
-            label={copy.clubHome.completeProfile}
-            secondary
-            onPress={onProfile}
-          />
+          {onProfile ? (
+            <Button
+              label={copy.clubHome.completeProfile}
+              secondary
+              onPress={onProfile}
+            />
+          ) : null}
         </>
       )}
     </View>
@@ -131,8 +134,8 @@ function WorkCounters({
   onNews,
 }: {
   center: ClubCenter;
-  onApplications(): void;
-  onNews(): void;
+  onApplications?(): void;
+  onNews?(): void;
 }) {
   return (
     <View style={styles.stack}>
@@ -172,12 +175,13 @@ function CounterTile({
   icon: LucideIcon;
   count: number;
   label: string;
-  onPress(): void;
+  onPress?(): void;
 }) {
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={onPress ? 'button' : 'summary'}
       accessibilityLabel={label + ': ' + count}
+      disabled={!onPress}
       onPress={onPress}
       style={({ pressed }) => [styles.counter, pressed && styles.pressed]}
     >

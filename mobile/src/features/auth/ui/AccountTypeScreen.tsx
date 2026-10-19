@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import {
   ChevronRight,
+  ClipboardList,
   Shield,
   Trophy,
   UserRound,
@@ -12,7 +13,11 @@ import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import type { AccountRole } from '../domain/models';
 
-export type SignUpKind = Extract<AccountRole, 'player' | 'club' | 'organizer'>;
+// Players and coaches sign up at once; clubs and organizers apply.
+export type SignUpKind = Extract<
+  AccountRole,
+  'player' | 'coach' | 'club' | 'organizer'
+>;
 const options: {
   kind: SignUpKind;
   icon: LucideIcon;
@@ -24,6 +29,12 @@ const options: {
     icon: UserRound,
     title: copy.accountType.player,
     description: copy.accountType.playerDescription,
+  },
+  {
+    kind: 'coach',
+    icon: ClipboardList,
+    title: copy.accountType.coach,
+    description: copy.accountType.coachDescription,
   },
   {
     kind: 'club',

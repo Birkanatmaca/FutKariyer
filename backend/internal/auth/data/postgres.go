@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 
 	"futcareer/backend/internal/auth/domain"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -39,6 +40,14 @@ func (r *Postgres) Register(ctx context.Context, user domain.User, session domai
 			return err
 		}
 	}
+	// A self-registered coach starts with the football type and licence given
+	// at sign-up; every group stays hidden on the public profile until shown.
+	if user.Role == "coach" {
+		if _, err = tx.ExecContext(ctx, `INSERT INTO coach_profiles(user_id,license_level,football_type,updated_at)
+			VALUES($1,COALESCE(NULLIF($2,''),'unknown'),COALESCE(NULLIF($3,''),'unknown'),$4)`, user.ID, user.LicenseLevel, user.FootballType, user.CreatedAt); err != nil {
+			return err
+		}
+	}
 	if _, err = tx.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,expires_at) VALUES($1,$2,$3)", session.TokenHash, session.UserID, session.ExpiresAt); err != nil {
 		return err
 	}
@@ -70,7 +79,23 @@ func (r *Postgres) UserByID(ctx context.Context, id string) (domain.User, error)
 }
 
 func (r *Postgres) CreateSession(ctx context.Context, session domain.Session) error {
-	result, err := r.db.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,expires_at,auth_version,audience) SELECT $1,id,$3,$4,$5 FROM users WHERE id=$2 AND active AND auth_version=$4", session.TokenHash, session.UserID, session.ExpiresAt, session.AuthVersion, session.Audience)
+	var (
+		result sql.Result
+		err    error
+	)
+	if session.ActingUserID == "" {
+		result, err = r.db.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,expires_at,auth_version,audience) SELECT $1,id,$3,$4,$5 FROM users WHERE id=$2 AND active AND auth_version=$4", session.TokenHash, session.UserID, session.ExpiresAt, session.AuthVersion, session.Audience)
+	} else {
+		// A club session for a coach: both accounts must be active with the
+		// expected credentials and the coach must be active staff right now.
+		result, err = r.db.ExecContext(ctx, `INSERT INTO sessions(token_hash,user_id,expires_at,auth_version,audience,acting_user_id,acting_auth_version)
+			SELECT $1,club.id,$3,$4,$5,coach.id,$7
+			FROM users club JOIN users coach ON coach.id=$6
+			JOIN club_staff s ON s.club_user_id=club.id AND s.coach_user_id=coach.id AND s.status='active'
+			WHERE club.id=$2 AND club.role='club' AND club.active AND club.auth_version=$4
+				AND coach.role='coach' AND coach.active AND coach.auth_version=$7`,
+			session.TokenHash, session.UserID, session.ExpiresAt, session.AuthVersion, session.Audience, session.ActingUserID, session.ActingAuthVersion)
+	}
 	if err != nil {
 		return err
 	}
@@ -83,12 +108,28 @@ func (r *Postgres) CreateSession(ctx context.Context, session domain.Session) er
 
 func (r *Postgres) SessionByHash(ctx context.Context, hash string) (domain.Session, error) {
 	var session domain.Session
-	err := r.db.QueryRowContext(ctx, "SELECT token_hash,user_id,expires_at,auth_version,audience FROM sessions WHERE token_hash=$1", hash).Scan(&session.TokenHash, &session.UserID, &session.ExpiresAt, &session.AuthVersion, &session.Audience)
+	err := r.db.QueryRowContext(ctx, "SELECT token_hash,user_id,expires_at,auth_version,audience,COALESCE(acting_user_id,''),COALESCE(acting_auth_version,0) FROM sessions WHERE token_hash=$1", hash).Scan(&session.TokenHash, &session.UserID, &session.ExpiresAt, &session.AuthVersion, &session.Audience, &session.ActingUserID, &session.ActingAuthVersion)
 	if errors.Is(err, sql.ErrNoRows) {
 		return session, domain.ErrNotFound
 	}
 	session.ExpiresAt = session.ExpiresAt.UTC()
 	return session, err
+}
+
+func (r *Postgres) StaffPermissions(ctx context.Context, clubID, coachID string) ([]string, error) {
+	var list string
+	err := r.db.QueryRowContext(ctx, `SELECT array_to_string(permissions,',') FROM club_staff
+		WHERE club_user_id=$1 AND coach_user_id=$2 AND status='active'`, clubID, coachID).Scan(&list)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, domain.ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	if list == "" {
+		return []string{}, nil
+	}
+	return strings.Split(list, ","), nil
 }
 
 func (r *Postgres) DeleteSession(ctx context.Context, hash string) error {

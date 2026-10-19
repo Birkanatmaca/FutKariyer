@@ -14,6 +14,9 @@ var (
 	ErrWrongPortal         = errors.New("wrong login portal")
 	ErrPendingApproval     = errors.New("account application awaiting approval")
 	ErrApplicationRejected = errors.New("account application rejected")
+	// ErrForbidden: the signed-in account may not do this (e.g. a coach acting
+	// for a club, or a coach without an active staff link).
+	ErrForbidden = errors.New("forbidden")
 )
 
 type User struct {
@@ -29,6 +32,8 @@ type User struct {
 	City          string
 	FootballType  string
 	LicenseStatus string
+	// LicenseLevel is a self-registering coach's declared licence.
+	LicenseLevel string
 	// ApprovalStatus is approved, pending or rejected; pending and rejected accounts are inactive.
 	ApprovalStatus string
 	CreatedAt      time.Time
@@ -40,6 +45,10 @@ type Session struct {
 	TokenHash   string
 	UserID      string
 	ExpiresAt   time.Time
+	// ActingUserID is set on a session a coach opened for a club (UserID);
+	// ActingAuthVersion pins the coach's credentials at that moment.
+	ActingUserID      string
+	ActingAuthVersion int
 }
 
 type Repository interface {
@@ -50,6 +59,9 @@ type Repository interface {
 	CreateSession(context.Context, Session) error
 	SessionByHash(context.Context, string) (Session, error)
 	DeleteSession(context.Context, string) error
+	// StaffPermissions returns the club sections an active staff coach may
+	// run, or ErrNotFound when the coach is not active staff of the club.
+	StaffPermissions(ctx context.Context, clubID, coachID string) ([]string, error)
 	// DeleteUser removes a mobile account; related records cascade or are detached.
 	DeleteUser(context.Context, string) error
 }

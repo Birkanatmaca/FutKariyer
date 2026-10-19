@@ -6,6 +6,7 @@ import {
   AuthProvider,
   authRepository,
   sessionStorage,
+  clubSessionStorage,
 } from './src/features/auth';
 import { AppNavigator } from './src/app/AppNavigator';
 
@@ -14,7 +15,11 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar barStyle="light-content" />
       <KeyboardProvider>
-        <AuthProvider repository={authRepository} storage={sessionStorage}>
+        <AuthProvider
+          repository={authRepository}
+          storage={sessionStorage}
+          clubStorage={clubSessionStorage}
+        >
           <AppNavigator />
         </AuthProvider>
       </KeyboardProvider>

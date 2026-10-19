@@ -17,6 +17,7 @@ import {
   Sparkles,
   Trophy,
   UserPlus,
+  UsersRound,
   type LucideIcon,
 } from 'lucide-react-native';
 import { copy } from '../../../shared/lib/copy';
@@ -36,6 +37,7 @@ const kindIcon: Record<DisplayNotificationKind, LucideIcon> = {
   connection: Handshake,
   tournament: Medal,
   follow: UserPlus,
+  staff: UsersRound,
   other: Bell,
 };
 

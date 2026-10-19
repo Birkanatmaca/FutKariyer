@@ -8,6 +8,8 @@ export const notificationKinds = [
   'connection',
   'tournament',
   'follow',
+  // Club technical staff: invitations, joins, removals (19 Oct 2026).
+  'staff',
 ] as const;
 
 export type NotificationKind = (typeof notificationKinds)[number];

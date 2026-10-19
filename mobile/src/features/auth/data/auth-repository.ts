@@ -1,13 +1,26 @@
 import { request, ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
-import type {
-  AccountApplicationResult,
-  AdminSession,
-  AdminUser,
-  AuthRepository,
-  AuthSession,
-  User,
+import {
+  staffPermissions,
+  type AccountApplicationResult,
+  type AdminSession,
+  type AdminUser,
+  type AuthRepository,
+  type AuthSession,
+  type Delegate,
+  type User,
 } from '../domain/models';
+
+function isDelegate(value: Delegate | undefined): boolean {
+  return (
+    value === undefined ||
+    (!!value &&
+      typeof value.coachId === 'string' &&
+      typeof value.coachName === 'string' &&
+      Array.isArray(value.permissions) &&
+      value.permissions.every(item => staffPermissions.includes(item)))
+  );
+}
 
 function isUser(value: User): boolean {
   return (
@@ -21,7 +34,9 @@ function isUser(value: User): boolean {
     typeof value.city === 'string' &&
     typeof value.createdAt === 'string' &&
     Number.isFinite(Date.parse(value.createdAt)) &&
-    ['player', 'coach', 'club', 'organizer'].includes(value.role)
+    ['player', 'coach', 'club', 'organizer'].includes(value.role) &&
+    isDelegate(value.delegate) &&
+    (value.delegate === undefined || value.role === 'club')
   );
 }
 function session(value: AuthSession): AuthSession {
@@ -109,6 +124,15 @@ export const authRepository: AuthRepository = {
   },
   async logout(token) {
     await request<void>('/v1/auth/logout', { method: 'POST', token });
+  },
+  async switchToClub(token, clubId) {
+    return session(
+      await request<AuthSession>('/v1/auth/switch', {
+        method: 'POST',
+        token,
+        body: { clubId },
+      }),
+    );
   },
   // Admin accounts get a bearer token for the /v1/admin API only.
   async adminLogin(input) {

@@ -1,4 +1,5 @@
 import {
+  toRegisterInput,
   validateLogin,
   validateRegistration,
 } from '../src/features/auth/application/validation';
@@ -30,6 +31,26 @@ test('counts multi-byte characters against the bcrypt byte limit', () => {
   expect(
     validateRegistration({ ...account, password: 'ş'.repeat(36) }),
   ).toEqual({});
+});
+test('a coach names a licence level instead of a licence status', () => {
+  const coach = {
+    fullName: 'Ayşe Hoca',
+    email: 'ayse@example.com',
+    password: 'strong-password',
+    role: 'coach' as const,
+    footballType: 'amateur' as const,
+  };
+  expect(Object.keys(validateRegistration(coach))).toEqual(['licenseLevel']);
+  expect(
+    validateRegistration({ ...coach, licenseLevel: 'uefa_a' as const }),
+  ).toEqual({});
+  expect(
+    toRegisterInput({
+      ...coach,
+      licenseLevel: 'none',
+      licenseStatus: 'licensed',
+    }),
+  ).toEqual({ ...coach, licenseLevel: 'none' });
 });
 test('login rejects empty identifier and empty password', () => {
   expect(

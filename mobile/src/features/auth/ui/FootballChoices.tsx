@@ -9,7 +9,11 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { copy } from '../../../shared/lib/copy';
-import type { PlayerFootballType } from '../../../shared/domain/football';
+import {
+  declaredCoachLicenses,
+  type DeclaredCoachLicense,
+  type PlayerFootballType,
+} from '../../../shared/domain/football';
 import { colors, radius, space, type } from '../../../styles/tokens';
 
 const types: { value: PlayerFootballType; icon: LucideIcon }[] = [
@@ -119,8 +123,67 @@ export function LicenseCheck({
   );
 }
 
+// A coach picks the licence level they hold; "Lisans yok" is an answer too.
+export function CoachLicensePicker({
+  value,
+  error,
+  disabled,
+  onChange,
+}: {
+  value: DeclaredCoachLicense | '';
+  error?: string;
+  disabled: boolean;
+  onChange(value: DeclaredCoachLicense): void;
+}) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.label}>{copy.signUp.coachLicense}</Text>
+      <View style={styles.pills} accessibilityRole="radiogroup">
+        {declaredCoachLicenses.map(option => {
+          const selected = value === option;
+          const label = copy.coaches.licenses[option];
+          return (
+            <Pressable
+              key={option}
+              accessibilityRole="radio"
+              accessibilityLabel={label}
+              accessibilityState={{ checked: selected, disabled }}
+              disabled={disabled}
+              onPress={() => onChange(option)}
+              style={({ pressed }) => [
+                styles.pill,
+                selected && styles.tileOn,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text style={[styles.tileText, selected && styles.tileTextOn]}>
+                {label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {error ? (
+        <Text accessibilityRole="alert" style={styles.error}>
+          {error}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   section: { gap: space.sm },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  pill: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: space.lg,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
   label: { color: colors.secondary, fontSize: 13, fontWeight: '600' },
   tiles: { flexDirection: 'row', gap: space.sm },
   tile: {

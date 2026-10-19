@@ -40,7 +40,7 @@ export function ClubProfileSection({
 }: {
   token: string | null;
   service: ClubService;
-  onEdit(): void;
+  onEdit?(): void;
 }) {
   const state = useFocusedResource(
     useCallback(
@@ -70,7 +70,9 @@ export function ClubProfileSection({
           </Text>
         </View>
       ) : null}
-      <Button label={copy.clubHome.profileEdit} secondary onPress={onEdit} />
+      {onEdit ? (
+        <Button label={copy.clubHome.profileEdit} secondary onPress={onEdit} />
+      ) : null}
     </ClubSection>
   );
 }
@@ -85,8 +87,8 @@ export function ClubNewsSection({
   token: string | null;
   service: ContentService;
   onNews(): void;
-  onCompose(): void;
-  onMine(): void;
+  onCompose?(): void;
+  onMine?(): void;
 }) {
   const state = useFocusedResource(
     useCallback(
@@ -108,8 +110,12 @@ export function ClubNewsSection({
           onNews={onNews}
         />
       ) : null}
-      <Button label={copy.clubHome.newsWrite} onPress={onCompose} />
-      <Button label={copy.clubHome.newsMine} secondary onPress={onMine} />
+      {onCompose ? (
+        <Button label={copy.clubHome.newsWrite} onPress={onCompose} />
+      ) : null}
+      {onMine ? (
+        <Button label={copy.clubHome.newsMine} secondary onPress={onMine} />
+      ) : null}
     </View>
   );
 }
@@ -118,16 +124,21 @@ export function ClubPlayersSection({
   token,
   teamsService,
   discoveryService,
+  applications = true,
   onDiscover,
 }: {
   token: string | null;
   teamsService: TeamsService;
   discoveryService: DiscoveryService;
+  // False for a switched coach without the applications section.
+  applications?: boolean;
   onDiscover(): void;
 }) {
   return (
     <ClubSection title={copy.clubHome.playersTitle}>
-      <PendingApplications token={token} service={teamsService} />
+      {applications ? (
+        <PendingApplications token={token} service={teamsService} />
+      ) : null}
       <PlayerDiscoveryPreview
         token={token}
         service={discoveryService}
@@ -142,17 +153,22 @@ export function ClubSquadSection({
   onSquad,
   onListings,
 }: {
-  onSquad(): void;
-  onListings(): void;
+  onSquad?(): void;
+  onListings?(): void;
 }) {
+  if (!onSquad && !onListings) return null;
   return (
     <ClubSection title={copy.clubHome.squadTitle}>
-      <Button label={copy.clubHome.squadOpen} secondary onPress={onSquad} />
-      <Button
-        label={copy.clubHome.listingsOpen}
-        secondary
-        onPress={onListings}
-      />
+      {onSquad ? (
+        <Button label={copy.clubHome.squadOpen} secondary onPress={onSquad} />
+      ) : null}
+      {onListings ? (
+        <Button
+          label={copy.clubHome.listingsOpen}
+          secondary
+          onPress={onListings}
+        />
+      ) : null}
     </ClubSection>
   );
 }
@@ -162,7 +178,7 @@ export function ClubTournamentsSection({
   onEntries,
 }: {
   onTournaments(): void;
-  onEntries(): void;
+  onEntries?(): void;
 }) {
   return (
     <ClubSection title={copy.clubHome.tournamentsTitle}>
@@ -171,11 +187,13 @@ export function ClubTournamentsSection({
         secondary
         onPress={onTournaments}
       />
-      <Button
-        label={copy.clubHome.tournamentEntriesOpen}
-        secondary
-        onPress={onEntries}
-      />
+      {onEntries ? (
+        <Button
+          label={copy.clubHome.tournamentEntriesOpen}
+          secondary
+          onPress={onEntries}
+        />
+      ) : null}
     </ClubSection>
   );
 }

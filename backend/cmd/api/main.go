@@ -21,6 +21,9 @@ import (
 	"futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/auth/data"
 	"futcareer/backend/internal/auth/transport"
+	coachapplication "futcareer/backend/internal/coaches/application"
+	coachdata "futcareer/backend/internal/coaches/data"
+	coachtransport "futcareer/backend/internal/coaches/transport"
 	clubapplication "futcareer/backend/internal/clubs/application"
 	clubdata "futcareer/backend/internal/clubs/data"
 	clubtransport "futcareer/backend/internal/clubs/transport"
@@ -253,21 +256,27 @@ func run() error {
 	routes.Handle("/v1/me/pro", proHandler)
 	routes.Handle("/v1/me/pro/", proHandler)
 	routes.Handle("/v1/players/", playertransport.New(authService, playerapplication.New(playerRepo), playerapplication.NewMedia(playerRepo)))
+	coachHandler := coachtransport.New(authService, coachapplication.New(coachdata.New(db)))
+	for _, path := range []string{"/v1/me/coach-profile", "/v1/me/staff", "/v1/me/staff/", "/v1/me/coach-clubs", "/v1/me/coach-clubs/", "/v1/staff/"} {
+		routes.Handle(path, coachHandler)
+	}
 	discoveryHandler := discoverytransport.New(authService, discoveryapplication.New(discoverydata.New(db)))
 	routes.Handle("/v1/discovery/", discoveryHandler)
 	routes.Handle("/v1/me/", discoveryHandler)
 	routes.Handle("/", transport.New(authService))
-	var handler http.Handler = routes
+	// Switched (coach-as-club) sessions only reach what the club allowed.
+	guarded := transport.DelegationGuard(authService, routes)
+	var handler http.Handler = guarded
 	if directory := os.Getenv("ADMIN_FRONTEND_DIR"); directory != "" {
 		web, err := adminweb.New(directory)
 		if err != nil {
 			return err
 		}
 		combined := http.NewServeMux()
-		combined.Handle("/api/", http.StripPrefix("/api", routes))
+		combined.Handle("/api/", http.StripPrefix("/api", guarded))
 		combined.Handle("GET /securityadmin", web)
 		combined.Handle("GET /securityadmin/", web)
-		combined.Handle("/", routes)
+		combined.Handle("/", guarded)
 		handler = combined
 	}
 	server := &http.Server{Addr: env("LISTEN_ADDR", ":8080"), Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16384}

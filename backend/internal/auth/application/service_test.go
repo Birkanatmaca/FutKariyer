@@ -3,6 +3,8 @@ package application_test
 import (
 	"context"
 	"errors"
+	"maps"
+	"slices"
 	"testing"
 	"time"
 
@@ -71,9 +73,26 @@ func TestPersistentAuthLifecycle(t *testing.T) {
 }
 func TestRegistrationRejectsInvalidAccounts(t *testing.T) {
 	service := application.New(nil, time.Hour)
-	_, err := service.Register(context.Background(), application.RegisterInput{FullName: "X", Email: "invalid", Password: "short", Role: "admin"})
-	var fields application.ValidationError
-	if !errors.As(err, &fields) || len(fields) != 6 {
-		t.Fatalf("invalid account was not fully rejected: %v", err)
+	const password = "strong-password-123"
+	for _, c := range []struct {
+		in   application.RegisterInput
+		want []string
+	}{
+		// Only players and coaches sign up on their own; clubs and organizers apply.
+		{application.RegisterInput{FullName: "X", Email: "invalid", Password: "short", Role: "admin"}, []string{"email", "footballType", "fullName", "password", "role"}},
+		{application.RegisterInput{FullName: "Kulüp", Email: "kulup@example.com", Password: password, Role: "club", FootballType: "amateur"}, []string{"role"}},
+		{application.RegisterInput{FullName: "Deniz", Email: "deniz@example.com", Password: password, Role: "player", FootballType: "amateur"}, []string{"licenseStatus"}},
+		// A coach names a licence level; "unknown" is not a declaration.
+		{application.RegisterInput{FullName: "Ayşe", Email: "ayse@example.com", Password: password, Role: "coach", FootballType: "amateur", LicenseLevel: "unknown"}, []string{"licenseLevel"}},
+		{application.RegisterInput{FullName: "Ayşe", Email: "ayse@example.com", Password: password, Role: "coach", LicenseLevel: "uefa_b"}, []string{"footballType"}},
+	} {
+		_, err := service.Register(context.Background(), c.in)
+		var fields application.ValidationError
+		if !errors.As(err, &fields) {
+			t.Fatalf("%s sign-up was accepted: %v", c.in.Role, err)
+		}
+		if got := slices.Sorted(maps.Keys(fields)); !slices.Equal(got, c.want) {
+			t.Fatalf("%s sign-up: got errors %v, want %v", c.in.Role, got, c.want)
+		}
 	}
 }
