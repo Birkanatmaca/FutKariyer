@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -18,6 +18,8 @@ import type { PlayerProfileService } from '../application/profile-service';
 import type { PlayerMediaService } from '../application/media-service';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { PlayerProfileContent } from './PlayerProfileContent';
+import { ProfileShareSheet } from './ProfileShareSheet';
+import type { ProfileSharer } from '../application/profile-share';
 
 export function PlayerOverviewScreen({
   fullName,
@@ -31,6 +33,7 @@ export function PlayerOverviewScreen({
   userId,
   media,
   avatarUri,
+  sharer,
 }: {
   fullName: string;
   // The owner's id and gallery service enable uploads on the own profile.
@@ -44,8 +47,11 @@ export function PlayerOverviewScreen({
   counts?: ProfileCounts | null;
   posts?: ProfilePostsSlot;
   avatarUri?: string;
+  // Own profile only: shares the player card to other apps.
+  sharer?: ProfileSharer;
 }) {
   const { profile, error, loading, retry } = usePlayerProfile(service, token);
+  const [sharing, setSharing] = useState(false);
   return (
     <Screen>
       {onBack && (
@@ -74,6 +80,7 @@ export function PlayerOverviewScreen({
             fullName={fullName}
             profile={profile}
             onEdit={onEdit}
+            onShare={sharer ? () => setSharing(true) : undefined}
             avatarSource={avatarUri ? { uri: avatarUri } : undefined}
             counts={counts}
             posts={posts}
@@ -86,6 +93,18 @@ export function PlayerOverviewScreen({
           />
         )
       )}
+      {profile && sharer ? (
+        <ProfileShareSheet
+          visible={sharing}
+          onClose={() => setSharing(false)}
+          sharer={sharer}
+          fullName={fullName}
+          profile={profile}
+          counts={counts}
+          avatarUri={avatarUri}
+          isPro={isPro}
+        />
+      ) : null}
     </Screen>
   );
 }

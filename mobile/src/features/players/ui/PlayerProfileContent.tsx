@@ -14,6 +14,7 @@ export function PlayerProfileContent({
   avatarSource,
   gallery,
   onEdit,
+  onShare,
   counts,
   posts,
   isPro = false,
@@ -28,6 +29,7 @@ export function PlayerProfileContent({
   // Signed-in viewer's access to this player's gallery.
   gallery?: GalleryProps;
   onEdit?(): void;
+  onShare?(): void;
 }) {
   return (
     <>
@@ -36,6 +38,7 @@ export function PlayerProfileContent({
         profile={profile}
         avatarSource={avatarSource}
         onEdit={onEdit}
+        onShare={onShare}
         counts={counts}
         isPro={isPro}
       />

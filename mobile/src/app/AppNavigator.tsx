@@ -124,6 +124,7 @@ import {
   createPlayerProfileService,
   playerProfileRepository,
   playerMediaService,
+  profileSharer,
   type ProfileCounts,
 } from '../features/players';
 import { Brand } from '../shared/ui/Brand';
@@ -1112,6 +1113,7 @@ function OwnPlayerProfile({
       userId={userId}
       media={playerMediaService}
       avatarUri={avatar}
+      sharer={profileSharer}
       onEdit={() => navigation.navigate('AccountProfile')}
       counts={counts}
       posts={posts}

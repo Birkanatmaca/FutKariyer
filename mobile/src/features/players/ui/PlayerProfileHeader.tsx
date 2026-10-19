@@ -7,7 +7,7 @@ import {
   View,
   type ImageSourcePropType,
 } from 'react-native';
-import { Pencil, Shield, Eye, EyeOff } from 'lucide-react-native';
+import { Pencil, Share, Shield, Eye, EyeOff } from 'lucide-react-native';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import type { PlayerProfile } from '../domain/profile';
@@ -26,6 +26,7 @@ export function PlayerProfileHeader({
   profile,
   avatarSource,
   onEdit,
+  onShare,
   counts,
   isPro = false,
 }: {
@@ -35,6 +36,8 @@ export function PlayerProfileHeader({
   isPro?: boolean;
   avatarSource?: ImageSourcePropType;
   onEdit?(): void;
+  // Opens the share sheet; an icon-only button beside Profili düzenle.
+  onShare?(): void;
 }) {
   const [failedSource, setFailedSource] = useState<ImageSourcePropType | null>(
     null,
@@ -168,14 +171,29 @@ export function PlayerProfileHeader({
       </View>
       {onEdit && (
         <>
-          <Pressable
-            accessibilityRole="button"
-            onPress={onEdit}
-            style={({ pressed }) => [styles.edit, pressed && styles.pressed]}
-          >
-            <Pencil size={16} color={colors.text} />
-            <Text style={styles.editText}>{copy.playerOverview.edit}</Text>
-          </Pressable>
+          <View style={styles.actions}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={onEdit}
+              style={({ pressed }) => [styles.edit, pressed && styles.pressed]}
+            >
+              <Pencil size={16} color={colors.text} />
+              <Text style={styles.editText}>{copy.playerOverview.edit}</Text>
+            </Pressable>
+            {onShare ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={copy.profileShare.open}
+                onPress={onShare}
+                style={({ pressed }) => [
+                  styles.share,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Share size={18} color={colors.text} />
+              </Pressable>
+            ) : null}
+          </View>
           <View style={styles.visibility}>
             <VisibilityIcon size={14} color={colors.muted} />
             <Text style={styles.visibilityText}>
@@ -274,7 +292,19 @@ const styles = StyleSheet.create({
   club: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   clubText: { color: colors.secondary, fontSize: 12, lineHeight: 18, flex: 1 },
   claim: { color: colors.muted, fontSize: 11 },
+  actions: { flexDirection: 'row', gap: space.sm },
+  share: {
+    width: 44,
+    minHeight: 40,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.raised,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   edit: {
+    flex: 1,
     minHeight: 40,
     borderRadius: radius.md,
     borderWidth: 1,

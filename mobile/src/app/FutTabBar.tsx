@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   Animated,
   BackHandler,
@@ -16,7 +22,7 @@ import {
   Ellipsis,
   House,
   Trophy,
-  Plus,
+  X,
   type LucideIcon,
 } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,7 +30,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { copy } from '../shared/lib/copy';
 import { useReducedMotion } from '../shared/lib/useReducedMotion';
 import { colors, radius, shadow, space } from '../styles/tokens';
-import { hubArt, isHubRoute, type HubRoute } from './HubArt';
+import { HubBallArt, hubArt, isHubRoute, type HubRoute } from './HubArt';
 
 type TabIcon = LucideIcon;
 const userIcons: Record<string, TabIcon> = {
@@ -116,85 +122,137 @@ function TabItem({
   );
 }
 
-// Each page's artwork lands in the hub with its own short move.
-type Motion = {
-  x: Animated.Value;
-  y: Animated.Value;
-  turn: Animated.Value;
-  scale: Animated.Value;
-  flash: Animated.Value;
+// Each page's artwork lands in the hub with its own short move. Every move is
+// one native timeline (a single 0→1 value with keyframed tracks), so it stays
+// smooth while the page below is still mounting.
+type Step = [to: number, ms: number, easing?: (t: number) => number];
+type Track = { from: number; steps: Step[] };
+type Landing = {
+  x?: Track;
+  y?: Track;
+  turn?: Track;
+  scale?: Track;
+  flash?: Track;
 };
-
-function landing(route: HubRoute, m: Motion) {
-  const to = (
-    value: Animated.Value,
-    toValue: number,
-    duration: number,
-    easing: (t: number) => number = Easing.inOut(Easing.quad),
-  ) =>
-    Animated.timing(value, {
-      toValue,
-      duration,
-      easing,
-      useNativeDriver: native,
-    });
-  const settle = (value: Animated.Value, toValue: number) =>
-    Animated.spring(value, {
-      toValue,
-      speed: 14,
-      bounciness: 11,
-      useNativeDriver: native,
-    });
-  switch (route) {
-    // Sosyal: the ball hops up, lands and rebounds once.
-    case 'Social':
-      return Animated.parallel([
-        settle(m.scale, 1),
-        Animated.sequence([
-          to(m.y, -20, 170, Easing.out(Easing.quad)),
-          to(m.y, 0, 170, Easing.in(Easing.quad)),
-          to(m.y, -7, 110, Easing.out(Easing.quad)),
-          to(m.y, 0, 110, Easing.in(Easing.quad)),
-        ]),
-      ]);
-    // Profil: the boot draws back and kicks.
-    case 'Profile':
-      return Animated.parallel([
-        settle(m.scale, 1),
-        Animated.sequence([
-          to(m.turn, -26, 190, Easing.out(Easing.quad)),
-          to(m.turn, 16, 110, Easing.in(Easing.quad)),
-          settle(m.turn, 0),
-        ]),
-        Animated.sequence([to(m.x, -3, 190), to(m.x, 4, 110), settle(m.x, 0)]),
-      ]);
-    // Takımlar: the stadium swells as its floodlights come on.
-    case 'Teams':
-      return Animated.parallel([
-        Animated.sequence([
-          to(m.scale, 1.14, 220, Easing.out(Easing.quad)),
-          settle(m.scale, 1),
-        ]),
-        Animated.sequence([
-          to(m.flash, 1, 160),
-          to(m.flash, 0, 700, Easing.out(Easing.quad)),
-        ]),
-      ]);
-    // Oyunlar: the pad rumbles like a vibrating controller.
-    case 'Games':
-      return Animated.parallel([
-        settle(m.scale, 1),
-        Animated.sequence(
-          [3, -3, 3, -3, 2.5, -2.5, 1.5, -1.5, 0].map(v => to(m.x, v, 40)),
-        ),
-        Animated.sequence([5, -5, 5, -5, 3, -3, 0].map(v => to(m.turn, v, 50))),
-      ]);
+// Waits for the chosen option to fly back into the hub.
+const LAND_DELAY = 140;
+const out = Easing.out(Easing.quad);
+const into = Easing.in(Easing.quad);
+const arrive: Track = {
+  from: 0.55,
+  steps: [
+    [1.08, 160, out],
+    [1, 120],
+  ],
+};
+const wiggle = (values: number[], ms: number): Track => ({
+  from: 0,
+  steps: values.map(value => [value, ms] as Step),
+});
+// "Hub" is the idle button, which shows the ball.
+const landings: Record<HubRoute | 'Hub', Landing> = {
+  // Saha: the ball hops up, lands and rebounds once.
+  Hub: {
+    scale: arrive,
+    y: {
+      from: 0,
+      steps: [
+        [-20, 170, out],
+        [0, 170, into],
+        [-7, 110, out],
+        [0, 110, into],
+      ],
+    },
+  },
+  // Sosyal: the bubbles pop in and beat twice like a like.
+  Social: {
+    scale: {
+      from: 0.55,
+      steps: [
+        [1.12, 170, out],
+        [0.95, 120],
+        [1.14, 130, out],
+        [1, 200],
+      ],
+    },
+    turn: wiggle([-7, 6, -3, 0], 90),
+  },
+  // Profil: the player rises into the hub and gives a proud little nod.
+  Profile: {
+    scale: arrive,
+    y: {
+      from: 12,
+      steps: [
+        [-5, 220, out],
+        [0, 160, into],
+      ],
+    },
+    turn: wiggle([-9, 7, -3, 0], 110),
+  },
+  // Takımlar: the stadium swells as its floodlights come on.
+  Teams: {
+    scale: {
+      from: 0.55,
+      steps: [
+        [1.14, 240, out],
+        [0.97, 160],
+        [1, 140],
+      ],
+    },
+    flash: {
+      from: 0,
+      steps: [
+        [1, 160],
+        [0, 700, out],
+      ],
+    },
+  },
+  // Oyunlar: the pad rumbles like a vibrating controller.
+  Games: {
+    scale: arrive,
+    x: wiggle([3, -3, 3, -3, 2.5, -2.5, 1.5, -1.5, 0], 45),
+    turn: wiggle([5, -5, 5, -5, 3, -3, 0], 55),
+  },
+};
+const trackLength = (track?: Track) =>
+  track ? track.steps.reduce((sum, [, ms]) => sum + ms, 0) : 0;
+function landingLength(landing: Landing) {
+  const { x, y, turn, scale, flash } = landing;
+  return LAND_DELAY + Math.max(...[x, y, turn, scale, flash].map(trackLength));
+}
+// Samples each eased step so the native interpolation follows its curve.
+function play(
+  time: Animated.Value,
+  total: number,
+  track: Track | undefined,
+  rest: number,
+) {
+  if (!track) return rest;
+  const input = [0];
+  const output = [track.from];
+  let at = LAND_DELAY;
+  let value = track.from;
+  input.push(at / total);
+  output.push(value);
+  for (const [to, ms, easing = Easing.inOut(Easing.quad)] of track.steps) {
+    for (let i = 1; i <= 6; i += 1) {
+      input.push((at + (ms * i) / 6) / total);
+      output.push(value + (to - value) * easing(i / 6));
+    }
+    at += ms;
+    value = to;
   }
+  if (at < total) {
+    input.push(1);
+    output.push(value);
+  }
+  return time.interpolate({ inputRange: input, outputRange: output });
 }
 
-// The raised centre button. Idle it is a lime disc with a plus that pulses a
-// couple of times to invite a tap; while one of its pages is open it shows that
-// page's artwork; with the menu open the plus turns into a close cross.
+// The raised centre button. Idle ("Saha") it shows the ball, which hops once
+// and sends out a couple of pulses to invite a tap; while one of its pages is
+// open it shows that page's artwork; with the menu open it turns into a lime
+// close button.
 function HubButton({
   active,
   label,
@@ -211,32 +269,38 @@ function HubButton({
   onLayout(event: LayoutChangeEvent): void;
 }) {
   const reducedMotion = useReducedMotion();
-  const motion = useRef<Motion>({
-    x: new Animated.Value(0),
-    y: new Animated.Value(0),
-    turn: new Animated.Value(0),
-    scale: new Animated.Value(1),
-    flash: new Animated.Value(0),
-  }).current;
+  // 1 is the resting pose; a landing replays it from 0.
+  const time = useRef(new Animated.Value(1)).current;
   const pulse = useRef(new Animated.Value(0)).current;
+  const motion = useMemo(() => {
+    const landing = landings[active ?? 'Hub'];
+    const total = landingLength(landing);
+    return {
+      total,
+      x: play(time, total, landing.x, 0),
+      y: play(time, total, landing.y, 0),
+      turn: play(time, total, landing.turn, 0),
+      scale: play(time, total, landing.scale, 1),
+      flash: play(time, total, landing.flash, 0),
+    };
+  }, [active, time]);
   useEffect(() => {
-    if (!active || reducedMotion) return;
-    const { x, y, turn, scale, flash } = motion;
-    for (const value of [x, y, turn, flash]) value.setValue(0);
-    scale.setValue(0.55);
-    // Waits for the chosen option to fly back into the hub.
-    const animation = Animated.sequence([
-      Animated.delay(140),
-      landing(active, motion),
-    ]);
+    if (reducedMotion) return;
+    time.setValue(0);
+    const animation = Animated.timing(time, {
+      toValue: 1,
+      duration: motion.total,
+      easing: Easing.linear,
+      useNativeDriver: native,
+    });
     animation.start();
     return () => animation.stop();
-  }, [active, motion, reducedMotion]);
+  }, [active, motion, time, reducedMotion]);
   useEffect(() => {
     if (active || reducedMotion) return;
     pulse.setValue(0);
     const animation = Animated.sequence([
-      Animated.delay(400),
+      Animated.delay(900),
       Animated.loop(
         Animated.timing(pulse, {
           toValue: 1,
@@ -250,15 +314,7 @@ function HubButton({
     animation.start();
     return () => animation.stop();
   }, [active, pulse, reducedMotion]);
-  const Art = active ? hubArt[active] : null;
-  // Over an artwork the plus only shows while the menu opens.
-  const plusOpacity = Art
-    ? progress.interpolate({
-        inputRange: [0.4, 1],
-        outputRange: [0, 1],
-        extrapolate: 'clamp',
-      })
-    : 1;
+  const Art = active ? hubArt[active] : HubBallArt;
   const fade = (from: number, to: number) =>
     progress.interpolate({
       inputRange: [0, 0.6],
@@ -299,63 +355,58 @@ function HubButton({
             ]}
           />
         ) : null}
-        <View style={[styles.hubCircle, active && styles.hubCircleActive]}>
-          {Art ? (
-            <>
-              <Animated.View
-                style={[styles.hubFill, { opacity: fade(0, 1) }]}
-              />
-              <Animated.View
-                style={[
-                  styles.hubFlash,
-                  {
-                    opacity: motion.flash.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [0, 0.5],
-                    }),
-                  },
-                ]}
-              />
-              <Animated.View
-                style={[
-                  styles.hubLayer,
-                  {
-                    opacity: fade(1, 0),
-                    transform: [
-                      { translateX: motion.x },
-                      { translateY: motion.y },
-                      {
-                        rotate: motion.turn.interpolate({
-                          inputRange: [-180, 180],
-                          outputRange: ['-180deg', '180deg'],
-                        }),
-                      },
-                      { scale: motion.scale },
-                    ],
-                  },
-                ]}
-              >
-                <Art size={48} />
-              </Animated.View>
-            </>
-          ) : null}
+        <View style={styles.hubCircle}>
+          <Animated.View style={[styles.hubFill, { opacity: fade(0, 1) }]} />
+          <Animated.View
+            style={[
+              styles.hubFlash,
+              {
+                opacity: Animated.multiply(motion.flash, 0.5),
+              },
+            ]}
+          />
           <Animated.View
             style={[
               styles.hubLayer,
               {
-                opacity: plusOpacity,
+                opacity: fade(1, 0),
+                transform: [
+                  { translateX: motion.x },
+                  { translateY: motion.y },
+                  {
+                    rotate: Animated.multiply(motion.turn, 1).interpolate({
+                      inputRange: [-180, 180],
+                      outputRange: ['-180deg', '180deg'],
+                    }),
+                  },
+                  { scale: motion.scale },
+                ],
+              },
+            ]}
+          >
+            <Art size={48} />
+          </Animated.View>
+          <Animated.View
+            style={[
+              styles.hubLayer,
+              {
+                opacity: progress.interpolate({
+                  inputRange: [0.4, 1],
+                  outputRange: [0, 1],
+                  extrapolate: 'clamp',
+                }),
                 transform: [
                   {
                     rotate: progress.interpolate({
                       inputRange: [0, 1],
-                      outputRange: ['0deg', '45deg'],
+                      outputRange: ['-90deg', '0deg'],
                     }),
                   },
                 ],
               },
             ]}
           >
-            <Plus size={30} color={colors.brandInk} strokeWidth={3} />
+            <X size={28} color={colors.brandInk} strokeWidth={2.8} />
           </Animated.View>
         </View>
       </View>
@@ -732,19 +783,28 @@ const styles = StyleSheet.create({
     borderRadius: HUB_SIZE / 2,
     borderWidth: 2,
     borderColor: colors.brand,
-    backgroundColor: colors.brand,
+    backgroundColor: colors.raised,
     justifyContent: 'center',
     alignItems: 'center',
     ...shadow.glow,
   },
-  hubCircleActive: { backgroundColor: colors.raised },
   hubFill: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    // Covers the 2 pt border too, so the open hub is one solid disc.
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
     borderRadius: HUB_SIZE / 2,
     backgroundColor: colors.brand,
   },
   hubFlash: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    // Covers the 2 pt border too, so the open hub is one solid disc.
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
     borderRadius: HUB_SIZE / 2,
     backgroundColor: colors.floodlight,
   },

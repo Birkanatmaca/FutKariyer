@@ -76,6 +76,13 @@ export const type = {
 } satisfies Record<string, TextStyle>;
 
 // Elevation: soft night shadow for layers, lime glow only for the primary action.
+// Third-party marks on share targets keep their own brand colours
+// (PROJECT.md, Paylaşım hedefleri); nothing else uses them.
+export const partner = {
+  whatsapp: '#25D366',
+  instagram: ['#FEDA75', '#FA7E1E', '#D62976', '#962FBF', '#4F5BD5'],
+} as const;
+
 export const shadow = {
   layer: {
     shadowColor: '#000000',

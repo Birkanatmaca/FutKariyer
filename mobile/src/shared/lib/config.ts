@@ -15,4 +15,8 @@ export const config = {
         : 'http://localhost:8080')
     : productionApiUrl,
   requestTimeout: 12000,
+  // Meta app id for opening Instagram's story editor directly with the
+  // profile card. Empty: the card goes to Instagram's own share screen, where
+  // the user picks Hikâye.
+  facebookAppId: '',
 };

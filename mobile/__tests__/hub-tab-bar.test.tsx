@@ -13,7 +13,7 @@ jest.mock('lucide-react-native', () => ({
   Ellipsis: () => null,
   House: () => null,
   Trophy: () => null,
-  Plus: () => null,
+  X: () => null,
 }));
 // Without motion the menu opens and closes synchronously.
 jest.mock('../src/shared/lib/useReducedMotion', () => ({

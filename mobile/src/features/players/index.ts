@@ -5,6 +5,8 @@ export type { ProfileCounts } from './ui/PlayerProfileHeader';
 export type { ProfilePostsSlot } from './ui/PlayerMediaGallery';
 export { createPlayerProfileService } from './application/profile-service';
 export { playerProfileRepository } from './data/http-profile-repository';
+export { profileSharer } from './data/profile-share';
+export type { ProfileSharer } from './application/profile-share';
 export type {
   PlayerProfile,
   DominantFoot,
