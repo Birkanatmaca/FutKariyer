@@ -230,17 +230,25 @@ export const copy = {
   tabs: {
     Home: 'Ana Sayfa',
     Leagues: 'Ligler',
-    Teams: 'Takımlar',
     Social: 'Sosyal',
     Profile: 'Profil',
+    Teams: 'Takımlar',
+    Games: 'Oyunlar',
+    // The centre hub's label while none of its pages is open.
+    Hub: 'Saha',
     Notifications: 'Bildirimler',
     More: 'Diğer',
+  },
+  hub: {
+    open: 'menüyü aç',
+    close: 'Menüyü kapat',
   },
   more: {
     news: 'Haberler',
     newsHint: 'Futbol dünyasından haberleri takip et.',
     profile: 'Profil',
     profileHint: 'Futbol profilini görüntüle ve düzenle.',
+    profileOpen: 'Profilini görüntüle',
     sections: {
       career: 'Kariyer',
       club: 'Kulüp yönetimi',
@@ -1585,9 +1593,6 @@ export const copy = {
       ' başvurusu reddedilecek. Reddedilen kulüp bu turnuvaya tekrar başvuramaz.',
     acceptedEntry: (club: string) => club + ' turnuvaya kabul edildi.',
     rejectedEntry: (club: string) => club + ' başvurusu reddedildi.',
-    socialUnavailableTitle: 'Sosyal akış organizasyon hesaplarına kapalı',
-    socialUnavailableBody:
-      'Organizasyon hesabı turnuva açmak ve başvuruları yönetmek içindir. Turnuvalarını Ana Sayfa’dan yönetebilirsin.',
   },
   footballData: {
     majorTitle: 'Büyük ligler',

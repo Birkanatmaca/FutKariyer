@@ -126,12 +126,9 @@ import {
   playerMediaService,
   type ProfileCounts,
 } from '../features/players';
-import { Medal } from 'lucide-react-native';
 import { Brand } from '../shared/ui/Brand';
 import { Button } from '../shared/ui/Button';
-import { EmptyState } from '../shared/ui/EmptyState';
 import { ErrorBanner } from '../shared/ui/ErrorBanner';
-import { Screen } from '../shared/ui/Screen';
 import { copy } from '../shared/lib/copy';
 import { colors, space } from '../styles/tokens';
 import { HomeScreen } from './HomeScreen';
@@ -146,16 +143,20 @@ import {
 import { SocialSidebar } from './SocialSidebar';
 import { FutTabBar } from './FutTabBar';
 import { MoreScreen } from './MoreScreen';
+import { GamesTab } from './GamesTab';
 import { AdminNavigator } from './AdminNavigator';
 import { AuthNavigator } from './AuthNavigator';
 import { useProfilePostsSlot } from './useProfilePostsSlot';
 
+// Bar (19 Oct 2026): Ana Sayfa, Ligler | centre hub | Bildirimler, Diğer.
+// Sosyal, Profil, Takımlar and Oyunlar are the hub's pages (see HubArt).
 type MainRoutes = {
   Home: undefined;
   Leagues: NavigatorScreenParams<LeaguesRoutes> | undefined;
-  Teams: { open?: { id: string; at: number } } | undefined;
   Social: NavigatorScreenParams<SocialRoutes> | undefined;
   Profile: NavigatorScreenParams<ProfileRoutes> | undefined;
+  Teams: { open?: { id: string; at: number } } | undefined;
+  Games: undefined;
   Notifications: undefined;
   More: NavigatorScreenParams<MoreRoutes> | undefined;
 };
@@ -272,7 +273,8 @@ function MainTabs() {
   const { user, token } = useAuth();
   useStoreRecovery(storeCheckout, token);
   usePushRegistration(pushMessaging, pushRepository, token, openNotifications);
-  // Organizers have no player or club profile; their tab is left out.
+  // Organizers have no profile and the social and games APIs reject them, so
+  // their hub only holds Takımlar.
   const member = user?.role !== 'organizer';
   // The Bildirimler tab badge is refreshed whenever any tab gains focus.
   const [unreadCount, setUnreadCount] = useState<number | null>(null);
@@ -434,6 +436,18 @@ function MainTabs() {
         component={LeaguesNavigator}
         options={{ popToTopOnBlur: true }}
       />
+      {member ? (
+        <Tabs.Screen
+          name="Social"
+          component={SocialNavigator}
+          options={{ popToTopOnBlur: true }}
+        />
+      ) : null}
+      {member ? (
+        <Tabs.Screen name="Profile" options={{ popToTopOnBlur: true }}>
+          {() => <ProfileNavigator />}
+        </Tabs.Screen>
+      ) : null}
       <Tabs.Screen name="Teams">
         {({ navigation, route }) => (
           <TeamsScreen
@@ -447,14 +461,9 @@ function MainTabs() {
           />
         )}
       </Tabs.Screen>
-      <Tabs.Screen
-        name="Social"
-        component={SocialNavigator}
-        options={{ popToTopOnBlur: true }}
-      />
       {member ? (
-        <Tabs.Screen name="Profile" options={{ popToTopOnBlur: true }}>
-          {() => <ProfileNavigator />}
+        <Tabs.Screen name="Games">
+          {() => (token ? <GamesTab token={token} /> : null)}
         </Tabs.Screen>
       ) : null}
       <Tabs.Screen name="Notifications" component={NotificationsTab} />
@@ -853,8 +862,29 @@ function MoreHomeRoute({
   isPlayer: boolean;
   isOrganizer: boolean;
 }) {
+  const { token, user } = useAuth();
+  const account = useAccountProfile(accountRepository, token);
+  const profile =
+    user && !isOrganizer
+      ? {
+          name: account.profile?.fullName ?? user.fullName,
+          role: copy.roles[user.role],
+          avatarUri: account.profile
+            ? avatarUrl(account.profile.id, account.profile.avatarVersion)
+            : undefined,
+          square: isClub,
+        }
+      : null;
   return (
     <MoreScreen
+      profile={profile}
+      onProfile={() =>
+        (
+          navigation.getParent() as
+            | BottomTabNavigationProp<MainRoutes>
+            | undefined
+        )?.navigate('Profile')
+      }
       onSettings={() => navigation.navigate('Account')}
       onTeamRequests={() => navigation.navigate('TeamJoinRequests')}
       onMyTeamApplications={() => navigation.navigate('TeamApplications')}
@@ -1104,19 +1134,6 @@ function useDiscoveryPostsSlot(userId: string) {
       }),
   });
 }
-// The social API rejects organizer accounts, so their Sosyal tab explains it
-// instead of showing a failing feed (this also hides the Oyunlar tab).
-function OrganizerSocialNotice() {
-  return (
-    <Screen>
-      <EmptyState
-        icon={Medal}
-        title={copy.tournaments.socialUnavailableTitle}
-        body={copy.tournaments.socialUnavailableBody}
-      />
-    </Screen>
-  );
-}
 // The Social feed with its header shortcuts; requests, discovery and visitors
 // live in the More stack and open on top of it.
 function SocialFeedRoute({
@@ -1172,7 +1189,6 @@ function SocialFeedRoute({
 function SocialNavigator() {
   const { token, user } = useAuth();
   if (!token || !user) return null;
-  if (user.role === 'organizer') return <OrganizerSocialNotice />;
   return (
     <SocialStack.Navigator
       screenOptions={{

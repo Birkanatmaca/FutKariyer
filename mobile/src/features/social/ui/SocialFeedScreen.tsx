@@ -34,7 +34,6 @@ import { DeleteContentPrompt } from './DeleteContentPrompt';
 import { useAuth } from '../../auth';
 import { Wordmark } from '../../../shared/ui/Wordmark';
 import { useReducedMotion } from '../../../shared/lib/useReducedMotion';
-import { GamesScreen } from '../../games';
 import {
   ModerationSheet,
   moderationService,
@@ -71,7 +70,8 @@ export function SocialFeedScreen({
   onRequests(): void;
   onMenu(): void;
 }) {
-  const [scope, setScope] = useState<FeedScope | 'games'>('explore');
+  // Oyunlar left this screen for its own hub page on 19 Oct 2026.
+  const [scope, setScope] = useState<FeedScope>('explore');
   const { user } = useAuth();
   const [visible, setVisible] = useState(STEP);
   const [revealing, setRevealing] = useState(false);
@@ -79,11 +79,9 @@ export function SocialFeedScreen({
   const lastOffset = useRef(0);
   const feed = useSocialList(
     useCallback(
-      (cursor: string) =>
-        service.feed(token, cursor, scope === 'games' ? 'explore' : scope),
+      (cursor: string) => service.feed(token, cursor, scope),
       [service, token, scope],
     ),
-    scope !== 'games',
   );
   const [busy, setBusy] = useState('');
   const [deleting, setDeleting] = useState('');
@@ -236,7 +234,7 @@ export function SocialFeedScreen({
 
       {tabsShown ? (
         <View style={styles.tabs}>
-          {(['explore', 'following', 'games'] as const).map(value => (
+          {(['explore', 'following'] as const).map(value => (
             <Pressable
               key={value}
               accessibilityRole="tab"
@@ -258,9 +256,7 @@ export function SocialFeedScreen({
               >
                 {value === 'explore'
                   ? copy.social.explore
-                  : value === 'following'
-                  ? copy.social.following
-                  : copy.social.games}
+                  : copy.social.following}
               </Text>
               <View
                 style={[
@@ -272,132 +268,126 @@ export function SocialFeedScreen({
           ))}
         </View>
       ) : null}
-      {scope === 'games' ? (
-        <GamesScreen token={token} />
-      ) : (
-        <FlatList
-          key={scope}
-          data={feed.items.slice(0, visible)}
-          onScroll={onScroll}
-          scrollEventThrottle={16}
-          onEndReached={showMore}
-          onEndReachedThreshold={0.4}
-          ItemSeparatorComponent={Separator}
-          keyExtractor={item => item.id}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={feed.refreshing && !feed.loading}
-              onRefresh={() => {
-                if (!busy) feed.refresh();
-              }}
-              tintColor={colors.brand}
-              colors={[colors.brand]}
-            />
-          }
-          ListHeaderComponent={
-            <View style={styles.messages}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={copy.social.compose}
-                onPress={onCompose}
-                style={({ pressed }) => [
-                  styles.composer,
-                  pressed && styles.composerPressed,
-                ]}
-              >
-                <View style={styles.composerAvatar}>
-                  <Text style={styles.composerInitial}>
-                    {Array.from(
-                      user?.fullName.trim() ?? '',
-                    )[0]?.toLocaleUpperCase('tr-TR') ?? ''}
-                  </Text>
-                </View>
-                <Text style={styles.composerText}>
-                  {copy.social.composePrompt}
+      <FlatList
+        key={scope}
+        data={feed.items.slice(0, visible)}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        onEndReached={showMore}
+        onEndReachedThreshold={0.4}
+        ItemSeparatorComponent={Separator}
+        keyExtractor={item => item.id}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={feed.refreshing && !feed.loading}
+            onRefresh={() => {
+              if (!busy) feed.refresh();
+            }}
+            tintColor={colors.brand}
+            colors={[colors.brand]}
+          />
+        }
+        ListHeaderComponent={
+          <View style={styles.messages}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={copy.social.compose}
+              onPress={onCompose}
+              style={({ pressed }) => [
+                styles.composer,
+                pressed && styles.composerPressed,
+              ]}
+            >
+              <View style={styles.composerAvatar}>
+                <Text style={styles.composerInitial}>
+                  {Array.from(
+                    user?.fullName.trim() ?? '',
+                  )[0]?.toLocaleUpperCase('tr-TR') ?? ''}
                 </Text>
-                <ImagePlus size={20} color={colors.brand} />
-              </Pressable>
-              {notice ? (
-                <Text accessibilityRole="alert" style={styles.notice}>
-                  {notice}
-                </Text>
-              ) : null}
-              {error || feed.error ? (
-                <ErrorBanner message={error || feed.error} />
-              ) : null}
-              {feed.error ? (
+              </View>
+              <Text style={styles.composerText}>
+                {copy.social.composePrompt}
+              </Text>
+              <ImagePlus size={20} color={colors.brand} />
+            </Pressable>
+            {notice ? (
+              <Text accessibilityRole="alert" style={styles.notice}>
+                {notice}
+              </Text>
+            ) : null}
+            {error || feed.error ? (
+              <ErrorBanner message={error || feed.error} />
+            ) : null}
+            {feed.error ? (
+              <Button
+                label={copy.form.retry}
+                secondary
+                onPress={() => feed.refresh()}
+              />
+            ) : null}
+          </View>
+        }
+        renderItem={({ item }) => (
+          <SocialPostCard
+            framed
+            item={item}
+            token={token}
+            service={service}
+            busy={!!busy}
+            onLike={() => like(item.id, item.liked)}
+            onReplies={() => onOpen(item.id)}
+            onFollow={() => follow(item.author.id, item.author.following)}
+            onDelete={() => setDeleting(item.id)}
+            onMore={() =>
+              setModerating({
+                kind: 'post',
+                id: item.id,
+                userId: item.author.id,
+                name: item.author.fullName,
+              })
+            }
+          />
+        )}
+        ListEmptyComponent={
+          feed.loading ? (
+            <ActivityIndicator color={colors.brand} style={styles.loader} />
+          ) : !feed.error ? (
+            <View>
+              <EmptyState
+                icon={Users}
+                title={
+                  scope === 'following'
+                    ? copy.social.followingEmptyTitle
+                    : copy.social.emptyTitle
+                }
+                body={
+                  scope === 'following'
+                    ? copy.social.followingEmptyBody
+                    : copy.social.emptyBody
+                }
+              />
+              {scope === 'following' ? (
                 <Button
-                  label={copy.form.retry}
+                  label={copy.social.goExplore}
                   secondary
-                  onPress={() => feed.refresh()}
+                  onPress={() => setScope('explore')}
                 />
               ) : null}
             </View>
-          }
-          renderItem={({ item }) => (
-            <SocialPostCard
-              framed
-              item={item}
-              token={token}
-              service={service}
-              busy={!!busy}
-              onLike={() => like(item.id, item.liked)}
-              onReplies={() => onOpen(item.id)}
-              onFollow={() => follow(item.author.id, item.author.following)}
-              onDelete={() => setDeleting(item.id)}
-              onMore={() =>
-                setModerating({
-                  kind: 'post',
-                  id: item.id,
-                  userId: item.author.id,
-                  name: item.author.fullName,
-                })
-              }
-            />
-          )}
-          ListEmptyComponent={
-            feed.loading ? (
-              <ActivityIndicator color={colors.brand} style={styles.loader} />
-            ) : !feed.error ? (
-              <View>
-                <EmptyState
-                  icon={Users}
-                  title={
-                    scope === 'following'
-                      ? copy.social.followingEmptyTitle
-                      : copy.social.emptyTitle
-                  }
-                  body={
-                    scope === 'following'
-                      ? copy.social.followingEmptyBody
-                      : copy.social.emptyBody
-                  }
-                />
-                {scope === 'following' ? (
-                  <Button
-                    label={copy.social.goExplore}
-                    secondary
-                    onPress={() => setScope('explore')}
-                  />
-                ) : null}
-              </View>
-            ) : null
-          }
-          ListFooterComponent={
-            feed.items.length && (revealing || feed.loadingMore) ? (
-              <View style={styles.more}>
-                <ActivityIndicator color={colors.brand} />
-                <Text style={styles.loadingText}>
-                  {copy.social.loadingMore}
-                </Text>
-              </View>
-            ) : null
-          }
-        />
-      )}
+          ) : null
+        }
+        ListFooterComponent={
+          feed.items.length && (revealing || feed.loadingMore) ? (
+            <View style={styles.more}>
+              <ActivityIndicator color={colors.brand} />
+              <Text style={styles.loadingText}>{copy.social.loadingMore}</Text>
+            </View>
+          ) : null
+        }
+      />
       <DeleteContentPrompt
         visible={!!deleting}
         busy={!!busy}

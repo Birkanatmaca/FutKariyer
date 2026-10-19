@@ -15,6 +15,7 @@ import {
 } from 'lucide-react-native';
 import { Screen } from '../shared/ui/Screen';
 import { Brand } from '../shared/ui/Brand';
+import { Avatar } from '../shared/ui/Avatar';
 import { copy } from '../shared/lib/copy';
 import { colors, radius, space } from '../styles/tokens';
 
@@ -25,8 +26,17 @@ type Entry = {
   onPress(): void;
 };
 type Section = { title: string; entries: Entry[] };
+// The signed-in account shown at the top of Diğer; it opens the Profil stack.
+export type MoreProfile = {
+  name: string;
+  role: string;
+  avatarUri?: string;
+  square: boolean;
+};
 
 export function MoreScreen({
+  profile,
+  onProfile,
   onSettings,
   onTeamRequests,
   onMyTeamApplications,
@@ -43,6 +53,9 @@ export function MoreScreen({
   isPlayer,
   isOrganizer = false,
 }: {
+  // Organizers have no profile, so they get no card.
+  profile?: MoreProfile | null;
+  onProfile(): void;
   onSettings(): void;
   onTeamRequests(): void;
   onMyTeamApplications(): void;
@@ -179,6 +192,34 @@ export function MoreScreen({
   return (
     <Screen>
       <Brand mark={false} />
+      {profile ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={profile.name + ', ' + text.profileOpen}
+          onPress={onProfile}
+          style={({ pressed }) => [styles.profile, pressed && styles.pressed]}
+        >
+          <Avatar
+            name={profile.name}
+            uri={profile.avatarUri}
+            size={56}
+            square={profile.square}
+            style={styles.avatar}
+          />
+          <View style={styles.text}>
+            <Text numberOfLines={1} style={styles.profileName}>
+              {profile.name}
+            </Text>
+            <Text numberOfLines={1} style={styles.hint}>
+              {profile.role}
+            </Text>
+            <Text numberOfLines={1} style={styles.profileLink}>
+              {text.profileOpen}
+            </Text>
+          </View>
+          <ChevronRight size={20} color={colors.muted} />
+        </Pressable>
+      ) : null}
       {sections.map(section => (
         <View key={section.title} style={styles.section}>
           <Text accessibilityRole="header" style={styles.sectionTitle}>
@@ -220,6 +261,19 @@ export function MoreScreen({
 }
 
 const styles = StyleSheet.create({
+  profile: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    backgroundColor: colors.surface,
+  },
+  avatar: { borderWidth: 2, borderColor: colors.brand },
+  profileName: { color: colors.text, fontSize: 17, fontWeight: '800' },
+  profileLink: { color: colors.brand, fontSize: 12, fontWeight: '700' },
   section: { gap: space.sm },
   sectionTitle: {
     color: colors.muted,

@@ -295,6 +295,7 @@ describe('organizer accounts', () => {
     act(() => {
       root = create(
         <MoreScreen
+          onProfile={noop}
           onSettings={noop}
           onTeamRequests={noop}
           onMyTeamApplications={noop}
