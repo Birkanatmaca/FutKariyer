@@ -13,7 +13,7 @@ import (
 // frontend/src/app/useAdminRoute.ts).
 var sections = map[string]bool{
 	"users": true, "clubs": true, "applications": true, "reports": true, "ads": true, "popups": true, "news": true,
-	"leagues": true, "payments": true, "gifts": true, "rating": true, "announcements": true, "audit": true,
+	"leagues": true, "payments": true, "gifts": true, "rating": true, "announcements": true, "audit": true, "logs": true,
 }
 var clubOverview = regexp.MustCompile(`^/securityadmin/clubs/[0-9a-f]{32}$`)
 

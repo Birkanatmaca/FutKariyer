@@ -47,6 +47,7 @@ import {
   auditRepository,
   createAuditService,
 } from '../features/audit';
+import { LogsPanel, createLogsService, logsRepository } from '../features/logs';
 import {
   AnnouncementsPanel,
   createAnnouncementService,
@@ -77,6 +78,7 @@ const paymentService = createPaymentService(paymentsRepository);
 const giftService = createGiftService(giftsRepository);
 const ratingService = createRatingService(ratingRepository);
 const auditService = createAuditService(auditRepository);
+const logsService = createLogsService(logsRepository);
 const announcementService = createAnnouncementService(announcementsRepository);
 const applicationService = createApplicationService(applicationsRepository);
 const reportsService = createReportsService(reportsRepository);
@@ -196,7 +198,8 @@ export function App() {
     route === 'gifts' ||
     route === 'rating' ||
     route === 'announcements' ||
-    route === 'audit'
+    route === 'audit' ||
+    route === 'logs'
       ? route === 'club-overview'
         ? 'clubs'
         : route
@@ -241,6 +244,8 @@ export function App() {
         <GiftsPanel service={giftService} />
       ) : section === 'rating' ? (
         <RatingPanel service={ratingService} />
+      ) : section === 'logs' ? (
+        <LogsPanel service={logsService} />
       ) : section === 'audit' ? (
         <AuditPanel service={auditService} />
       ) : section === 'announcements' ? (

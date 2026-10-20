@@ -12,6 +12,8 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync/atomic"
+	"time"
 )
 
 // Setup makes a JSON logger the process default. level: debug, info, warn
@@ -20,20 +22,42 @@ func Setup(service, env, version, level string) *slog.Logger {
 	return setup(os.Stdout, service, env, version, level)
 }
 
-func setup(w io.Writer, service, env, version, level string) *slog.Logger {
-	var lvl slog.Level
-	switch strings.ToLower(level) {
+// level is the minimum level written; the admin panel changes it at run
+// time (SetLevel).
+var level = new(slog.LevelVar)
+
+func parseLevel(name string) (slog.Level, bool) {
+	switch strings.ToLower(name) {
 	case "debug":
-		lvl = slog.LevelDebug
+		return slog.LevelDebug, true
+	case "info":
+		return slog.LevelInfo, true
 	case "warn":
-		lvl = slog.LevelWarn
+		return slog.LevelWarn, true
 	case "error":
-		lvl = slog.LevelError
-	default:
-		lvl = slog.LevelInfo
+		return slog.LevelError, true
 	}
+	return slog.LevelInfo, false
+}
+
+// SetLevel changes the minimum level (debug, info, warn, error) at once.
+func SetLevel(name string) bool {
+	lvl, ok := parseLevel(name)
+	if ok {
+		level.Set(lvl)
+	}
+	return ok
+}
+
+// Level is the current minimum level's name.
+func Level() string { return strings.ToLower(level.Level().String()) }
+
+func setup(w io.Writer, service, env, version, levelName string) *slog.Logger {
+	lvl, _ := parseLevel(levelName)
+	level.Set(lvl)
+	buildVersion = version
 	json := slog.NewJSONHandler(w, &slog.HandlerOptions{
-		Level: lvl,
+		Level: level,
 		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
 			if len(groups) == 0 && a.Key == slog.MessageKey {
 				a.Key = "event"
@@ -47,12 +71,15 @@ func setup(w io.Writer, service, env, version, level string) *slog.Logger {
 }
 
 // contextHandler adds the request fields of the context to every record
-// written with a *Context logging call.
+// written with a *Context logging call, and hands records to the sink.
 type contextHandler struct{ slog.Handler }
 
 func (h contextHandler) Handle(ctx context.Context, r slog.Record) error {
 	if info := infoFrom(ctx); info != nil {
 		r.AddAttrs(info.attrs()...)
+	}
+	if s := currentSink.Load(); s != nil {
+		(*s).Accept(toEntry(r))
 	}
 	return h.Handler.Handle(ctx, r)
 }
@@ -85,4 +112,47 @@ func MaskIP(ip string) string {
 // SetupTo is Setup writing to w (tests that read the log).
 func SetupTo(w io.Writer, service, env, version, level string) *slog.Logger {
 	return setup(w, service, env, version, level)
+}
+
+var buildVersion string
+
+// Entry is a log line as a sink receives it: the standard fields plus every
+// attribute by key.
+type Entry struct {
+	Time    time.Time
+	Level   string
+	Event   string
+	Version string
+	Attrs   map[string]any
+}
+
+// Sink receives every written line, e.g. to keep some of them in the
+// database for the admin panel. Accept must not block or log.
+type Sink interface{ Accept(Entry) }
+
+var currentSink atomic.Pointer[Sink]
+
+// SetSink installs (or with nil removes) the sink.
+func SetSink(s Sink) {
+	if s == nil {
+		currentSink.Store(nil)
+		return
+	}
+	currentSink.Store(&s)
+}
+
+func toEntry(r slog.Record) Entry {
+	e := Entry{Time: r.Time, Level: r.Level.String(), Event: r.Message, Version: buildVersion, Attrs: make(map[string]any, r.NumAttrs())}
+	r.Attrs(func(a slog.Attr) bool {
+		v := a.Value.Resolve()
+		if v.Kind() == slog.KindGroup {
+			for _, g := range v.Group() {
+				e.Attrs[a.Key+"."+g.Key] = g.Value.Resolve().Any()
+			}
+			return true
+		}
+		e.Attrs[a.Key] = v.Any()
+		return true
+	})
+	return e
 }

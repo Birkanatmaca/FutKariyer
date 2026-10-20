@@ -43,6 +43,7 @@ export function AdminLayout({
               'rating',
               'announcements',
               'audit',
+              'logs',
             ] as const
           ).map(value => (
             <a
@@ -87,6 +88,8 @@ export function AdminLayout({
                   ? '⚑'
                   : value === 'audit'
                   ? '🛡'
+                  : value === 'logs'
+                  ? '≋'
                   : '▤'}
               </span>
               {copy.panel[value]}

@@ -224,3 +224,22 @@ func (r *Registry) ObserveRequest(method, route string, status int, d time.Durat
 	r.Add("http_requests_total", "HTTP requests by route and status.", []string{"method", "route", "status"}, []string{method, route, strconv.Itoa(status)}, 1)
 	r.Observe("http_request_duration_seconds", "HTTP request latency by route.", LatencyBuckets, []string{"route"}, []string{route}, d.Seconds())
 }
+
+// Requests is the number of requests served since start and how many ended
+// with a server error (5xx).
+func (r *Registry) Requests() (total, serverErrors float64) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	c := r.counters["http_requests_total"]
+	if c == nil {
+		return 0, 0
+	}
+	for k, v := range c.values {
+		total += v
+		parts := strings.Split(k, "\x00")
+		if len(parts) == 3 && strings.HasPrefix(parts[2], "5") {
+			serverErrors += v
+		}
+	}
+	return total, serverErrors
+}

@@ -280,3 +280,13 @@ func clip(s string, n int) string {
 	}
 	return s
 }
+
+// CurrentUser is the account id the auth layer recorded for this request.
+func CurrentUser(ctx context.Context) string {
+	if info := infoFrom(ctx); info != nil {
+		info.mu.Lock()
+		defer info.mu.Unlock()
+		return info.UserID
+	}
+	return ""
+}

@@ -18,6 +18,14 @@ Amaç: canlıda bir sorun olduğunda **kullanıcı bize söylemeden önce** habe
 - **Uygulama hataları:** Sentry gelene kadar mobil (yakalanmamış JS hataları + `ErrorBoundary` "Bir şeyler ters gitti" ekranı) ve yönetici paneli (`window.onerror`) hataları `POST /v1/client-errors` ile sunucu loguna `client.error` olarak düşer (e-posta ve uzun sayılar silinir, IP başına dakikada 30). Yerel (native) çökmeler bunun kapsamında değildir; Sentry ister.
 - Kişisel veri testi: kayıt, giriş, hatalı şifre, e-posta doğrulama ve şifre sıfırlama akışlarının tüm log satırlarında e-posta, şifre, token ve kod geçmediği CI'da kontrol edilir.
 
+**Yönetici panelinde Sistem logları (kullanıcı kararı, 20 Ekim 2026):** Loglar dış bir servise gitmeden kendi veritabanımızda (`system_logs`, migration 00042) tutulur ve web panelinde "Sistem logları" sayfasında görülür ve yönetilir:
+- **Saklanan satırlar:** tüm hata ve uyarılar, güvenlik olayları, uygulama hata raporları, yavaş istek ve sorgular; "Tüm istekleri de sakla" açılırsa her istek (log sayfasının kendi istekleri hariç). Satırlar arka planda 2 saniyede bir toplu yazılır, istek beklemez; tampon dolarsa satır stdout'ta kalır ve "Yazılamayan satır" sayacı artar.
+- **Sayfa:** zaman aralığı (1 saat–30 gün), özet kartları (hata, uyarı, güvenlik, uygulama hatası, yavaş işlem; tıklanınca filtreler), canlı sayaçlar (sürüm, çalışma süresi, açılıştan beri istek ve 5xx, log seviyesi), hata/uyarı dağılım grafiği, en sık sorunlar ve yavaş/hatalı uç noktalar; hızlı filtreler, destek kodu/istek kimliği/olay/metin araması, hesap kimliği filtresi, 10 saniyede bir otomatik yenileme; satır ayrıntısında tüm alanlar ve "Bu isteğin tüm satırları" / "Bu hesabın satırları".
+- **Ayarlar:** log seviyesi (debug/info/warn/error, anında uygulanır; veritabanındaki ayar `LOG_LEVEL` ortam değişkeninin önüne geçer), tüm istekleri saklama ve saklama süreleri (istek logları 1–90, hata/uyarı 7–365, güvenlik 30–730 gün; saatlik temizlik). Her değişiklik İşlem geçmişine yazılır.
+- Mobil yönetici modunda bu sayfa yoktur.
+
+Bu yapı Grafana'ya olan ihtiyacı ilk aşamada kaldırır. Kalan seçenekler: Sentry (yerel/native çökmeler için), dışarıdan kesinti takibi ve alarm kanalı (Telegram).
+
 **Karar bekleyenler (madde 14):** logların ve metriklerin nereye gideceği (Grafana Cloud / kendi sunucumuz), Sentry hesabı, alarm kanalı (Telegram). Bunlar gelince Aşama 2 ve 4 yapılır; kod tarafı hazırdır (stdout JSON + `/metrics`).
 
 ## 1. Bugünkü durum

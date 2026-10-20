@@ -88,6 +88,9 @@ import (
 	socialapplication "futcareer/backend/internal/social/application"
 	socialdata "futcareer/backend/internal/social/data"
 	socialtransport "futcareer/backend/internal/social/transport"
+	systemlogsapplication "futcareer/backend/internal/systemlogs/application"
+	systemlogsdata "futcareer/backend/internal/systemlogs/data"
+	systemlogstransport "futcareer/backend/internal/systemlogs/transport"
 	teamsapplication "futcareer/backend/internal/teams/application"
 	teamsdata "futcareer/backend/internal/teams/data"
 	teamstransport "futcareer/backend/internal/teams/transport"
@@ -160,6 +163,12 @@ func run() error {
 	if err := migrations.CheckCurrent(startup, db); err != nil {
 		return err
 	}
+	// Sistem logları: lines worth keeping go to the database for the panel.
+	logWriter := systemlogsapplication.NewWriter(systemlogsdata.New(db))
+	logging.SetSink(logWriter)
+	defer logging.SetSink(nil)
+	systemlogsapplication.SetVersion(version)
+	systemLogs := systemlogsapplication.New(systemlogsdata.New(db), logWriter, registry)
 	repo := data.New(db)
 	if err := repo.DeleteExpiredSessions(startup); err != nil {
 		return fmt.Errorf("expired sessions could not be cleaned up: %w", err)
@@ -246,6 +255,8 @@ func run() error {
 	adminReports := moderationtransport.NewAdmin(moderationService)
 	adminFeatures.Handle("/v1/admin/reports", adminReports)
 	adminFeatures.Handle("/v1/admin/reports/", adminReports)
+	adminFeatures.Handle("/v1/admin/logs", systemlogstransport.NewAdmin(systemLogs))
+	adminFeatures.Handle("/v1/admin/logs/", systemlogstransport.NewAdmin(systemLogs))
 	adminPaymentHandler := paymenttransport.NewAdmin(paymentService)
 	adminFeatures.Handle("/v1/admin/payments", adminPaymentHandler)
 	adminFeatures.Handle("/v1/admin/payments/", adminPaymentHandler)
@@ -362,6 +373,14 @@ func run() error {
 	defer listener.Close()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	logWriterDone := make(chan struct{})
+	go func() {
+		defer close(logWriterDone)
+		logWriter.Run(ctx)
+	}()
+	// Stop first so the writer flushes and returns even when serving failed.
+	defer func() { stop(); <-logWriterDone }()
+	logging.Go(ctx, "logs.maintenance", systemLogs.Run)
 	logging.Go(ctx, "payment.refund_sync", func(ctx context.Context) { paymentService.RunGoogleRefundSync(ctx, time.Hour) })
 	logging.Go(ctx, "push.dispatch", func(ctx context.Context) { pushService.Run(ctx, 5*time.Second) })
 	if addr := os.Getenv("METRICS_ADDR"); addr != "" {
