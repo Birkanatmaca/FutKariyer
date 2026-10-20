@@ -3,6 +3,7 @@ import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LockKeyhole, UserRound } from 'lucide-react-native';
 import { AuthFrame } from './AuthFrame';
 import { AuthNotice } from './AuthNotice';
+import { AdminSecondFactor } from './AdminSecondFactor';
 import { Field } from '../../../shared/ui/Field';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
@@ -23,7 +24,8 @@ export function SignInScreen({
   onSignUp(): void;
   onForgot?: () => void;
 }) {
-  const { signIn, sessionNotice } = useAuth();
+  const { signIn, sessionNotice, adminChallenge, adminRecoveryCodes } =
+    useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [fields, setFields] = useState<FieldErrors>({});
@@ -66,68 +68,72 @@ export function SignInScreen({
   }
   return (
     <AuthFrame title={copy.signIn.title} description={copy.signIn.description}>
-      <View style={styles.form}>
-        <Field
-          label={copy.form.identifier}
-          icon={UserRound}
-          value={identifier}
-          onChangeText={setIdentifier}
-          error={fields.identifier}
-          placeholder={copy.form.identifierPlaceholder}
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="username"
-          textContentType="username"
-          maxLength={254}
-          editable={!busy}
-        />
-        <Field
-          label={copy.form.password}
-          icon={LockKeyhole}
-          value={password}
-          onChangeText={setPassword}
-          error={fields.password}
-          placeholder={copy.form.passwordPlaceholder}
-          password
-          autoCapitalize="none"
-          autoComplete="current-password"
-          textContentType="password"
-          editable={!busy}
-          returnKeyType="go"
-          onSubmitEditing={submit}
-        />
-        {onForgot ? (
-          <Pressable
-            accessibilityRole="button"
-            onPress={onForgot}
-            disabled={busy}
-            hitSlop={10}
-            style={styles.forgot}
-          >
-            <Text style={styles.forgotText}>{copy.security.forgotLink}</Text>
-          </Pressable>
-        ) : null}
-        <AuthNotice message={notice ?? sessionNotice} live />
-        <ErrorBanner message={error} />
-        <Button
-          label={copy.signIn.button}
-          onPress={submit}
-          loading={busy}
-          compact
-        />
-        <View style={styles.switch}>
-          <Text style={styles.question}>{copy.signIn.question}</Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={copy.signIn.question + ' ' + copy.signIn.link}
-            onPress={onSignUp}
-            disabled={busy}
-            hitSlop={12}
-          >
-            <Text style={styles.link}>{copy.signIn.link}</Text>
-          </Pressable>
+      {adminChallenge || adminRecoveryCodes.length ? (
+        <AdminSecondFactor />
+      ) : (
+        <View style={styles.form}>
+          <Field
+            label={copy.form.identifier}
+            icon={UserRound}
+            value={identifier}
+            onChangeText={setIdentifier}
+            error={fields.identifier}
+            placeholder={copy.form.identifierPlaceholder}
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="username"
+            textContentType="username"
+            maxLength={254}
+            editable={!busy}
+          />
+          <Field
+            label={copy.form.password}
+            icon={LockKeyhole}
+            value={password}
+            onChangeText={setPassword}
+            error={fields.password}
+            placeholder={copy.form.passwordPlaceholder}
+            password
+            autoCapitalize="none"
+            autoComplete="current-password"
+            textContentType="password"
+            editable={!busy}
+            returnKeyType="go"
+            onSubmitEditing={submit}
+          />
+          {onForgot ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={onForgot}
+              disabled={busy}
+              hitSlop={10}
+              style={styles.forgot}
+            >
+              <Text style={styles.forgotText}>{copy.security.forgotLink}</Text>
+            </Pressable>
+          ) : null}
+          <AuthNotice message={notice ?? sessionNotice} live />
+          <ErrorBanner message={error} />
+          <Button
+            label={copy.signIn.button}
+            onPress={submit}
+            loading={busy}
+            compact
+          />
+          <View style={styles.switch}>
+            <Text style={styles.question}>{copy.signIn.question}</Text>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={copy.signIn.question + ' ' + copy.signIn.link}
+              onPress={onSignUp}
+              disabled={busy}
+              hitSlop={12}
+            >
+              <Text style={styles.link}>{copy.signIn.link}</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
+      )}
     </AuthFrame>
   );
 }

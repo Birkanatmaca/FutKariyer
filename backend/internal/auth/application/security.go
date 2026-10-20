@@ -13,6 +13,7 @@ import (
 	"unicode/utf8"
 
 	"futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/audit"
 	"futcareer/backend/internal/platform/mail"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -83,7 +84,11 @@ func (s *Service) ChangePassword(ctx context.Context, token, current, next strin
 	if err != nil {
 		return err
 	}
-	return s.repo.ChangePassword(ctx, user.ID, string(hash), HashToken(token))
+	if err = s.repo.ChangePassword(ctx, user.ID, string(hash), HashToken(token)); err != nil {
+		return err
+	}
+	s.audit(ctx, audit.Entry{ActorType: "user", ActorID: user.ID, Action: "auth.password.changed"})
+	return nil
 }
 
 func newCode() (string, error) {
@@ -161,6 +166,7 @@ func (s *Service) VerifyEmail(ctx context.Context, token, code string) (PublicUs
 		if err = s.repo.MarkEmailVerified(ctx, public.ID); err != nil {
 			return PublicUser{}, err
 		}
+		s.audit(ctx, audit.Entry{ActorType: "user", ActorID: public.ID, Action: "auth.email.verified"})
 	}
 	return s.Me(ctx, token)
 }
@@ -240,6 +246,7 @@ func (s *Service) ResetPassword(ctx context.Context, in ResetInput) (AuthResult,
 	if err = s.repo.MarkEmailVerified(ctx, user.ID); err != nil {
 		return AuthResult{}, err
 	}
+	s.audit(ctx, audit.Entry{ActorType: "user", ActorID: user.ID, Action: "auth.password.reset"})
 	return s.Login(ctx, LoginInput{Email: user.Email, Password: in.Password, Device: in.Device})
 }
 
@@ -296,7 +303,11 @@ func (s *Service) EndSession(ctx context.Context, token, id string) error {
 	}
 	for _, item := range list {
 		if sessionID(item.TokenHash) == id {
-			return s.repo.DeleteUserSession(ctx, public.ID, item.TokenHash)
+			if err := s.repo.DeleteUserSession(ctx, public.ID, item.TokenHash); err != nil {
+				return err
+			}
+			s.audit(ctx, audit.Entry{ActorType: "user", ActorID: public.ID, Action: "auth.session.ended"})
+			return nil
 		}
 	}
 	return domain.ErrNotFound
@@ -311,5 +322,9 @@ func (s *Service) EndOtherSessions(ctx context.Context, token string) error {
 	if public.Delegate != nil {
 		return domain.ErrForbidden
 	}
-	return s.repo.DeleteOtherSessions(ctx, public.ID, HashToken(token))
+	if err = s.repo.DeleteOtherSessions(ctx, public.ID, HashToken(token)); err != nil {
+		return err
+	}
+	s.audit(ctx, audit.Entry{ActorType: "user", ActorID: public.ID, Action: "auth.sessions.ended_others"})
+	return nil
 }

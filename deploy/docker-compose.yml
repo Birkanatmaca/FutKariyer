@@ -30,6 +30,7 @@ services:
       MAIL_PROVIDER: ${MAIL_PROVIDER:-}
       MAIL_API_KEY: ${MAIL_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-}
+      ADMIN_TOTP_KEY: ${ADMIN_TOTP_KEY:-}
       TZ: Europe/Istanbul
     ports:
       - "80:8080"

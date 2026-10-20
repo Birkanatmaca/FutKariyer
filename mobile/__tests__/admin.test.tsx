@@ -90,6 +90,7 @@ function makeRepository(overrides: Partial<AuthRepository> = {}) {
     me: jest.fn().mockResolvedValue(playerUser),
     logout: jest.fn().mockResolvedValue(undefined),
     adminLogin: jest.fn(),
+    adminVerify: jest.fn(),
     adminMe: jest.fn().mockResolvedValue(adminUser),
     adminLogout: jest.fn().mockResolvedValue(undefined),
     ...overrides,
@@ -148,9 +149,10 @@ describe('admin sign-in and session', () => {
         .mockRejectedValue(
           new ApiError('Yönetici hesabı', 403, {}, 'wrong_portal'),
         ),
-      adminLogin: jest
-        .fn()
-        .mockResolvedValue({ token, expiresAt, user: adminUser }),
+      adminLogin: jest.fn().mockResolvedValue({
+        kind: 'session',
+        session: { token, expiresAt, user: adminUser },
+      }),
     });
     const storage = makeStorage();
     const auth = await renderAuth(repository, storage);
@@ -167,6 +169,85 @@ describe('admin sign-in and session', () => {
     // The user API never sees the admin token.
     expect(auth.current.token).toBeNull();
     expect(auth.current.user).toBeNull();
+  });
+
+  test('an admin with two-factor sign-in enters the code, then saves the recovery codes', async () => {
+    const challenge = {
+      challenge: 'c'.repeat(43),
+      setup: true,
+      secret: 'ABCD',
+      otpauthUri: 'otpauth://totp/Fut%20Career:admin?secret=ABCD',
+    };
+    const repository = makeRepository({
+      login: jest
+        .fn()
+        .mockRejectedValue(
+          new ApiError('Yönetici hesabı', 403, {}, 'wrong_portal'),
+        ),
+      adminLogin: jest.fn().mockResolvedValue({ kind: 'twoFactor', challenge }),
+      adminVerify: jest
+        .fn()
+        .mockRejectedValueOnce(new ApiError('Kod doğru değil.', 422))
+        .mockResolvedValueOnce({
+          session: { token, expiresAt, user: adminUser },
+          recoveryCodes: ['aaaa-bbbb', 'cccc-dddd'],
+        }),
+    });
+    const storage = makeStorage();
+    const auth = await renderAuth(repository, storage);
+    await act(async () =>
+      auth.current.signIn({ identifier: 'admin', password: 'secret' }),
+    );
+    expect(auth.current.adminChallenge).toEqual(challenge);
+    expect(auth.current.admin).toBeNull();
+    await act(async () => {
+      await expect(auth.current.verifyAdmin('000000')).rejects.toThrow(
+        'Kod doğru değil.',
+      );
+    });
+    // A wrong code keeps the step open.
+    expect(auth.current.adminChallenge).toEqual(challenge);
+    await act(async () => auth.current.verifyAdmin('123456'));
+    expect(repository.adminVerify).toHaveBeenLastCalledWith(
+      challenge.challenge,
+      '123456',
+    );
+    expect(auth.current.adminRecoveryCodes).toEqual(['aaaa-bbbb', 'cccc-dddd']);
+    expect(auth.current.admin).toBeNull();
+    expect(storage.save).not.toHaveBeenCalled();
+    await act(async () => auth.current.acceptAdmin());
+    expect(auth.current.admin).toEqual(adminUser);
+    expect(auth.current.adminRecoveryCodes).toEqual([]);
+    expect(storage.save).toHaveBeenCalledWith({
+      token,
+      expiresAt,
+      kind: 'admin',
+    });
+  });
+
+  test('an expired admin step starts over from the password', async () => {
+    const repository = makeRepository({
+      login: jest
+        .fn()
+        .mockRejectedValue(
+          new ApiError('Yönetici hesabı', 403, {}, 'wrong_portal'),
+        ),
+      adminLogin: jest.fn().mockResolvedValue({
+        kind: 'twoFactor',
+        challenge: { challenge: 'c'.repeat(43), setup: false },
+      }),
+      adminVerify: jest
+        .fn()
+        .mockRejectedValue(new ApiError('Süresi doldu', 401)),
+    });
+    const auth = await renderAuth(repository, makeStorage());
+    await act(async () =>
+      auth.current.signIn({ identifier: 'admin', password: 'secret' }),
+    );
+    await act(async () => {
+      await expect(auth.current.verifyAdmin('123456')).rejects.toThrow();
+    });
+    expect(auth.current.adminChallenge).toBeNull();
   });
 
   test('other 403 answers do not fall back to the admin login', async () => {
@@ -277,11 +358,11 @@ describe('admin HTTP', () => {
 
   test('the admin token login posts the identifier to the token endpoint', async () => {
     const fetchMock = respond(200, { token, expiresAt, user: adminUser });
-    const session = await authRepository.adminLogin({
+    const result = await authRepository.adminLogin({
       identifier: 'admin@example.com',
       password: 'secret',
     });
-    expect(session.user.role).toBe('admin');
+    expect(result.kind === 'session' && result.session.user.role).toBe('admin');
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toMatch(/\/v1\/admin\/auth\/token$/);
     expect(JSON.parse(init.body)).toEqual({

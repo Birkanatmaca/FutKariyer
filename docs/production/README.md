@@ -4,7 +4,7 @@
 
 | Dosya | Konu | Durum |
 |---|---|---|
-| [hesap-guvenligi.md](hesap-guvenligi.md) | E-posta doğrulama, şifre sıfırlama/değiştirme, yönetici 2FA, kaba kuvvet koruması, antrenör oturumu | 1–6 ve 8 yapıldı (20 Ekim); yönetici 2FA sırada |
+| [hesap-guvenligi.md](hesap-guvenligi.md) | E-posta doğrulama, şifre sıfırlama/değiştirme, yönetici 2FA, kaba kuvvet koruması, antrenör oturumu | Yapıldı (20 Ekim); QR kod ve hareketsizlik süresi kaldı |
 | [gizlilik.md](gizlilik.md) | Engelleme açıkları, medya erişimi, profil fotoğrafı, antrenörün kulüp verisini görmesi, KVKK | 1–5 kapatıldı (20 Ekim); KVKK maddeleri bekliyor |
 | [sunucu-ve-yedekleme.md](sunucu-ve-yedekleme.md) | Yedekleme, medya saklama, sunucu sağlamlığı, güvenlik duvarı, kotalar | Öneri, karar bekliyor |
 | [loglama.md](loglama.md) | Uçtan uca loglama, izleme ve alarm mimarisi | Öneri, en son birlikte incelenecek |

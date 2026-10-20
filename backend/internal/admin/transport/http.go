@@ -14,6 +14,7 @@ import (
 	"futcareer/backend/internal/admin/domain"
 	auth "futcareer/backend/internal/auth/application"
 	authdomain "futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/audit"
 	"futcareer/backend/internal/platform/ratelimit"
 )
 
@@ -34,6 +35,7 @@ func New(authService *auth.Service, service *application.Service, browser Browse
 		mux.Handle("/v1/admin/", features)
 	}
 	mux.HandleFunc("POST /v1/admin/auth/logout", h.logout)
+	mux.HandleFunc("GET /v1/admin/audit", h.auditLog)
 	for _, kind := range []string{"users", "clubs"} {
 		clubOnly := kind == "clubs"
 		path := "/v1/admin/" + kind
@@ -60,12 +62,20 @@ func New(authService *auth.Service, service *application.Service, browser Browse
 			h.tokenLogin(w, r)
 			return
 		}
+		if r.Method == "POST" && r.URL.Path == "/v1/admin/auth/token/2fa" {
+			h.tokenSecondFactor(w, r)
+			return
+		}
 		if !bearer && r.Method != "GET" && r.Method != "HEAD" && (h.browser.origin == "" || r.Header.Get("Origin") != h.browser.origin) {
 			writeError(w, 403, "invalid_origin", "Bu işlem yönetici panelinden yapılmalı.", nil)
 			return
 		}
 		if r.Method == "POST" && r.URL.Path == "/v1/admin/auth/login" {
 			h.login(w, r)
+			return
+		}
+		if r.Method == "POST" && r.URL.Path == "/v1/admin/auth/2fa" {
+			h.secondFactor(w, r)
 			return
 		}
 		if !bearer {
@@ -87,7 +97,18 @@ func New(authService *auth.Service, service *application.Service, browser Browse
 			write(w, 200, map[string]any{"user": user})
 			return
 		}
-		mux.ServeHTTP(w, r)
+		if r.Method == "GET" || r.Method == "HEAD" {
+			mux.ServeHTTP(w, r)
+			return
+		}
+		// Every successful admin write goes to the audit log: who, which
+		// route and which record; never the request body.
+		recorder := &audit.StatusRecorder{ResponseWriter: w}
+		mux.ServeHTTP(recorder, r)
+		if recorder.Status > 0 && recorder.Status < 400 && r.URL.Path != "/v1/admin/auth/logout" {
+			action, target := audit.Route(r.Method, r.URL.Path)
+			h.auth.Audit(r.Context(), audit.Entry{ActorType: "admin", ActorID: user.ID, Action: "admin." + action, TargetID: target, Details: map[string]any{"status": recorder.Status}})
+		}
 	})
 }
 func write(w http.ResponseWriter, status int, v any) {
@@ -113,6 +134,14 @@ func failure(w http.ResponseWriter, err error) {
 		writeError(w, 409, "username_exists", "Bu kullanıcı adı zaten kullanımda.", map[string]string{"username": "Bu kullanıcı adı zaten kullanımda."})
 	case errors.Is(err, domain.ErrProtected):
 		writeError(w, 403, "protected_account", "Yönetici hesapları bu panelden değiştirilemez veya silinemez.", nil)
+	case errors.Is(err, authdomain.ErrLoginLocked):
+		writeError(w, 429, "login_locked", "Çok fazla hatalı şifre denendi. Birkaç dakika sonra tekrar dene.", nil)
+	case errors.Is(err, authdomain.ErrCodeInvalid):
+		writeError(w, 422, "code_invalid", "Kod doğru değil. Uygulamadaki güncel kodu veya bir kurtarma kodunu gir.", map[string]string{"code": "Kod doğru değil."})
+	case errors.Is(err, authdomain.ErrChallengeInvalid):
+		writeError(w, 401, "challenge_invalid", "Giriş adımının süresi doldu. Şifrenle yeniden giriş yap.", nil)
+	case errors.Is(err, authdomain.ErrTwoFactorRequired):
+		writeError(w, 403, "two_factor_required", "Bu giriş iki aşamalı doğrulama ister; uygulamayı güncelle.", nil)
 	case errors.Is(err, authdomain.ErrWrongPortal):
 		writeError(w, 403, "wrong_portal", "Bu giriş yalnızca yönetici hesapları için. Diğer hesaplarla mobil uygulamadan giriş yap.", nil)
 	default:
@@ -210,4 +239,16 @@ func (h *Handler) password(w http.ResponseWriter, r *http.Request, clubOnly bool
 		return
 	}
 	w.WriteHeader(204)
+}
+
+// auditLog pages the audit log (İşlem geçmişi): ?page, ?action (prefix),
+// ?actor (an account id as actor, delegate or target).
+func (h *Handler) auditLog(w http.ResponseWriter, r *http.Request) {
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	result, err := h.service.AuditLog(r.Context(), domain.AuditQuery{Page: page, PageSize: 50, Action: r.URL.Query().Get("action"), ActorID: r.URL.Query().Get("actor")})
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, result)
 }

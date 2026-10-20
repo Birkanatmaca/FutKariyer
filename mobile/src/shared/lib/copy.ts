@@ -643,6 +643,24 @@ export const copy = {
       ' adresine gönderdiğimiz 6 haneli kodu gir. Doğrulayana kadar paylaşım yapamaz, başvuru ve tanışma isteği gönderemezsin.',
     verifyButton: 'Doğrula',
     verified: 'E-postan doğrulandı.',
+    adminTitle: 'İki aşamalı doğrulama',
+    adminHint:
+      'Kimlik doğrulayıcı uygulamandaki 6 haneli kodu gir. Telefonun yanında değilse kurtarma kodlarından birini kullanabilirsin.',
+    adminSetupTitle: 'Kimlik doğrulayıcıyı kur',
+    adminSetupHint:
+      'Google Authenticator, Microsoft Authenticator veya 1Password gibi bir uygulamada yeni hesap ekle ve aşağıdaki anahtarı gir; sonra gösterdiği 6 haneli kodu yaz.',
+    adminKey: 'Kurulum anahtarı',
+    adminOpenApp: 'Kimlik doğrulayıcıda aç',
+    adminCode: 'Doğrulama kodu',
+    adminCodeOrRecovery: 'Doğrulama veya kurtarma kodu',
+    adminVerify: 'Doğrula ve giriş yap',
+    adminBack: 'Şifre adımına dön',
+    adminRecoveryTitle: 'Kurtarma kodlarını sakla',
+    adminRecoveryHint:
+      'Telefonunu kaybedersen bu kodlardan biriyle giriş yapabilirsin. Her kod bir kez çalışır ve bu liste yalnızca şimdi gösterilir.',
+    adminRecoveryShare: 'Kodları kaydet',
+    adminRecoveryShareTitle: 'Fut Career yönetici kurtarma kodları',
+    adminRecoveryDone: 'Kodları kaydettim, devam et',
   },
   rating: {
     eyebrow: 'GLOBAL RATING',

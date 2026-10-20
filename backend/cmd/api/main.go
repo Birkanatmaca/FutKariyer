@@ -65,8 +65,10 @@ import (
 	paymentdomain "futcareer/backend/internal/payments/domain"
 	paymenttransport "futcareer/backend/internal/payments/transport"
 	"futcareer/backend/internal/platform/adminweb"
+	"futcareer/backend/internal/platform/audit"
 	platformmail "futcareer/backend/internal/platform/mail"
 	"futcareer/backend/internal/platform/postgres"
+	"futcareer/backend/internal/platform/secretbox"
 	playerapplication "futcareer/backend/internal/players/application"
 	playerdata "futcareer/backend/internal/players/data"
 	playertransport "futcareer/backend/internal/players/transport"
@@ -153,6 +155,15 @@ func run() error {
 		authService.WithMailer(sender)
 	} else {
 		slog.Warn("email sending is off (MAIL_PROVIDER unset): no email verification or password reset")
+	}
+	if key := os.Getenv("ADMIN_TOTP_KEY"); key != "" {
+		box, err := secretbox.FromKey(key)
+		if err != nil {
+			return fmt.Errorf("ADMIN_TOTP_KEY: %w", err)
+		}
+		authService.WithAdminSecondFactor(box)
+	} else {
+		slog.Warn("admin two-factor sign-in is off (ADMIN_TOTP_KEY unset); set it before going live")
 	}
 	gameBank, err := gamecatalog.Load()
 	if err != nil {
@@ -296,6 +307,7 @@ func run() error {
 		combined.Handle("/", guarded)
 		handler = combined
 	}
+	handler = audit.Middleware(handler)
 	server := &http.Server{Addr: env("LISTEN_ADDR", ":8080"), Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16384}
 	listener, err := net.Listen("tcp", server.Addr)
 	if err != nil {

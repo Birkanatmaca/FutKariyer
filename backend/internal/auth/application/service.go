@@ -16,7 +16,9 @@ import (
 
 	"futcareer/backend/internal/auth/domain"
 	coachdomain "futcareer/backend/internal/coaches/domain"
+	"futcareer/backend/internal/platform/audit"
 	platformmail "futcareer/backend/internal/platform/mail"
+	"futcareer/backend/internal/platform/secretbox"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -86,6 +88,8 @@ type Service struct {
 	now       func() time.Time
 	// mailer is nil while email sending is not configured.
 	mailer platformmail.Sender
+	// totpBox seals admin authenticator keys; nil turns admin 2FA off.
+	totpBox *secretbox.Box
 }
 
 func New(repo domain.Repository, ttl time.Duration) *Service {
@@ -173,10 +177,26 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 func (s *Service) Login(ctx context.Context, in LoginInput) (AuthResult, error) {
 	return s.login(ctx, in, "mobile")
 }
+
+// AdminLogin signs an admin in with the password alone; once a second factor
+// is configured (WithAdminSecondFactor) it refuses and AdminSignIn is used.
 func (s *Service) AdminLogin(ctx context.Context, in LoginInput) (AuthResult, error) {
+	if s.totpBox != nil {
+		return AuthResult{}, domain.ErrTwoFactorRequired
+	}
 	return s.login(ctx, in, "admin")
 }
 func (s *Service) login(ctx context.Context, in LoginInput, audience string) (AuthResult, error) {
+	user, err := s.authenticate(ctx, in, audience)
+	if err != nil {
+		return AuthResult{}, err
+	}
+	return s.openSession(ctx, user, audience, in.Device)
+}
+
+// authenticate checks the password (with the wrong-password slowdown) and
+// that the account may sign in to this audience.
+func (s *Service) authenticate(ctx context.Context, in LoginInput, audience string) (domain.User, error) {
 	identifier := in.Identifier
 	if identifier == "" {
 		identifier = in.Email
@@ -184,26 +204,26 @@ func (s *Service) login(ctx context.Context, in LoginInput, audience string) (Au
 	user, err := s.repo.UserByLogin(ctx, canonicalEmail(identifier))
 	if errors.Is(err, domain.ErrNotFound) {
 		_ = bcrypt.CompareHashAndPassword(s.dummyHash, []byte(in.Password))
-		return AuthResult{}, domain.ErrUnauthorized
+		return domain.User{}, domain.ErrUnauthorized
 	}
 	if err != nil {
-		return AuthResult{}, err
+		return domain.User{}, err
 	}
 	if user.LockedUntil.After(s.now()) {
-		return AuthResult{}, domain.LoginLockedError{Until: user.LockedUntil}
+		return domain.User{}, domain.LoginLockedError{Until: user.LockedUntil}
 	}
 	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)) != nil {
 		until, err := s.repo.LoginFailed(ctx, user.ID, s.now())
 		if err != nil {
-			return AuthResult{}, err
+			return domain.User{}, err
 		}
 		if !until.IsZero() {
-			return AuthResult{}, domain.LoginLockedError{Until: until}
+			return domain.User{}, domain.LoginLockedError{Until: until}
 		}
-		return AuthResult{}, domain.ErrUnauthorized
+		return domain.User{}, domain.ErrUnauthorized
 	}
 	if err = s.repo.LoginSucceeded(ctx, user.ID); err != nil {
-		return AuthResult{}, err
+		return domain.User{}, err
 	}
 	// Hashes from before the cost was raised are upgraded on the next sign-in.
 	if cost, err := bcrypt.Cost([]byte(user.PasswordHash)); err == nil && cost < PasswordCost {
@@ -215,22 +235,26 @@ func (s *Service) login(ctx context.Context, in LoginInput, audience string) (Au
 	if !user.Active {
 		switch user.ApprovalStatus {
 		case "pending":
-			return AuthResult{}, domain.ErrPendingApproval
+			return domain.User{}, domain.ErrPendingApproval
 		case "rejected":
-			return AuthResult{}, domain.ErrApplicationRejected
+			return domain.User{}, domain.ErrApplicationRejected
 		}
-		return AuthResult{}, domain.ErrUnauthorized
+		return domain.User{}, domain.ErrUnauthorized
 	}
 	if (user.Role == "admin") != (audience == "admin") {
-		return AuthResult{}, domain.ErrWrongPortal
+		return domain.User{}, domain.ErrWrongPortal
 	}
+	return user, nil
+}
+
+func (s *Service) openSession(ctx context.Context, user domain.User, audience, device string) (AuthResult, error) {
 	token, session, err := s.newSession(user.ID)
 	if err != nil {
 		return AuthResult{}, err
 	}
 	session.AuthVersion = user.AuthVersion
 	session.Audience = audience
-	session.Device = deviceLabel(in.Device)
+	session.Device = deviceLabel(device)
 	if audience == "admin" && session.ExpiresAt.After(s.now().Add(8*time.Hour)) {
 		session.ExpiresAt = s.now().UTC().Add(8 * time.Hour)
 	}
@@ -380,6 +404,7 @@ func (s *Service) SwitchToClub(ctx context.Context, token, clubID string) (AuthR
 	if err != nil {
 		return AuthResult{}, err
 	}
+	s.audit(ctx, audit.Entry{ActorType: "user", ActorID: club.ID, DelegatedBy: coachUser.ID, Action: "auth.switch", TargetType: "user", TargetID: club.ID})
 	return AuthResult{Token: clubToken, ExpiresAt: session.ExpiresAt, User: public}, nil
 }
 
@@ -402,7 +427,11 @@ func (s *Service) DeleteAccount(ctx context.Context, token, password string) err
 	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) != nil {
 		return ValidationError{"password": "Şifre doğru değil."}
 	}
-	return s.repo.DeleteUser(ctx, user.ID)
+	if err = s.repo.DeleteUser(ctx, user.ID); err != nil {
+		return err
+	}
+	s.audit(ctx, audit.Entry{ActorType: "user", ActorID: user.ID, Action: "auth.account.deleted", Details: map[string]any{"role": user.Role}})
+	return nil
 }
 
 func (s *Service) Logout(ctx context.Context, token string) error {

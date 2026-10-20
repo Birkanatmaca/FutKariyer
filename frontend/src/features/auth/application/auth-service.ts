@@ -7,6 +7,8 @@ export function createAuthService(repository: AuthRepository) {
         ...input,
         identifier: input.identifier.trim().toLowerCase(),
       }),
+    verify: (challenge: string, code: string) =>
+      repository.verify(challenge, code.replace(/\s/g, '')),
     logout: () => repository.logout(),
   };
 }

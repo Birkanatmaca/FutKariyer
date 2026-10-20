@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/audit"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -357,4 +358,109 @@ func (r *Postgres) DeleteOtherSessions(ctx context.Context, userID, keepTokenHas
 func (r *Postgres) TouchSession(ctx context.Context, tokenHash string, now time.Time) error {
 	_, err := r.db.ExecContext(ctx, `UPDATE sessions SET last_seen_at=$2 WHERE token_hash=$1 AND last_seen_at<$3`, tokenHash, now, now.Add(-5*time.Minute))
 	return err
+}
+
+func (r *Postgres) SecondFactor(ctx context.Context, userID string) (domain.AdminSecondFactor, error) {
+	var out domain.AdminSecondFactor
+	err := r.db.QueryRowContext(ctx, `SELECT COALESCE(totp_secret,''::bytea),totp_enabled_at IS NOT NULL,totp_last_step FROM users WHERE id=$1`, userID).Scan(&out.Sealed, &out.Enabled, &out.LastStep)
+	if errors.Is(err, sql.ErrNoRows) {
+		return out, domain.ErrNotFound
+	}
+	return out, err
+}
+
+func (r *Postgres) CreateChallenge(ctx context.Context, tokenHash, userID string, pendingSecret []byte, expires time.Time) error {
+	if _, err := r.db.ExecContext(ctx, `DELETE FROM admin_challenges WHERE expires_at<now()`); err != nil {
+		return err
+	}
+	_, err := r.db.ExecContext(ctx, `INSERT INTO admin_challenges(token_hash,user_id,pending_secret,expires_at) VALUES($1,$2,$3,$4)`, tokenHash, userID, pendingSecret, expires)
+	return err
+}
+
+func (r *Postgres) Challenge(ctx context.Context, tokenHash string, now time.Time) (domain.Challenge, error) {
+	var out domain.Challenge
+	err := r.db.QueryRowContext(ctx, `SELECT user_id,pending_secret,attempts FROM admin_challenges WHERE token_hash=$1 AND expires_at>$2`, tokenHash, now).Scan(&out.UserID, &out.PendingSecret, &out.Attempts)
+	if errors.Is(err, sql.ErrNoRows) {
+		return out, domain.ErrChallengeInvalid
+	}
+	return out, err
+}
+
+func (r *Postgres) ChallengeFailed(ctx context.Context, tokenHash string) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE admin_challenges SET attempts=attempts+1 WHERE token_hash=$1`, tokenHash)
+	return err
+}
+
+func (r *Postgres) DeleteChallenge(ctx context.Context, tokenHash string) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM admin_challenges WHERE token_hash=$1`, tokenHash)
+	return err
+}
+
+func (r *Postgres) EnableSecondFactor(ctx context.Context, userID string, sealed []byte, step int64, recoveryHashes []string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	if _, err = tx.ExecContext(ctx, `UPDATE users SET totp_secret=$2,totp_enabled_at=now(),totp_last_step=$3 WHERE id=$1 AND role='admin'`, userID, sealed, step); err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, `DELETE FROM admin_recovery_codes WHERE user_id=$1`, userID); err != nil {
+		return err
+	}
+	for _, hash := range recoveryHashes {
+		if _, err = tx.ExecContext(ctx, `INSERT INTO admin_recovery_codes(user_id,code_hash) VALUES($1,$2)`, userID, hash); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func (r *Postgres) UseStep(ctx context.Context, userID string, step int64) (bool, error) {
+	result, err := r.db.ExecContext(ctx, `UPDATE users SET totp_last_step=$2 WHERE id=$1 AND totp_last_step<$2`, userID, step)
+	if err != nil {
+		return false, err
+	}
+	n, err := result.RowsAffected()
+	return n == 1, err
+}
+
+func (r *Postgres) UseRecoveryCode(ctx context.Context, userID, codeHash string) (bool, error) {
+	result, err := r.db.ExecContext(ctx, `UPDATE admin_recovery_codes SET used_at=now() WHERE user_id=$1 AND code_hash=$2 AND used_at IS NULL`, userID, codeHash)
+	if err != nil {
+		return false, err
+	}
+	n, err := result.RowsAffected()
+	return n == 1, err
+}
+
+func (r *Postgres) ResetSecondFactor(ctx context.Context, login string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	var id string
+	err = tx.QueryRowContext(ctx, `UPDATE users SET totp_secret=NULL,totp_enabled_at=NULL,totp_last_step=0,auth_version=auth_version+1
+		WHERE (email=$1 OR username=$1) AND role='admin' RETURNING id`, login).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, `DELETE FROM admin_recovery_codes WHERE user_id=$1`, id); err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, `DELETE FROM sessions WHERE user_id=$1`, id); err != nil {
+		return err
+	}
+	if err = audit.Write(ctx, tx, audit.Entry{ActorType: "system", Action: "admin.2fa.reset", TargetType: "user", TargetID: id}); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *Postgres) Audit(ctx context.Context, entry audit.Entry) error {
+	return audit.Write(ctx, r.db, entry)
 }

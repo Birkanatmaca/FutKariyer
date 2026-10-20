@@ -87,12 +87,61 @@ func (h *Handler) tokenLogin(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &in) {
 		return
 	}
-	result, err := h.auth.AdminLogin(r.Context(), in)
+	in.Device = r.Header.Get("X-Device")
+	result, err := h.auth.AdminSignIn(r.Context(), in)
 	if err != nil {
 		failure(w, err)
 		return
 	}
-	write(w, 200, map[string]any{"token": result.Token, "user": result.User, "expiresAt": result.ExpiresAt})
+	if result.Challenge != nil {
+		write(w, 200, map[string]any{"twoFactor": result.Challenge})
+		return
+	}
+	write(w, 200, map[string]any{"token": result.Session.Token, "user": result.Session.User, "expiresAt": result.Session.ExpiresAt})
+}
+
+type secondFactorInput struct {
+	Challenge string `json:"challenge"`
+	Code      string `json:"code"`
+}
+
+// tokenSecondFactor finishes a mobile admin sign-in with the authenticator
+// (or a recovery) code.
+func (h *Handler) tokenSecondFactor(w http.ResponseWriter, r *http.Request) {
+	if !h.allowLogin(w, r) {
+		return
+	}
+	var in secondFactorInput
+	if !decode(w, r, &in) {
+		return
+	}
+	result, err := h.auth.AdminVerify(r.Context(), in.Challenge, in.Code, r.Header.Get("X-Device"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, map[string]any{"token": result.Token, "user": result.User, "expiresAt": result.ExpiresAt, "recoveryCodes": result.RecoveryCodes})
+}
+
+// secondFactor finishes a web admin sign-in and sets the session cookie.
+func (h *Handler) secondFactor(w http.ResponseWriter, r *http.Request) {
+	if !h.allowLogin(w, r) {
+		return
+	}
+	var in secondFactorInput
+	if !decode(w, r, &in) {
+		return
+	}
+	result, err := h.auth.AdminVerify(r.Context(), in.Challenge, in.Code, r.UserAgent())
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	if old := cookieToken(r); old != "" {
+		_ = h.auth.Logout(r.Context(), old)
+	}
+	h.cookie(w, result.Token, result.ExpiresAt)
+	write(w, 200, map[string]any{"user": result.User, "expiresAt": result.ExpiresAt, "recoveryCodes": result.RecoveryCodes})
 }
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
@@ -103,11 +152,17 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	if !decode(w, r, &in) {
 		return
 	}
-	result, err := h.auth.AdminLogin(r.Context(), in)
+	in.Device = r.UserAgent()
+	signIn, err := h.auth.AdminSignIn(r.Context(), in)
 	if err != nil {
 		failure(w, err)
 		return
 	}
+	if signIn.Challenge != nil {
+		write(w, 200, map[string]any{"twoFactor": signIn.Challenge})
+		return
+	}
+	result := *signIn.Session
 	if old := cookieToken(r); old != "" {
 		if err = h.auth.Logout(r.Context(), old); err != nil {
 			_ = h.auth.Logout(r.Context(), result.Token)

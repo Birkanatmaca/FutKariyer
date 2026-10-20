@@ -4,16 +4,23 @@ import { Brand } from '../../../shared/ui/Brand';
 import { Button } from '../../../shared/ui/Button';
 import { Field } from '../../../shared/ui/Field';
 import { Feedback } from '../../../shared/ui/Feedback';
-import type { LoginInput } from '../domain/models';
+import type { LoginInput, TwoFactorChallenge } from '../domain/models';
+import { SecondFactorStep } from './SecondFactorStep';
 
 export function LoginScreen({
   onLogin,
   serviceError,
   onRetry,
+  challenge,
+  onVerify,
+  onCancelChallenge,
 }: {
   onLogin(input: LoginInput): Promise<void>;
   serviceError: string | null;
   onRetry(): void;
+  challenge: TwoFactorChallenge | null;
+  onVerify(code: string): Promise<void>;
+  onCancelChallenge(): void;
 }) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -61,42 +68,56 @@ export function LoginScreen({
       <section className="login-form-area">
         <div className="login-form-card">
           <p className="eyebrow">{copy.brand}</p>
-          <h2>{copy.login.formTitle}</h2>
-          <p className="muted">{copy.login.formDescription}</p>
-          <Feedback message={serviceError} />
-          {serviceError && (
-            <Button variant="secondary" onClick={onRetry}>
-              {copy.form.retry}
-            </Button>
+          {challenge ? (
+            <SecondFactorStep
+              key={challenge.challenge}
+              challenge={challenge}
+              onVerify={onVerify}
+              onBack={() => {
+                setPassword('');
+                onCancelChallenge();
+              }}
+            />
+          ) : (
+            <>
+              <h2>{copy.login.formTitle}</h2>
+              <p className="muted">{copy.login.formDescription}</p>
+              <Feedback message={serviceError} />
+              {serviceError && (
+                <Button variant="secondary" onClick={onRetry}>
+                  {copy.form.retry}
+                </Button>
+              )}
+              <form onSubmit={submit} className="form-stack">
+                <Field
+                  label={copy.login.username}
+                  value={identifier}
+                  onChange={event => setIdentifier(event.target.value)}
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  maxLength={32}
+                  required
+                  disabled={busy}
+                />
+                <Field
+                  label={copy.login.password}
+                  type="password"
+                  value={password}
+                  onChange={event => setPassword(event.target.value)}
+                  autoComplete="current-password"
+                  required
+                  disabled={busy}
+                />
+                <Feedback message={error} />
+                <Button type="submit" busy={busy}>
+                  {copy.login.button}
+                  <span aria-hidden="true">↗</span>
+                </Button>
+              </form>
+              <p className="login-mobile-hint">{copy.login.mobileHint}</p>
+            </>
           )}
-          <form onSubmit={submit} className="form-stack">
-            <Field
-              label={copy.login.username}
-              value={identifier}
-              onChange={event => setIdentifier(event.target.value)}
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              maxLength={32}
-              required
-              disabled={busy}
-            />
-            <Field
-              label={copy.login.password}
-              type="password"
-              value={password}
-              onChange={event => setPassword(event.target.value)}
-              autoComplete="current-password"
-              required
-              disabled={busy}
-            />
-            <Feedback message={error} />
-            <Button type="submit" busy={busy}>
-              {copy.login.button}
-              <span aria-hidden="true">↗</span>
-            </Button>
-          </form>
-          <p className="login-mobile-hint">{copy.login.mobileHint}</p>
         </div>
       </section>
     </main>

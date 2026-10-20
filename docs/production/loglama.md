@@ -168,6 +168,8 @@ TFF, App Store, Google Play, FCM, e-posta servisi çağrıları ortak bir `http.
 
 ## 7. Denetim ve güvenlik kayıtları
 
+**Durum:** `audit_log` tablosu, yönetici/kulüp adına yazma kayıtları, hesap güvenliği olayları ve panelde İşlem geçmişi 20 Ekim 2026'da yapıldı (migration 00041). Aşağıdaki güvenlik olayı logları ve örüntü alarmları loglama işiyle gelecek.
+
 Bunlar uygulama logundan **ayrıdır**: veritabanında, değiştirilemez (yalnızca INSERT yetkisi), uzun süre saklanır, yönetici panelinden okunur.
 
 ```sql

@@ -9,6 +9,7 @@ import (
 
 	"futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/audit"
 )
 
 // The single policy for switched sessions (a staff coach running a club
@@ -75,8 +76,22 @@ func DelegationGuard(service *application.Service, next http.Handler) http.Handl
 			writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
 			return
 		}
-		if !delegated || allowed(r, permissions) {
+		if !delegated {
 			next.ServeHTTP(w, r)
+			return
+		}
+		if allowed(r, permissions) {
+			if r.Method == http.MethodGet || r.Method == http.MethodHead {
+				next.ServeHTTP(w, r)
+				return
+			}
+			// Every write a coach makes for a club goes to the audit log.
+			recorder := &audit.StatusRecorder{ResponseWriter: w}
+			next.ServeHTTP(recorder, r)
+			if recorder.Status > 0 && recorder.Status < 400 {
+				action, target := audit.Route(r.Method, r.URL.Path)
+				service.AuditDelegatedWrite(r.Context(), bearer(r), action, target)
+			}
 			return
 		}
 		w.Header().Set("Cache-Control", "no-store")

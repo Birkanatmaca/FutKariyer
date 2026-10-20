@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"futcareer/backend/internal/platform/audit"
 )
 
 var (
@@ -28,7 +30,26 @@ var (
 	ErrMailUnavailable = errors.New("mail unavailable")
 	// ErrEmailUnverified: the action needs a verified email address.
 	ErrEmailUnverified = errors.New("email not verified")
+	// ErrTwoFactorRequired: an admin password matched but the second factor
+	// is still due (AdminSignIn returns the challenge).
+	ErrTwoFactorRequired = errors.New("second factor required")
+	// ErrChallengeInvalid: the sign-in step expired, was used up or is unknown.
+	ErrChallengeInvalid = errors.New("invalid sign-in challenge")
 )
+
+// AdminSecondFactor is an admin's authenticator state.
+type AdminSecondFactor struct {
+	Sealed   []byte
+	Enabled  bool
+	LastStep int64
+}
+
+// Challenge is a matched admin password waiting for its second factor.
+type Challenge struct {
+	UserID        string
+	PendingSecret []byte
+	Attempts      int
+}
 
 // LoginLockedError carries when a slowed-down account may try again.
 type LoginLockedError struct{ Until time.Time }
@@ -122,6 +143,26 @@ type Repository interface {
 	DeleteOtherSessions(ctx context.Context, userID, keepTokenHash string) error
 	// TouchSession records use at most every few minutes.
 	TouchSession(ctx context.Context, tokenHash string, now time.Time) error
+
+	// Admin second factor (20 Oct 2026).
+	SecondFactor(ctx context.Context, userID string) (AdminSecondFactor, error)
+	CreateChallenge(ctx context.Context, tokenHash, userID string, pendingSecret []byte, expires time.Time) error
+	// Challenge returns a live challenge or ErrChallengeInvalid.
+	Challenge(ctx context.Context, tokenHash string, now time.Time) (Challenge, error)
+	ChallengeFailed(ctx context.Context, tokenHash string) error
+	DeleteChallenge(ctx context.Context, tokenHash string) error
+	// EnableSecondFactor stores the sealed key, the step just used and the
+	// hashes of fresh recovery codes (replacing older ones).
+	EnableSecondFactor(ctx context.Context, userID string, sealed []byte, step int64, recoveryHashes []string) error
+	// UseStep records a step as used; false when it was not newer.
+	UseStep(ctx context.Context, userID string, step int64) (bool, error)
+	// UseRecoveryCode spends an unused recovery code; false when none matched.
+	UseRecoveryCode(ctx context.Context, userID, codeHash string) (bool, error)
+	// ResetSecondFactor removes an admin's authenticator and recovery codes
+	// and ends their sessions (server command for a lost phone).
+	ResetSecondFactor(ctx context.Context, login string) error
+	// Audit appends to the audit log.
+	Audit(ctx context.Context, entry audit.Entry) error
 }
 
 // Application is a club or organizer sign-up waiting for administrator review.

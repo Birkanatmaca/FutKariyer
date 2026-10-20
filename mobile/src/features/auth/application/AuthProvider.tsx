@@ -13,6 +13,8 @@ import { AvatarTokenProvider } from '../../../shared/lib/avatar';
 import { copy } from '../../../shared/lib/copy';
 import type {
   AccountApplicationInput,
+  AdminChallenge,
+  AdminSession,
   AdminUser,
   AuthRepository,
   Delegate,
@@ -54,6 +56,14 @@ type AuthContextValue = {
   coach: User | null;
   switchToClub(clubId: string): Promise<void>;
   switchBack(): Promise<void>;
+  // Admin second sign-in step (20 Oct 2026): set after an admin password
+  // matched; verifyAdmin finishes it. Right after the authenticator is set
+  // up, adminRecoveryCodes are shown once and acceptAdmin enters admin mode.
+  adminChallenge: AdminChallenge | null;
+  adminRecoveryCodes: string[];
+  verifyAdmin(code: string): Promise<void>;
+  cancelAdminChallenge(): void;
+  acceptAdmin(): Promise<void>;
   // Account security (20 Oct 2026).
   forgotPassword(email: string): Promise<void>;
   // Sets the new password and signs this device in.
@@ -216,14 +226,11 @@ export function AuthProvider({
           throw error;
         }
         const result = await repository.adminLogin(input);
-        const saved = {
-          token: result.token,
-          expiresAt: result.expiresAt,
-          kind: 'admin' as SessionKind,
-        };
-        await persist(saved);
-        setSessionNotice(null);
-        setCurrent({ kind: 'admin', saved, admin: result.user });
+        if (result.kind === 'twoFactor') {
+          setAdminChallenge(result.challenge);
+          return;
+        }
+        await enterAdmin(result.session);
       }
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
@@ -231,6 +238,53 @@ export function AuthProvider({
       }
       throw error;
     }
+  }
+  const [adminChallenge, setAdminChallenge] = useState<AdminChallenge | null>(
+    null,
+  );
+  const [pendingAdmin, setPendingAdmin] = useState<{
+    session: AdminSession;
+    codes: string[];
+  } | null>(null);
+  async function enterAdmin(result: AdminSession) {
+    const saved = {
+      token: result.token,
+      expiresAt: result.expiresAt,
+      kind: 'admin' as SessionKind,
+    };
+    await persist(saved);
+    setSessionNotice(null);
+    setCurrent({ kind: 'admin', saved, admin: result.user });
+  }
+  async function verifyAdmin(code: string) {
+    if (!adminChallenge) return;
+    try {
+      const result = await repository.adminVerify(
+        adminChallenge.challenge,
+        code,
+      );
+      setAdminChallenge(null);
+      if (result.recoveryCodes.length) {
+        setPendingAdmin({
+          session: result.session,
+          codes: result.recoveryCodes,
+        });
+        return;
+      }
+      await enterAdmin(result.session);
+    } catch (error) {
+      // An expired or used-up step starts over from the password.
+      if (error instanceof ApiError && error.status === 401) {
+        setAdminChallenge(null);
+      }
+      throw error;
+    }
+  }
+  async function acceptAdmin() {
+    if (!pendingAdmin) return;
+    const { session: next } = pendingAdmin;
+    setPendingAdmin(null);
+    await enterAdmin(next);
   }
   async function signUp(input: RegisterInput) {
     await acceptUser(await repository.register(input));
@@ -380,6 +434,11 @@ export function AuthProvider({
         coach: home?.user ?? null,
         switchToClub,
         switchBack,
+        adminChallenge,
+        adminRecoveryCodes: pendingAdmin?.codes ?? [],
+        verifyAdmin,
+        cancelAdminChallenge: () => setAdminChallenge(null),
+        acceptAdmin,
         forgotPassword,
         resetPassword,
         verifyEmail,

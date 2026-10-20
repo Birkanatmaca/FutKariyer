@@ -11,7 +11,8 @@ export type PanelSection =
   | 'payments'
   | 'gifts'
   | 'rating'
-  | 'announcements';
+  | 'announcements'
+  | 'audit';
 type Route = 'login' | PanelSection | 'club-overview' | 'missing';
 type Location = { route: Route; clubId: string | null };
 const clubOverviewPath = /^\/securityadmin\/clubs\/([0-9a-f]{32})$/;
@@ -36,6 +37,7 @@ function currentRoute(): Route {
   if (path === '/securityadmin/gifts') return 'gifts';
   if (path === '/securityadmin/rating') return 'rating';
   if (path === '/securityadmin/announcements') return 'announcements';
+  if (path === '/securityadmin/audit') return 'audit';
   return 'missing';
 }
 function currentLocation(): Location {

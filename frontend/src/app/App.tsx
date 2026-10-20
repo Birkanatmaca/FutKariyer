@@ -4,6 +4,7 @@ import {
   authRepository,
   useAdminAuth,
   LoginScreen,
+  RecoveryCodesScreen,
 } from '../features/auth';
 import {
   createAdminService,
@@ -42,6 +43,11 @@ import {
   ratingRepository,
 } from '../features/rating';
 import {
+  AuditPanel,
+  auditRepository,
+  createAuditService,
+} from '../features/audit';
+import {
   AnnouncementsPanel,
   createAnnouncementService,
   announcementsRepository,
@@ -70,6 +76,7 @@ const leagueService = createLeagueService(leagueRepository);
 const paymentService = createPaymentService(paymentsRepository);
 const giftService = createGiftService(giftsRepository);
 const ratingService = createRatingService(ratingRepository);
+const auditService = createAuditService(auditRepository);
 const announcementService = createAnnouncementService(announcementsRepository);
 const applicationService = createApplicationService(applicationsRepository);
 const reportsService = createReportsService(reportsRepository);
@@ -162,6 +169,17 @@ export function App() {
         onLogin={auth.login}
         serviceError={auth.error}
         onRetry={auth.retry}
+        challenge={auth.challenge}
+        onVerify={auth.verify}
+        onCancelChallenge={auth.cancelChallenge}
+      />
+    );
+  }
+  if (auth.recoveryCodes.length) {
+    return (
+      <RecoveryCodesScreen
+        codes={auth.recoveryCodes}
+        onDone={auth.acknowledgeRecoveryCodes}
       />
     );
   }
@@ -177,7 +195,8 @@ export function App() {
     route === 'payments' ||
     route === 'gifts' ||
     route === 'rating' ||
-    route === 'announcements'
+    route === 'announcements' ||
+    route === 'audit'
       ? route === 'club-overview'
         ? 'clubs'
         : route
@@ -222,6 +241,8 @@ export function App() {
         <GiftsPanel service={giftService} />
       ) : section === 'rating' ? (
         <RatingPanel service={ratingService} />
+      ) : section === 'audit' ? (
+        <AuditPanel service={auditService} />
       ) : section === 'announcements' ? (
         <AnnouncementsPanel service={announcementService} />
       ) : (

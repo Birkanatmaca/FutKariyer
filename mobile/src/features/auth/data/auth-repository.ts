@@ -3,6 +3,7 @@ import { copy } from '../../../shared/lib/copy';
 import {
   staffPermissions,
   type AccountApplicationResult,
+  type AdminChallenge,
   type AdminSession,
   type AdminUser,
   type AuthRepository,
@@ -173,10 +174,9 @@ export const authRepository: AuthRepository = {
     });
   },
   async sessions(token) {
-    const data = await request<{ sessions: SessionInfo[] }>(
-      '/v1/me/sessions',
-      { token },
-    );
+    const data = await request<{ sessions: SessionInfo[] }>('/v1/me/sessions', {
+      token,
+    });
     if (!data || !Array.isArray(data.sessions)) {
       throw new ApiError(copy.form.unexpected);
     }
@@ -201,12 +201,40 @@ export const authRepository: AuthRepository = {
   },
   // Admin accounts get a bearer token for the /v1/admin API only.
   async adminLogin(input) {
-    return adminSession(
-      await request<AdminSession>('/v1/admin/auth/token', {
+    const data = await request<AdminSession & { twoFactor?: AdminChallenge }>(
+      '/v1/admin/auth/token',
+      {
         method: 'POST',
         body: { identifier: input.identifier, password: input.password },
-      }),
+      },
     );
+    if (data?.twoFactor) {
+      const item = data.twoFactor;
+      if (
+        typeof item.challenge !== 'string' ||
+        typeof item.setup !== 'boolean' ||
+        (item.setup &&
+          (typeof item.secret !== 'string' ||
+            typeof item.otpauthUri !== 'string' ||
+            !item.otpauthUri.startsWith('otpauth://totp/')))
+      ) {
+        throw new ApiError(copy.form.unexpected);
+      }
+      return { kind: 'twoFactor', challenge: item };
+    }
+    return { kind: 'session', session: adminSession(data) };
+  },
+  async adminVerify(challenge, code) {
+    const data = await request<AdminSession & { recoveryCodes?: unknown }>(
+      '/v1/admin/auth/token/2fa',
+      { method: 'POST', body: { challenge, code: code.replace(/\s/g, '') } },
+    );
+    const codes = Array.isArray(data?.recoveryCodes)
+      ? data.recoveryCodes.filter(
+          (item): item is string => typeof item === 'string',
+        )
+      : [];
+    return { session: adminSession(data), recoveryCodes: codes };
   },
   async adminMe(token) {
     const data = await request<{ user: AdminUser }>('/v1/admin/auth/me', {

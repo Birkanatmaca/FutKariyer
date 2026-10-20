@@ -60,6 +60,22 @@ export type AdminSession = {
   expiresAt: string;
   user: AdminUser;
 };
+// The admin's second sign-in step (20 Oct 2026); setup: the authenticator
+// is added first and the key is shown only then.
+export type AdminChallenge = {
+  challenge: string;
+  setup: boolean;
+  secret?: string;
+  otpauthUri?: string;
+};
+export type AdminLoginResult =
+  | { kind: 'session'; session: AdminSession }
+  | { kind: 'twoFactor'; challenge: AdminChallenge };
+// recoveryCodes is filled once, right after the authenticator is set up.
+export type AdminVerifyResult = {
+  session: AdminSession;
+  recoveryCodes: string[];
+};
 // Sessions saved before admin mode existed have no kind and are user sessions.
 export type SavedSession = {
   token: string;
@@ -122,7 +138,8 @@ export interface AuthRepository {
   logout(token: string): Promise<void>;
   // Permanently removes the signed-in mobile account; needs its password.
   deleteAccount(token: string, password: string): Promise<void>;
-  adminLogin(input: LoginInput): Promise<AdminSession>;
+  adminLogin(input: LoginInput): Promise<AdminLoginResult>;
+  adminVerify(challenge: string, code: string): Promise<AdminVerifyResult>;
   adminMe(token: string): Promise<AdminUser>;
   adminLogout(token: string): Promise<void>;
   // A staff coach opens a session for a club that authorized them.

@@ -32,7 +32,12 @@ export async function request<T>(
           : JSON.stringify(options.body),
       signal: controller.signal,
     });
-    if (response.status === 401 && path !== '/v1/admin/auth/login') {
+    // Sign-in steps answer 401 for wrong or expired input, not a lost session.
+    if (
+      response.status === 401 &&
+      path !== '/v1/admin/auth/login' &&
+      path !== '/v1/admin/auth/2fa'
+    ) {
       window.dispatchEvent(new Event(sessionExpiredEvent));
     }
     if (response.status === 204) {

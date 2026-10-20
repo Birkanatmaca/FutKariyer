@@ -13,6 +13,7 @@ import (
 	admin "futcareer/backend/internal/admin/application"
 	"futcareer/backend/internal/admin/data"
 	auth "futcareer/backend/internal/auth/application"
+	authdata "futcareer/backend/internal/auth/data"
 	"futcareer/backend/internal/platform/postgres"
 	"futcareer/backend/migrations"
 )
@@ -33,6 +34,16 @@ func run() error {
 	defer db.Close()
 	if err = migrations.CheckCurrent(ctx, db); err != nil {
 		return err
+	}
+	// "admin reset-2fa <e-posta veya kullanıcı adı>": for an admin who lost
+	// both the authenticator and the recovery codes. The next sign-in enrols
+	// a new authenticator; current sessions end.
+	if len(os.Args) == 3 && os.Args[1] == "reset-2fa" {
+		if err = auth.New(authdata.New(db), time.Hour).ResetAdminSecondFactor(ctx, os.Args[2]); err != nil {
+			return fmt.Errorf("iki aşamalı doğrulama sıfırlanamadı: %w", err)
+		}
+		fmt.Println("İki aşamalı doğrulama sıfırlandı; yönetici bir sonraki girişte yeniden kuracak.")
+		return nil
 	}
 	account, err := admin.New(data.New(db)).Bootstrap(ctx, auth.AccountInput{FullName: os.Getenv("ADMIN_FULL_NAME"), Email: os.Getenv("ADMIN_EMAIL"), Username: os.Getenv("ADMIN_USERNAME"), Password: os.Getenv("ADMIN_PASSWORD")})
 	if err != nil {

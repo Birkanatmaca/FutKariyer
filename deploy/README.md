@@ -22,6 +22,20 @@ API her başlangıçta bekleyen migration'ları uygular. Veritabanı şifresi ya
 ssh -t root@SUNUCU 'cd /opt/futcareer && read -p "Ad soyad: " N && read -p "E-posta: " E && read -p "Kullanıcı adı: " U && read -s -p "Şifre (en az 10 karakter): " P && echo && docker compose exec -e ADMIN_FULL_NAME="$N" -e ADMIN_EMAIL="$E" -e ADMIN_USERNAME="$U" -e ADMIN_PASSWORD="$P" api /app/admin'
 ```
 
+## Yönetici iki aşamalı doğrulama
+
+`.env` içinde `ADMIN_TOTP_KEY` (`openssl rand -hex 32`) tanımlıysa yönetici girişi şifreden sonra kimlik doğrulayıcı kodu ister; ilk girişte kurulum anahtarı ve 10 kurtarma kodu gösterilir. Anahtarı ayrıca yedekle: kaybolursa tüm yöneticiler yeniden kurulum yapar. Telefonunu ve kurtarma kodlarını kaybeden yönetici için:
+
+```sh
+ssh root@SUNUCU 'cd /opt/futcareer && docker compose exec -T api /app/admin reset-2fa yonetici@ornek.com'
+```
+
+Komut yöneticinin oturumlarını kapatır ve bir sonraki girişte yeniden kurulum ister; işlem denetim kaydına yazılır. Yönetici panelindeki **İşlem geçmişi** sayfası tüm yönetici yazma işlemlerini, yönetici girişlerini ve hesap güvenliği olaylarını gösterir; kayıtlar değiştirilemez, 2 yıldan eskiler silinebilir.
+
+## E-posta
+
+`MAIL_PROVIDER=resend`, `MAIL_API_KEY` ve `MAIL_FROM` (`Fut Career <no-reply@alanadi>`) tanımlanınca e-posta doğrulama ve şifre sıfırlama açılır; alan adında SPF/DKIM kayıtları gerekir. Boşken doğrulama istenmez ve "Şifremi unuttum" e-postanın henüz açık olmadığını söyler. Canlıda `MAIL_PROVIDER=log` kullanma: kodlar loglara yazılır.
+
 ## Demo ortamı
 
 Kullanıcı kararıyla (15 Ekim 2026) sunucuda, giriş yapınca uygulamayı başkaları da kullanıyormuş gibi gösteren kurgusal bir demo verisi kurulabilir. Demo verisi **migration değildir** (migration her ortama kalıcı olarak giderdi); API imajındaki ayrı `/app/seed` komutuyla kurulur ve kaldırılır. Şifre her çalıştırmada rastgele üretilir ve yalnızca stdout'a yazılır; dosyaya root'tan başkasının okuyamayacağı biçimde yönlendir:

@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -240,4 +241,30 @@ func (s *Service) Bootstrap(ctx context.Context, in auth.AccountInput) (Account,
 		return Account{}, err
 	}
 	return dto(domain.Record{User: u}), nil
+}
+
+// AuditLog pages the audit log newest first (İşlem geçmişi).
+func (s *Service) AuditLog(ctx context.Context, q domain.AuditQuery) (domain.AuditPage, error) {
+	repo, ok := s.repo.(domain.AuditRepository)
+	if !ok {
+		return domain.AuditPage{}, errors.New("audit log is not supported by this repository")
+	}
+	if q.Page < 1 {
+		q.Page = 1
+	}
+	if q.PageSize < 1 || q.PageSize > 100 {
+		q.PageSize = 50
+	}
+	if q.Page > 1000 {
+		q.Page = 1000
+	}
+	q.Action = strings.TrimSpace(q.Action)
+	if utf8.RuneCountInString(q.Action) > 120 {
+		q.Action = ""
+	}
+	q.ActorID = strings.TrimSpace(q.ActorID)
+	if len(q.ActorID) > 64 {
+		q.ActorID = ""
+	}
+	return repo.AuditLog(ctx, q)
 }
