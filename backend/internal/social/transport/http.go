@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"mime"
 	"net/http"
 	"strings"
@@ -14,6 +13,7 @@ import (
 
 	auth "futcareer/backend/internal/auth/application"
 	authdomain "futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/logging"
 	"futcareer/backend/internal/social/application"
 	"futcareer/backend/internal/social/domain"
 )
@@ -38,7 +38,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
-		slog.Error("social operation failed", "error", err)
+		logging.Fail(w, "social.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }

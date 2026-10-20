@@ -3,7 +3,6 @@ package transport
 import (
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	authdomain "futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/notifications/application"
 	"futcareer/backend/internal/notifications/domain"
+	"futcareer/backend/internal/platform/logging"
 )
 
 type Handler struct {
@@ -58,7 +58,7 @@ func (h *Handler) failure(w http.ResponseWriter, err error) {
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
-		slog.Error("notification operation failed", "error", err)
+		logging.Fail(w, "notification.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }

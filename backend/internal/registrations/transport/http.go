@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"regexp"
 	"strings"
 	"unicode/utf8"
 
+	"futcareer/backend/internal/platform/logging"
 	"futcareer/backend/internal/registrations/data"
 )
 
@@ -39,7 +39,7 @@ func NewAdmin(repo *data.Postgres) http.Handler {
 		}
 		items, err := repo.List(r.Context(), status)
 		if err != nil {
-			slog.Error("application list failed", "error", err)
+			logging.Fail(w, "registration.list.failed", err)
 			fail(w, 500, "internal_error", "Başvurular yüklenemedi.", nil)
 			return
 		}
@@ -80,7 +80,7 @@ func NewAdmin(repo *data.Postgres) http.Handler {
 		case errors.Is(err, data.ErrInvalidState):
 			fail(w, 409, "already_decided", "Bu başvuru zaten sonuçlandırıldı. Listeyi yenile.", nil)
 		case err != nil:
-			slog.Error("application decision failed", "error", err)
+			logging.Fail(w, "registration.decision.failed", err)
 			fail(w, 500, "internal_error", "Karar kaydedilemedi.", nil)
 		default:
 			write(w, 200, map[string]any{"application": out})

@@ -7,6 +7,9 @@ const developmentOverride = 'http://153.56.210.50';
 // as a domain is configured (see deploy/README.md); App Store builds must use HTTPS.
 const productionApiUrl = 'http://153.56.210.50';
 export const config = {
+  // Sent as X-App-Version and with error reports; keep it equal to the
+  // native version (MARKETING_VERSION / versionName and the build number).
+  appVersion: '1.0 (1)',
   allowInsecureApi: true,
   apiBaseUrl: __DEV__
     ? developmentOverride ||

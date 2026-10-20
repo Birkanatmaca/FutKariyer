@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"math"
 	"net"
 	"net/http"
@@ -15,6 +14,7 @@ import (
 
 	"futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/logging"
 	"futcareer/backend/internal/platform/ratelimit"
 )
 
@@ -62,12 +62,6 @@ func New(service *application.Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		defer func() {
-			if recovered := recover(); recovered != nil {
-				slog.Error("request panic")
-				writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
-			}
-		}()
 		mux.ServeHTTP(w, r)
 	})
 }
@@ -117,6 +111,7 @@ func (h *Handler) limited(w http.ResponseWriter, r *http.Request, kind string) b
 }
 func (h *Handler) limitedKey(w http.ResponseWriter, kind, key string) bool {
 	if !h.limits[kind].Allow(key) {
+		logging.Warn(w, logging.EventRateLimit, nil, "security", true, "bucket", kind)
 		w.Header().Set("Retry-After", "60")
 		writeError(w, 429, "rate_limited", "Çok fazla deneme yaptın. Bir dakika sonra tekrar dene.", nil)
 		return true
@@ -164,7 +159,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrWrongPortal):
 		writeError(w, 403, "wrong_portal", "Yönetici hesabıyla webde /securityadmin adresinden giriş yap.", nil)
 	default:
-		slog.Error("auth operation failed", "error", err)
+		logging.Fail(w, "auth.failed", err)
 		writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
 	}
 }

@@ -9,6 +9,11 @@ services:
       POSTGRES_USER: futcareer
       POSTGRES_DB: futcareer
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    # Statements slower than 500 ms are written to the database log too.
+    command: ["postgres", "-c", "log_min_duration_statement=500"]
+    logging: &logging
+      driver: json-file
+      options: {max-size: "20m", max-file: "5"}
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:
@@ -31,7 +36,19 @@ services:
       MAIL_API_KEY: ${MAIL_API_KEY:-}
       MAIL_FROM: ${MAIL_FROM:-}
       ADMIN_TOTP_KEY: ${ADMIN_TOTP_KEY:-}
+      APP_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DB_MAX_CONNS: ${DB_MAX_CONNS:-20}
+      # Prometheus metrics on the compose network only (not published).
+      METRICS_ADDR: ":9090"
       TZ: Europe/Istanbul
+    logging: *logging
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
     ports:
       - "80:8080"
       - "8092:8080"

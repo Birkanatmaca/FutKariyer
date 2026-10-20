@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,6 +14,7 @@ import (
 	auth "futcareer/backend/internal/auth/application"
 	authdomain "futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/platform/audit"
+	"futcareer/backend/internal/platform/logging"
 	"futcareer/backend/internal/platform/ratelimit"
 )
 
@@ -49,12 +49,6 @@ func New(authService *auth.Service, service *application.Service, browser Browse
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		defer func() {
-			if recover() != nil {
-				slog.Error("admin request panic")
-				writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
-			}
-		}()
 		// The mobile app authenticates with a bearer token. Browsers never attach
 		// it on their own, so the Origin (CSRF) check only applies to cookie sessions.
 		token, bearer := bearerToken(r)
@@ -145,7 +139,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.Is(err, authdomain.ErrWrongPortal):
 		writeError(w, 403, "wrong_portal", "Bu giriş yalnızca yönetici hesapları için. Diğer hesaplarla mobil uygulamadan giriş yap.", nil)
 	default:
-		slog.Error("admin operation failed", "error", err)
+		logging.Fail(w, "admin.failed", err)
 		writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
 	}
 }

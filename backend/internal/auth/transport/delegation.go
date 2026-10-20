@@ -2,7 +2,6 @@ package transport
 
 import (
 	"errors"
-	"log/slog"
 	"net/http"
 	"regexp"
 	"slices"
@@ -10,6 +9,7 @@ import (
 	"futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/platform/audit"
+	"futcareer/backend/internal/platform/logging"
 )
 
 // The single policy for switched sessions (a staff coach running a club
@@ -72,7 +72,7 @@ func DelegationGuard(service *application.Service, next http.Handler) http.Handl
 			return
 		}
 		if err != nil {
-			slog.Error("delegation check failed", "error", err)
+			logging.Fail(w, "auth.delegation.failed", err)
 			writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
 			return
 		}
@@ -95,6 +95,7 @@ func DelegationGuard(service *application.Service, next http.Handler) http.Handl
 			return
 		}
 		w.Header().Set("Cache-Control", "no-store")
+		logging.Warn(w, logging.EventForbidden, nil, "security", true, "reason", "delegate_section")
 		writeError(w, 403, "delegate_forbidden", "Kulüp bu bölüm için sana yetki vermedi.", nil)
 	})
 }

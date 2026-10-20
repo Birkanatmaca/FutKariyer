@@ -3,7 +3,6 @@ package transport
 import (
 	"encoding/json"
 	"errors"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	authdomain "futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/football/application"
 	"futcareer/backend/internal/football/domain"
+	"futcareer/backend/internal/platform/logging"
 )
 
 type Handler struct {
@@ -54,9 +54,9 @@ func failure(w http.ResponseWriter, err error) {
 		status, code, message = 422, "validation_error", "Sezon, lig veya grup seçimi geçersiz."
 	case errors.Is(err, domain.ErrUpstream):
 		status, code, message = 502, "upstream_unavailable", "Lig verileri şu anda alınamıyor. Biraz sonra tekrar dene."
-		slog.Warn("football upstream failed", "error", err)
+		logging.Warn(w, logging.EventUpstream, err, "upstream", "football")
 	default:
-		slog.Error("football operation failed", "error", err)
+		logging.Fail(w, "football.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": nil}})
 }

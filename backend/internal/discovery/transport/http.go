@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	authdomain "futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/discovery/application"
 	"futcareer/backend/internal/discovery/domain"
+	"futcareer/backend/internal/platform/logging"
 )
 
 type Handler struct {
@@ -59,7 +59,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.As(err, &fields):
 		code, status, message = "validation_error", 422, fields.Error()
 	default:
-		slog.Error("discovery operation failed", "error", err)
+		logging.Fail(w, "discovery.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }

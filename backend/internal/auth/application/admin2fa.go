@@ -13,6 +13,7 @@ import (
 
 	"futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/platform/audit"
+	"futcareer/backend/internal/platform/logging"
 	"futcareer/backend/internal/platform/secretbox"
 	"futcareer/backend/internal/platform/totp"
 )
@@ -250,11 +251,13 @@ func recoveryHash(userID, normalized string) string {
 // caller's request log and never blocks the action.
 func (s *Service) audit(ctx context.Context, entry audit.Entry) {
 	if err := s.repo.Audit(ctx, entry); err != nil && !errors.Is(err, context.Canceled) {
-		auditFailed(err)
+		auditFailed(ctx, err)
 	}
 }
 
-func auditFailed(err error) { slog.Error("audit write failed", "error", err) }
+func auditFailed(ctx context.Context, err error) {
+	slog.ErrorContext(ctx, logging.EventAuditWrite, "error", err)
+}
 
 // Audit appends an entry for other handlers (admin writes).
 func (s *Service) Audit(ctx context.Context, entry audit.Entry) { s.audit(ctx, entry) }

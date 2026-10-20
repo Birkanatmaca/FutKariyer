@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	authdomain "futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/clubs/application"
 	"futcareer/backend/internal/clubs/domain"
+	"futcareer/backend/internal/platform/logging"
 )
 
 type Handler struct {
@@ -58,11 +58,11 @@ func failure(w http.ResponseWriter, err error) {
 		status, code, message = 404, "not_member", "Bu oyuncu kadroda değil."
 	case errors.Is(err, domain.ErrTFFUnavailable):
 		status, code, message = 503, "tff_unavailable", "TFF Ankara sayfasına şu an ulaşılamıyor. Biraz sonra tekrar dene."
-		slog.Warn("tff link check failed", "error", err)
+		logging.Warn(w, logging.EventUpstream, err, "upstream", "tff")
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
-		slog.Error("club profile failed", "error", err)
+		logging.Fail(w, "club.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }

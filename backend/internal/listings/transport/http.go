@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	authdomain "futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/listings/application"
 	"futcareer/backend/internal/listings/domain"
+	"futcareer/backend/internal/platform/logging"
 	teamdomain "futcareer/backend/internal/teams/domain"
 )
 
@@ -62,7 +62,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
-		slog.Error("listing operation failed", "error", err)
+		logging.Fail(w, "listing.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }

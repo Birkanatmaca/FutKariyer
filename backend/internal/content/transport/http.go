@@ -7,8 +7,8 @@ import (
 	authdomain "futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/content/application"
 	"futcareer/backend/internal/content/domain"
+	"futcareer/backend/internal/platform/logging"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -35,7 +35,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
-		slog.Error("content operation failed", "error", err)
+		logging.Fail(w, "content.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }

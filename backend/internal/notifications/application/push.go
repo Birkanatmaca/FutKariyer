@@ -59,10 +59,10 @@ func (s *PushService) Dispatch(ctx context.Context) (int, error) {
 			err := s.sender.Send(ctx, device.Token, message)
 			if errors.Is(err, domain.ErrPushTokenInvalid) {
 				if err := s.repo.DeleteDevice(ctx, device.Token); err != nil {
-					slog.Error("stale push device could not be removed", "error", err)
+					slog.ErrorContext(ctx, "push.device_remove.failed", "error", err)
 				}
 			} else if err != nil {
-				slog.Warn("push delivery failed", "notification", message.NotificationID, "error", err)
+				slog.WarnContext(ctx, "push.failed", "notification", message.NotificationID, "platform", device.Platform, "error", err)
 			}
 		}
 	}
@@ -77,7 +77,7 @@ func (s *PushService) Run(ctx context.Context, every time.Duration) {
 	for {
 		claimed, err := s.Dispatch(ctx)
 		if err != nil && ctx.Err() == nil {
-			slog.Error("push dispatch failed", "error", err)
+			slog.ErrorContext(ctx, "push.dispatch.failed", "error", err)
 		}
 		if claimed == 100 && err == nil {
 			continue

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strings"
 
@@ -14,6 +13,7 @@ import (
 	"futcareer/backend/internal/games/application"
 	"futcareer/backend/internal/games/catalog"
 	"futcareer/backend/internal/games/domain"
+	"futcareer/backend/internal/platform/logging"
 )
 
 type Handler struct {
@@ -62,11 +62,11 @@ func failure(w http.ResponseWriter, err error) {
 		status, code, message = 409, "question_order", "Oyun başka bir ekranda ilerlemiş olabilir. Oyunu yenileyip devam et."
 	case errors.Is(err, footballdomain.ErrUpstream), errors.Is(err, domain.ErrNoPairs):
 		status, code, message = 502, "upstream_unavailable", "Lig verileri şu anda alınamıyor. Biraz sonra tekrar dene."
-		slog.Warn("head-to-head standings unavailable", "error", err)
+		logging.Warn(w, logging.EventUpstream, err, "upstream", "standings")
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
-		slog.Error("football game failed", "error", err)
+		logging.Fail(w, "game.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }

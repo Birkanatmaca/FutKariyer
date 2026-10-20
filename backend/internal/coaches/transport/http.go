@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	authdomain "futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/coaches/application"
 	"futcareer/backend/internal/coaches/domain"
+	"futcareer/backend/internal/platform/logging"
 )
 
 type Handler struct {
@@ -66,7 +66,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.As(err, &fields):
 		writeError(w, 422, "validation_error", fields.Error(), fields)
 	default:
-		slog.Error("coach request failed", "error", err)
+		logging.Fail(w, "coach.failed", err)
 		writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
 	}
 }

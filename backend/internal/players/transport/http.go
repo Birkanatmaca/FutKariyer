@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strings"
 
 	authapplication "futcareer/backend/internal/auth/application"
 	authdomain "futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/logging"
 	playerapplication "futcareer/backend/internal/players/application"
 )
 
@@ -31,12 +31,6 @@ func New(auth *authapplication.Service, players *playerapplication.Service, gall
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		defer func() {
-			if recover() != nil {
-				slog.Error("player profile request panic")
-				writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
-			}
-		}()
 		mux.ServeHTTP(w, r)
 	})
 }
@@ -84,7 +78,7 @@ func (h *Handler) player(w http.ResponseWriter, r *http.Request) (authapplicatio
 		return authapplication.PublicUser{}, false
 	}
 	if err != nil {
-		slog.Error("player profile authentication failed", "error", err)
+		logging.Fail(w, "player.auth.failed", err)
 		writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
 		return authapplication.PublicUser{}, false
 	}
@@ -102,7 +96,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	}
 	profile, err := h.players.Get(r.Context(), user.ID)
 	if err != nil {
-		slog.Error("player profile could not be loaded", "error", err)
+		logging.Fail(w, "player.profile.load_failed", err)
 		writeError(w, 500, "internal_error", "Profil bilgileri yüklenemedi. Biraz sonra tekrar dene.", nil)
 		return
 	}
@@ -125,7 +119,7 @@ func (h *Handler) save(w http.ResponseWriter, r *http.Request) {
 			writeError(w, 422, "validation_error", fields.Error(), fields)
 			return
 		}
-		slog.Error("player profile could not be saved", "error", err)
+		logging.Fail(w, "player.profile.save_failed", err)
 		writeError(w, 500, "internal_error", "Profil kaydedilemedi. Biraz sonra tekrar dene.", nil)
 		return
 	}

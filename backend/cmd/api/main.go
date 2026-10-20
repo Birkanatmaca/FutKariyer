@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -9,6 +10,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -66,7 +69,9 @@ import (
 	paymenttransport "futcareer/backend/internal/payments/transport"
 	"futcareer/backend/internal/platform/adminweb"
 	"futcareer/backend/internal/platform/audit"
+	"futcareer/backend/internal/platform/logging"
 	platformmail "futcareer/backend/internal/platform/mail"
+	"futcareer/backend/internal/platform/metrics"
 	"futcareer/backend/internal/platform/postgres"
 	"futcareer/backend/internal/platform/secretbox"
 	playerapplication "futcareer/backend/internal/players/application"
@@ -98,18 +103,27 @@ func env(key, fallback string) string {
 	}
 	return fallback
 }
+
+// version is set at build time: -ldflags "-X main.version=1.4.0+4491027".
+var version = "dev"
+
 func main() {
+	logging.Setup("api", env("APP_ENV", "development"), version, env("LOG_LEVEL", "info"))
 	if err := run(); err != nil {
-		slog.Error("Fut Career API stopped", "error", err)
+		slog.Error(logging.EventStop, "error", err)
 		os.Exit(1)
 	}
 }
 
+// configWarning flags a setting that is not ready for production.
+func configWarning(detail string) { slog.Warn("system.config", "detail", detail) }
+
 func run() error {
 	allowInsecureAdmin := os.Getenv("ADMIN_ALLOW_INSECURE_HTTP") == "true"
 	if allowInsecureAdmin {
-		slog.Warn("admin panel allows plain HTTP; sessions and passwords travel unencrypted until HTTPS is configured")
+		configWarning("admin panel allows plain HTTP; sessions and passwords travel unencrypted until HTTPS is configured")
 	}
+	registry := metrics.New()
 	browser, err := admintransport.BrowserOrigin(env("ADMIN_ORIGIN", "http://localhost:5175"), allowInsecureAdmin)
 	if err != nil {
 		return err
@@ -132,7 +146,13 @@ func run() error {
 	}
 	startup, cancelStartup := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancelStartup()
-	db, err := postgres.Open(startup, os.Getenv("DATABASE_URL"))
+	maxConns, _ := strconv.Atoi(os.Getenv("DB_MAX_CONNS"))
+	db, err := postgres.Open(startup, os.Getenv("DATABASE_URL"), postgres.Options{
+		MaxConns: maxConns,
+		ObserveQuery: func(d time.Duration) {
+			registry.Observe("db_query_duration_seconds", "Database statement latency.", metrics.LatencyBuckets, nil, nil, d.Seconds())
+		},
+	})
 	if err != nil {
 		return err
 	}
@@ -154,7 +174,7 @@ func run() error {
 	if sender != nil {
 		authService.WithMailer(sender)
 	} else {
-		slog.Warn("email sending is off (MAIL_PROVIDER unset): no email verification or password reset")
+		configWarning("email sending is off (MAIL_PROVIDER unset): no email verification or password reset")
 	}
 	if key := os.Getenv("ADMIN_TOTP_KEY"); key != "" {
 		box, err := secretbox.FromKey(key)
@@ -163,7 +183,7 @@ func run() error {
 		}
 		authService.WithAdminSecondFactor(box)
 	} else {
-		slog.Warn("admin two-factor sign-in is off (ADMIN_TOTP_KEY unset); set it before going live")
+		configWarning("admin two-factor sign-in is off (ADMIN_TOTP_KEY unset); set it before going live")
 	}
 	gameBank, err := gamecatalog.Load()
 	if err != nil {
@@ -287,6 +307,30 @@ func run() error {
 	discoveryHandler := discoverytransport.New(authService, discoveryapplication.New(discoverydata.New(db)))
 	routes.Handle("/v1/discovery/", discoveryHandler)
 	routes.Handle("/v1/me/", discoveryHandler)
+	// /health: the process answers. /ready: it can serve (database reachable,
+	// schema current); the container healthcheck and uptime checks use it.
+	routes.HandleFunc("GET /ready", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-store")
+		if err := db.PingContext(ctx); err != nil {
+			logging.Warn(w, "system.not_ready", err, "check", "database")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"status":"database_unavailable"}`))
+			return
+		}
+		if err := migrations.CheckCurrent(ctx, db); err != nil {
+			logging.Warn(w, "system.not_ready", err, "check", "migrations")
+			w.WriteHeader(http.StatusServiceUnavailable)
+			_, _ = w.Write([]byte(`{"status":"migrations_pending"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"status":"ready"}`))
+	})
+	routes.Handle("POST /v1/client-errors", logging.ClientErrors(func(source string, fatal bool) {
+		registry.Add("client_errors_total", "Errors reported by the apps.", []string{"source", "fatal"}, []string{source, strconv.FormatBool(fatal)}, 1)
+	}))
 	authHandler := transport.New(authService)
 	for _, path := range []string{"/v1/me/password", "/v1/me/sessions", "/v1/me/sessions/"} {
 		routes.Handle(path, authHandler)
@@ -308,6 +352,8 @@ func run() error {
 		handler = combined
 	}
 	handler = audit.Middleware(handler)
+	handler = logging.Middleware(handler, registry.ObserveRequest)
+	registerGauges(registry, db)
 	server := &http.Server{Addr: env("LISTEN_ADDR", ":8080"), Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 15 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16384}
 	listener, err := net.Listen("tcp", server.Addr)
 	if err != nil {
@@ -316,13 +362,23 @@ func run() error {
 	defer listener.Close()
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	go paymentService.RunGoogleRefundSync(ctx, time.Hour)
-	go pushService.Run(ctx, 5*time.Second)
+	logging.Go(ctx, "payment.refund_sync", func(ctx context.Context) { paymentService.RunGoogleRefundSync(ctx, time.Hour) })
+	logging.Go(ctx, "push.dispatch", func(ctx context.Context) { pushService.Run(ctx, 5*time.Second) })
+	if addr := os.Getenv("METRICS_ADDR"); addr != "" {
+		// Never published: Prometheus or the collector reads it from inside.
+		metricsServer := &http.Server{Addr: addr, Handler: registry.Handler(), ReadHeaderTimeout: 5 * time.Second}
+		go func() {
+			if err := metricsServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				slog.Error("system.metrics.failed", "error", err)
+			}
+		}()
+		defer metricsServer.Close()
+	}
 	serveResult := make(chan error, 1)
 	go func() {
 		serveResult <- server.Serve(listener)
 	}()
-	slog.Info("Fut Career API ready", "address", listener.Addr())
+	slog.Info(logging.EventStart, "address", listener.Addr().String())
 	select {
 	case err = <-serveResult:
 		if errors.Is(err, http.ErrServerClosed) {
@@ -377,4 +433,37 @@ func pushSender() (notificationsdomain.PushSender, error) {
 		return nil, err
 	}
 	return sender, nil
+}
+
+// registerGauges exposes the connection pool, the Go runtime and the build.
+func registerGauges(r *metrics.Registry, db *sql.DB) {
+	started := time.Now()
+	r.Gauge("db_pool_connections", "Database connections by state.", func() []metrics.Sample {
+		s := db.Stats()
+		return []metrics.Sample{
+			{Labels: []string{"state", "in_use"}, Value: float64(s.InUse)},
+			{Labels: []string{"state", "idle"}, Value: float64(s.Idle)},
+			{Labels: []string{"state", "max"}, Value: float64(s.MaxOpenConnections)},
+		}
+	})
+	r.Gauge("db_pool_wait_total", "Times a request waited for a free connection.", func() []metrics.Sample {
+		return []metrics.Sample{{Value: float64(db.Stats().WaitCount)}}
+	})
+	r.Gauge("db_pool_wait_seconds_total", "Total time spent waiting for a connection.", func() []metrics.Sample {
+		return []metrics.Sample{{Value: db.Stats().WaitDuration.Seconds()}}
+	})
+	r.Gauge("go_goroutines", "Goroutines.", func() []metrics.Sample {
+		return []metrics.Sample{{Value: float64(runtime.NumGoroutine())}}
+	})
+	r.Gauge("go_memory_bytes", "Go heap in use and memory obtained from the OS.", func() []metrics.Sample {
+		var m runtime.MemStats
+		runtime.ReadMemStats(&m)
+		return []metrics.Sample{{Labels: []string{"kind", "heap"}, Value: float64(m.HeapAlloc)}, {Labels: []string{"kind", "sys"}, Value: float64(m.Sys)}}
+	})
+	r.Gauge("process_uptime_seconds", "Seconds since the API started.", func() []metrics.Sample {
+		return []metrics.Sample{{Value: time.Since(started).Seconds()}}
+	})
+	r.Gauge("build_info", "The running version.", func() []metrics.Sample {
+		return []metrics.Sample{{Labels: []string{"version", version}, Value: 1}}
+	})
 }

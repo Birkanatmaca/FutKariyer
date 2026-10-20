@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"errors"
+	"log/slog"
 	"net/mail"
 	"regexp"
 	"slices"
@@ -17,8 +18,10 @@ import (
 	"futcareer/backend/internal/auth/domain"
 	coachdomain "futcareer/backend/internal/coaches/domain"
 	"futcareer/backend/internal/platform/audit"
+	"futcareer/backend/internal/platform/logging"
 	platformmail "futcareer/backend/internal/platform/mail"
 	"futcareer/backend/internal/platform/secretbox"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -204,12 +207,14 @@ func (s *Service) authenticate(ctx context.Context, in LoginInput, audience stri
 	user, err := s.repo.UserByLogin(ctx, canonicalEmail(identifier))
 	if errors.Is(err, domain.ErrNotFound) {
 		_ = bcrypt.CompareHashAndPassword(s.dummyHash, []byte(in.Password))
+		slog.WarnContext(ctx, logging.EventLoginFailed, "security", true, "audience", audience, "reason", "unknown_account")
 		return domain.User{}, domain.ErrUnauthorized
 	}
 	if err != nil {
 		return domain.User{}, err
 	}
 	if user.LockedUntil.After(s.now()) {
+		slog.WarnContext(ctx, logging.EventLoginLocked, "security", true, "audience", audience, "target_user_id", user.ID)
 		return domain.User{}, domain.LoginLockedError{Until: user.LockedUntil}
 	}
 	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)) != nil {
@@ -217,6 +222,7 @@ func (s *Service) authenticate(ctx context.Context, in LoginInput, audience stri
 		if err != nil {
 			return domain.User{}, err
 		}
+		slog.WarnContext(ctx, logging.EventLoginFailed, "security", true, "audience", audience, "reason", "wrong_password", "target_user_id", user.ID, "locked", !until.IsZero())
 		if !until.IsZero() {
 			return domain.User{}, domain.LoginLockedError{Until: until}
 		}
@@ -307,6 +313,8 @@ func (s *Service) me(ctx context.Context, token, audience string) (PublicUser, e
 		// The club's sign-in email stays private from the coach running it.
 		public.Email = ""
 	}
+	// The request's log lines carry the account id from here on.
+	logging.SetUser(ctx, user.ID, user.Role, session.ActingUserID)
 	return public, nil
 }
 

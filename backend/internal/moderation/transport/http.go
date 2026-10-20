@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	authdomain "futcareer/backend/internal/auth/domain"
 	"futcareer/backend/internal/moderation/application"
 	"futcareer/backend/internal/moderation/domain"
+	"futcareer/backend/internal/platform/logging"
 )
 
 type Handler struct {
@@ -72,7 +72,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrAlreadyFinal):
 		status, code, message = 409, "already_resolved", "Bu bildirim zaten sonuçlandırıldı. Listeyi yenile."
 	default:
-		slog.Error("moderation operation failed", "error", err)
+		logging.Fail(w, "moderation.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message}})
 }

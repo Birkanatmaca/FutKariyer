@@ -9,6 +9,10 @@ import {
   clubSessionStorage,
 } from './src/features/auth';
 import { AppNavigator } from './src/app/AppNavigator';
+import { ErrorBoundary } from './src/shared/ui/ErrorBoundary';
+import { installCrashReporting } from './src/shared/lib/crash-report';
+
+installCrashReporting();
 
 export default function App() {
   return (
@@ -20,7 +24,9 @@ export default function App() {
           storage={sessionStorage}
           clubStorage={clubSessionStorage}
         >
-          <AppNavigator />
+          <ErrorBoundary>
+            <AppNavigator />
+          </ErrorBoundary>
         </AuthProvider>
       </KeyboardProvider>
     </SafeAreaProvider>

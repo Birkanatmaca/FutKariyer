@@ -192,7 +192,7 @@ func (s *Service) RunGoogleRefundSync(ctx context.Context, every time.Duration) 
 	defer ticker.Stop()
 	for {
 		if err := s.SyncGoogleRefunds(ctx, time.Now().UTC()); err != nil && ctx.Err() == nil {
-			slog.Error("google play refund sync failed", "error", err)
+			slog.ErrorContext(ctx, "payment.refund_sync.failed", "error", err)
 		}
 		select {
 		case <-ctx.Done():
@@ -217,7 +217,7 @@ func (s *Service) applyRefund(ctx context.Context, refund domain.StoreRefund) er
 	err := s.ApplyEvent(ctx, domain.ProviderEvent{EventID: refund.EventID, OrderID: orderID, Provider: refund.Store, ProviderPaymentID: refund.TransactionID, Status: "refunded"})
 	if errors.Is(err, domain.ErrNotFound) || errors.Is(err, domain.ErrInvalidEvent) {
 		// An order that was never confirmed as paid has nothing to take back.
-		slog.Warn("store refund ignored", "store", refund.Store, "order", orderID, "error", err)
+		slog.WarnContext(ctx, "payment.refund.ignored", "store", refund.Store, "order", orderID, "error", err)
 		return nil
 	}
 	return err

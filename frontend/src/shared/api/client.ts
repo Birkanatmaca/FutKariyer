@@ -5,6 +5,8 @@ export class ApiError extends Error {
     message: string,
     public status = 0,
     public fields: Record<string, string> = {},
+    // The server's X-Request-ID: the same id is on the request's log lines.
+    public requestId = '',
   ) {
     super(message);
     this.name = 'ApiError';
@@ -45,10 +47,15 @@ export async function request<T>(
     }
     const data = await response.json();
     if (!response.ok) {
+      const requestId = response.headers.get('X-Request-ID') ?? '';
+      const message = data.error?.message || copy.form.unexpected;
       throw new ApiError(
-        data.error?.message || copy.form.unexpected,
+        response.status >= 500 && requestId
+          ? message + ' ' + copy.form.supportCode(requestId.slice(-8))
+          : message,
         response.status,
         data.error?.fields || {},
+        requestId,
       );
     }
     return data as T;

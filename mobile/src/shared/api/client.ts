@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { config } from '../lib/config';
 import { copy } from '../lib/copy';
 import { deviceName } from '../lib/device';
@@ -11,6 +12,8 @@ export class ApiError extends Error {
     public status = 0,
     public fields: Record<string, string> = {},
     public code = '',
+    // The server's X-Request-ID: the same id is on the request's log lines.
+    public requestId = '',
   ) {
     super(message);
     this.name = 'ApiError';
@@ -51,6 +54,8 @@ async function perform<T>(
       headers: {
         ...(!options.formData ? { 'Content-Type': 'application/json' } : {}),
         'X-Device': device,
+        'X-Client': Platform.OS,
+        'X-App-Version': config.appVersion,
         ...(options.token ? { Authorization: 'Bearer ' + options.token } : {}),
       },
       body:
@@ -62,12 +67,19 @@ async function perform<T>(
       return undefined as T;
     }
     if (!response.ok) {
+      const requestId = response.headers?.get?.('X-Request-ID') ?? '';
       const data = await response.json();
+      const message = data.error?.message || copy.form.unexpected;
       throw new ApiError(
-        data.error?.message || copy.form.unexpected,
+        // Server faults carry a short support code the team can find in
+        // the logs when the user writes in.
+        response.status >= 500 && requestId
+          ? message + ' ' + copy.form.supportCode(requestId.slice(-8))
+          : message,
         response.status,
         data.error?.fields || {},
         typeof data.error?.code === 'string' ? data.error.code : '',
+        requestId,
       );
     }
     return await decode(response);

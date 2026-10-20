@@ -187,6 +187,8 @@ describe('application repository', () => {
     expect(init.headers).toEqual({
       'Content-Type': 'application/json',
       'X-Device': expect.any(String),
+      'X-Client': expect.any(String),
+      'X-App-Version': expect.any(String),
     });
     expect(init.headers.Authorization).toBeUndefined();
     expect(JSON.parse(init.body)).toEqual(body);

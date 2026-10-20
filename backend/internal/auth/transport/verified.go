@@ -2,12 +2,12 @@ package transport
 
 import (
 	"errors"
-	"log/slog"
 	"net/http"
 	"regexp"
 
 	"futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/logging"
 )
 
 // Actions that reach other people need a verified email (20 Oct 2026):
@@ -32,7 +32,7 @@ func VerifiedGuard(service *application.Service, next http.Handler) http.Handler
 			}
 			// Unauthorized requests fall through to the handler's own answer.
 			if err != nil && !errors.Is(err, domain.ErrUnauthorized) {
-				slog.Error("email verification check failed", "error", err)
+				logging.Fail(w, "auth.verified_check.failed", err)
 				writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
 				return
 			}

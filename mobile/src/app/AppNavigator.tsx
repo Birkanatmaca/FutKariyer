@@ -151,6 +151,7 @@ import { wordmarkSize } from '../shared/ui/brand-paths';
 import { Button } from '../shared/ui/Button';
 import { ErrorBanner } from '../shared/ui/ErrorBanner';
 import { copy } from '../shared/lib/copy';
+import { setCurrentScreen } from '../shared/lib/crash-report';
 import { colors, space } from '../styles/tokens';
 import { HomeScreen } from './HomeScreen';
 import { LeaguesHomeScreen } from './LeaguesHomeScreen';
@@ -1842,6 +1843,9 @@ export function AppNavigator() {
       key={admin ? 'admin' : user?.id ?? 'guest'}
       theme={theme}
       ref={navigationRef}
+      onStateChange={() =>
+        setCurrentScreen(navigationRef.getCurrentRoute()?.name)
+      }
     >
       {admin ? <AdminNavigator /> : user ? <MainTabs /> : <AuthNavigator />}
     </NavigationContainer>

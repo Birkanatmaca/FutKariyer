@@ -36,6 +36,29 @@ Komut yöneticinin oturumlarını kapatır ve bir sonraki girişte yeniden kurul
 
 `MAIL_PROVIDER=resend`, `MAIL_API_KEY` ve `MAIL_FROM` (`Fut Career <no-reply@alanadi>`) tanımlanınca e-posta doğrulama ve şifre sıfırlama açılır; alan adında SPF/DKIM kayıtları gerekir. Boşken doğrulama istenmez ve "Şifremi unuttum" e-postanın henüz açık olmadığını söyler. Canlıda `MAIL_PROVIDER=log` kullanma: kodlar loglara yazılır.
 
+## Loglar ve metrikler
+
+API her satırı JSON yazar; olay adı `event` alanındadır. Kullanıcı "Destek kodu: abcd1234" iletirse:
+
+```sh
+ssh root@SUNUCU 'cd /opt/futcareer && docker compose logs api --since 24h | grep abcd1234'
+```
+
+Sık kullanılanlar (`jq` sunucuda kuruluysa):
+
+```sh
+# Son 1 saatin hataları ve panikleri
+ssh root@SUNUCU 'cd /opt/futcareer && docker compose logs api --since 1h --no-log-prefix | jq -c "select(.level==\"ERROR\")"'
+# Yavaş istekler ve yavaş sorgular
+ssh root@SUNUCU 'cd /opt/futcareer && docker compose logs api --since 1h --no-log-prefix | jq -c "select(.event==\"http.slow\" or .event==\"db.slow_query\")"'
+# Başarısız girişler ve hız sınırları
+ssh root@SUNUCU 'cd /opt/futcareer && docker compose logs api --since 24h --no-log-prefix | jq -c "select(.security==true)"'
+# Uygulamalardan gelen hata raporları
+ssh root@SUNUCU 'cd /opt/futcareer && docker compose logs api --since 24h --no-log-prefix | jq -c "select(.event==\"client.error\")"'
+```
+
+Docker logları 5 × 20 MB tutar; daha uzun saklama için toplayıcı (Grafana Alloy) kurulacak (docs/production/loglama.md). Metrikler compose ağı içinde `http://api:9090/metrics` adresindedir, dışarı açık değildir; sunucudan bakmak için `docker compose exec api wget -qO- http://127.0.0.1:9090/metrics`. `LOG_LEVEL=debug` geçici ayrıntı için kullanılabilir.
+
 ## Demo ortamı
 
 Kullanıcı kararıyla (15 Ekim 2026) sunucuda, giriş yapınca uygulamayı başkaları da kullanıyormuş gibi gösteren kurgusal bir demo verisi kurulabilir. Demo verisi **migration değildir** (migration her ortama kalıcı olarak giderdi); API imajındaki ayrı `/app/seed` komutuyla kurulur ve kaldırılır. Şifre her çalıştırmada rastgele üretilir ve yalnızca stdout'a yazılır; dosyaya root'tan başkasının okuyamayacağı biçimde yönlendir:

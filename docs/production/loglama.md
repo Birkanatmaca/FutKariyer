@@ -2,6 +2,24 @@
 
 Amaç: canlıda bir sorun olduğunda **kullanıcı bize söylemeden önce** haberdar olmak, sorunun hangi istekte, hangi kullanıcıda, hangi sürümde ve kodun neresinde olduğunu dakikalar içinde bulmak, ve bunu kişisel veri sızdırmadan yapmak.
 
+## 0. Uygulama durumu (20 Ekim 2026)
+
+**Yapıldı (hesap gerektirmeyenler):**
+- `internal/platform/logging`: JSON log (`event` alanı olay adıdır), istek kimliği (`X-Request-ID`, yanıt başlığında döner), her isteğe tek `http.request` satırı (yöntem, route kalıbı, durum, süre, boyut, maskeli IP, `client`, `app_version`, oturum açıksa `user_id`/`account_type`/`delegated_by`), 1 sn üstü `http.slow`, stack trace'li `http.panic` (tek merkezde; eski 3 ayrı `recover` kaldırıldı).
+- ~50 log çağrısı olay adlarına taşındı; handler hataları `logging.Fail(w, "alan.failed", err)` ile hem ERROR satırı hem erişim satırında `error`/`error_event` olarak görünür. Dış servis sorunları `upstream.failed` (WARN).
+- Güvenlik olayları (`security: true`): `auth.login.failed`, `auth.login.locked`, `abuse.rate_limited`, `auth.forbidden` (kulüp adına izinsiz bölüm). E-posta/kullanıcı adı yazılmaz; hesap varsa yalnızca `target_user_id`.
+- Arka plan işleri `logging.Go` ile: panik stack'le loglanır, iş 10 sn sonra yeniden başlar (API çökmez).
+- `db.slow_query`: 300 ms üstü SQL (parametresiz, ilk 200 karakter, istek kimliğiyle); Postgres'te ayrıca `log_min_duration_statement=500`.
+- `/health` (süreç) ve `/ready` (DB + migration); Docker healthcheck `/ready` kullanır.
+- `/metrics` (bağımlılıksız Prometheus biçimi, `METRICS_ADDR`, dışarı açık değil): `http_requests_total`, `http_request_duration_seconds`, `db_query_duration_seconds`, `db_pool_connections`, `db_pool_wait_*`, `go_goroutines`, `go_memory_bytes`, `process_uptime_seconds`, `build_info`, `client_errors_total`. 404'ler tek `unmatched` route'unda; seri sayısı sınırlı.
+- Sürüm: `deploy/build.sh` derlemeye `tarih+commit` gömer; her satırda `version`.
+- Docker logları 5 × 20 MB döner (disk dolmaz).
+- **Hata yanıtları:** istek kimliği gövde yerine `X-Request-ID` başlığındadır. Mobil ve panel 5xx hatalarında mesajın sonuna "(Destek kodu: son 8 karakter)" ekler.
+- **Uygulama hataları:** Sentry gelene kadar mobil (yakalanmamış JS hataları + `ErrorBoundary` "Bir şeyler ters gitti" ekranı) ve yönetici paneli (`window.onerror`) hataları `POST /v1/client-errors` ile sunucu loguna `client.error` olarak düşer (e-posta ve uzun sayılar silinir, IP başına dakikada 30). Yerel (native) çökmeler bunun kapsamında değildir; Sentry ister.
+- Kişisel veri testi: kayıt, giriş, hatalı şifre, e-posta doğrulama ve şifre sıfırlama akışlarının tüm log satırlarında e-posta, şifre, token ve kod geçmediği CI'da kontrol edilir.
+
+**Karar bekleyenler (madde 14):** logların ve metriklerin nereye gideceği (Grafana Cloud / kendi sunucumuz), Sentry hesabı, alarm kanalı (Telegram). Bunlar gelince Aşama 2 ve 4 yapılır; kod tarafı hazırdır (stdout JSON + `/metrics`).
+
 ## 1. Bugünkü durum
 
 - Backend'de toplam ~45 `slog` çağrısı var, varsayılan **metin** biçiminde (aranamaz, filtrelenemez).

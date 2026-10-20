@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"log/slog"
 	"mime"
 	"net/http"
 	"time"
 
 	authapplication "futcareer/backend/internal/auth/application"
 	authdomain "futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/logging"
 	platformmedia "futcareer/backend/internal/platform/media"
 	playerapplication "futcareer/backend/internal/players/application"
 	"futcareer/backend/internal/players/domain"
@@ -58,7 +58,7 @@ func mediaFailure(w http.ResponseWriter, err error) {
 	case errors.Is(err, domain.ErrMediaLimit):
 		writeError(w, 409, "media_limit", "Galeri sınırına ulaştın. Yeni medya eklemek için eskilerden birini sil.", nil)
 	default:
-		slog.Error("player media request failed", "error", err)
+		logging.Fail(w, "player.media.failed", err)
 		writeError(w, 500, "internal_error", "İşlem tamamlanamadı. Biraz sonra tekrar dene.", nil)
 	}
 }

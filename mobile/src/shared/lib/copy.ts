@@ -212,6 +212,7 @@ export const copy = {
     networkError: 'Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.',
     timeoutError: 'Bağlantı beklenenden uzun sürdü. Tekrar dene.',
     unexpected: 'İşlem tamamlanamadı. Biraz sonra tekrar dene.',
+    supportCode: (code: string) => '(Destek kodu: ' + code + ')',
     configError: 'Hizmet şu anda kullanılamıyor.',
     sessionError: 'Oturumun güvenli olarak kaydedilemedi. Tekrar dene.',
     loading: 'Birazdan hazır',
@@ -590,6 +591,11 @@ export const copy = {
     changePasswordHint: 'Diğer cihazlardaki oturumlar kapanır',
     sessions: 'Aktif oturumlar',
     sessionsHint: 'Hesabının açık olduğu cihazlar',
+  },
+  crash: {
+    title: 'Bir şeyler ters gitti',
+    body: 'Bu ekran beklenmedik bir hatayla karşılaştı. Hatayı ekibimize ilettik; tekrar deneyebilirsin.',
+    retry: 'Tekrar dene',
   },
   security: {
     forgotLink: 'Şifremi unuttum',

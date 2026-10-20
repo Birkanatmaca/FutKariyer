@@ -53,6 +53,7 @@ export const copy = {
   },
   form: {
     unexpected: 'İşlem tamamlanamadı. Biraz sonra tekrar dene.',
+    supportCode: (code: string) => '(Destek kodu: ' + code + ')',
     network: 'Yönetim hizmetine ulaşılamadı. Biraz sonra tekrar dene.',
     timeout: 'Bağlantı beklenenden uzun sürdü. Tekrar dene.',
     retry: 'Tekrar dene',

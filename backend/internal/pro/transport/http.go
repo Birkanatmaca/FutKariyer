@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strings"
 
 	auth "futcareer/backend/internal/auth/application"
 	authdomain "futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/logging"
 	"futcareer/backend/internal/pro/application"
 	"futcareer/backend/internal/pro/domain"
 )
@@ -66,7 +66,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.As(err, &fields):
 		code, status, message = "validation_error", 422, fields.Error()
 	default:
-		slog.Error("pro operation failed", "error", err)
+		logging.Fail(w, "pro.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }

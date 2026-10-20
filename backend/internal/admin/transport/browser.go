@@ -9,6 +9,7 @@ import (
 	"time"
 
 	auth "futcareer/backend/internal/auth/application"
+	"futcareer/backend/internal/platform/logging"
 )
 
 const cookieName = "futcareer_admin"
@@ -70,6 +71,7 @@ func (h *Handler) allowLogin(w http.ResponseWriter, r *http.Request) bool {
 		host = r.RemoteAddr
 	}
 	if !h.limiter.Allow(host) {
+		logging.Warn(w, logging.EventRateLimit, nil, "security", true, "bucket", "admin_login")
 		w.Header().Set("Retry-After", "60")
 		writeError(w, 429, "rate_limited", "Çok fazla deneme yaptın. Bir dakika sonra tekrar dene.", nil)
 		return false

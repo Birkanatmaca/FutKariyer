@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"net/http"
 	"strings"
 
 	auth "futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/notifications/application"
 	"futcareer/backend/internal/notifications/domain"
+	"futcareer/backend/internal/platform/logging"
 )
 
 // NewAdmin serves opportunity announcements. It is mounted behind the admin session check.
@@ -59,7 +59,7 @@ func adminFailure(w http.ResponseWriter, err error) {
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
-		slog.Error("announcement failed", "error", err)
+		logging.Fail(w, "announcement.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }

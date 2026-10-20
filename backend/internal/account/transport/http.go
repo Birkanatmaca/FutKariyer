@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"log/slog"
 	"mime"
 	"net/http"
 	"strings"
@@ -13,6 +12,7 @@ import (
 	"futcareer/backend/internal/account/domain"
 	auth "futcareer/backend/internal/auth/application"
 	authdomain "futcareer/backend/internal/auth/domain"
+	"futcareer/backend/internal/platform/logging"
 	platformmedia "futcareer/backend/internal/platform/media"
 )
 
@@ -62,7 +62,7 @@ func failure(w http.ResponseWriter, err error) {
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
-		slog.Error("account profile request failed", "error", err)
+		logging.Fail(w, "account.failed", err)
 	}
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }
@@ -214,7 +214,7 @@ func (h *Handler) avatar(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		slog.Error("avatar read failed", "error", err)
+		logging.Fail(w, "account.avatar.failed", err)
 		http.Error(w, "", 500)
 		return
 	}
