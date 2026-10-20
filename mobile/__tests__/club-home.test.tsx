@@ -109,6 +109,7 @@ const profile: ClubProfile = {
   trainingGroundName: '',
   trainingGroundAddress: '',
   trainingSchedule: 'Salı 20:00',
+  tff: null,
   updatedAt: stamp,
 };
 
@@ -300,9 +301,10 @@ describe('role based home tab', () => {
   it('shows the club home sections to club accounts', () => {
     const root = mountFor('club');
     const found = texts(root);
-    expect(found).toContain(copy.clubHome.profileTitle);
-    expect(found).toContain(copy.clubHome.centerTitle);
-    expect(found).toContain(copy.clubHome.playersTitle);
+    expect(found).toContain(copy.home.hello);
+    expect(found).toContain(copy.clubHome.workTitle.toLocaleUpperCase('tr-TR'));
+    expect(found).toContain(copy.clubHome.quick.title);
+    expect(found).not.toContain(copy.clubHome.playersTitle);
     expect(found).not.toContain(copy.home.views);
     act(() => root.unmount());
   });
@@ -311,7 +313,9 @@ describe('role based home tab', () => {
     const root = mountFor('player');
     const found = texts(root);
     expect(found).toContain(copy.home.views);
-    expect(found).not.toContain(copy.clubHome.profileTitle);
+    expect(found).not.toContain(
+      copy.clubHome.workTitle.toLocaleUpperCase('tr-TR'),
+    );
     act(() => root.unmount());
   });
 });

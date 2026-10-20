@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Keyboard, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LockKeyhole, UserRound } from 'lucide-react-native';
 import { AuthFrame } from './AuthFrame';
 import { AuthNotice } from './AuthNotice';
@@ -92,26 +92,38 @@ export function SignInScreen({ onSignUp }: { onSignUp(): void }) {
         />
         <AuthNotice message={notice ?? sessionNotice} live />
         <ErrorBanner message={error} />
-        <Button label={copy.signIn.button} onPress={submit} loading={busy} />
-        <View style={styles.divider} accessibilityElementsHidden>
-          <View style={styles.rule} />
-          <Text style={styles.or}>{copy.signIn.or}</Text>
-          <View style={styles.rule} />
-        </View>
         <Button
-          label={copy.signIn.link}
-          accessibilityLabel={copy.signIn.question + ' ' + copy.signIn.link}
-          onPress={onSignUp}
-          disabled={busy}
-          secondary
+          label={copy.signIn.button}
+          onPress={submit}
+          loading={busy}
+          compact
         />
+        <View style={styles.switch}>
+          <Text style={styles.question}>{copy.signIn.question}</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={copy.signIn.question + ' ' + copy.signIn.link}
+            onPress={onSignUp}
+            disabled={busy}
+            hitSlop={12}
+          >
+            <Text style={styles.link}>{copy.signIn.link}</Text>
+          </Pressable>
+        </View>
       </View>
     </AuthFrame>
   );
 }
 const styles = StyleSheet.create({
   form: { gap: space.lg },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: space.md },
-  rule: { flex: 1, height: 1, backgroundColor: colors.border },
-  or: { ...type.caption, color: colors.muted },
+  switch: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: space.sm,
+    paddingVertical: space.sm,
+  },
+  question: { ...type.caption, fontSize: 14, color: colors.secondary },
+  link: { color: colors.brand, fontSize: 14, fontWeight: '700' },
 });

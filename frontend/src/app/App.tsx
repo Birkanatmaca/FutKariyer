@@ -17,6 +17,11 @@ import {
   contentRepository,
 } from '../features/content';
 import {
+  PopupPanel,
+  createPopupService,
+  popupRepository,
+} from '../features/popups';
+import {
   LeaguesPanel,
   createLeagueService,
   leagueRepository,
@@ -59,6 +64,8 @@ import { useAdminRoute } from './useAdminRoute';
 const authService = createAuthService(authRepository);
 const adminService = createAdminService(adminRepository);
 const contentService = createContentService(contentRepository);
+// Popup images use the same content image store as banner ads.
+const popupService = createPopupService(popupRepository, contentService);
 const leagueService = createLeagueService(leagueRepository);
 const paymentService = createPaymentService(paymentsRepository);
 const giftService = createGiftService(giftsRepository);
@@ -164,6 +171,7 @@ export function App() {
     route === 'applications' ||
     route === 'reports' ||
     route === 'ads' ||
+    route === 'popups' ||
     route === 'news' ||
     route === 'leagues' ||
     route === 'payments' ||
@@ -197,6 +205,8 @@ export function App() {
           section={section}
           service={contentService}
         />
+      ) : section === 'popups' ? (
+        <PopupPanel service={popupService} />
       ) : section === 'applications' ? (
         <ApplicationsPanel
           service={applicationService}

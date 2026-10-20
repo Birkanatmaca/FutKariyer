@@ -99,7 +99,7 @@ func TestClubNewsNeedsApprovalAndNotifiesAuthor(t *testing.T) {
 func TestClubProfileEditsOnlyClubFields(t *testing.T) {
 	db := testpostgres.New(t).DB
 	ctx := context.Background()
-	svc := clubapp.New(clubdata.New(db), leagueapp.New(leaguedata.New(db)))
+	svc := clubapp.New(clubdata.New(db), leagueapp.New(leaguedata.New(db)), nil)
 	id := club(t, db, 602)
 	if _, err := db.Exec(`UPDATE clubs SET football_type='amateur' WHERE user_id=$1`, id); err != nil {
 		t.Fatal(err)

@@ -203,3 +203,54 @@ func (r *Postgres) Visitors(ctx context.Context, ownerID string) (domain.Visitor
 	}
 	return owner, visits, tx.Commit()
 }
+
+const watchlistJoins = ` FROM player_watchlist w JOIN users u ON u.id=w.player_id LEFT JOIN player_profiles p ON p.user_id=u.id LEFT JOIN clubs c ON c.user_id=u.id`
+
+func (r *Postgres) Watchlist(ctx context.Context, owner string) ([]domain.Profile, error) {
+	rows, err := r.db.QueryContext(ctx, `SELECT `+columns+watchlistJoins+` WHERE `+visible+` AND w.owner_id=$2 AND `+moderation.NotBlocked("$2", "u.id")+`
+		ORDER BY w.created_at DESC,u.id LIMIT 200`, "player", owner)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []domain.Profile{}
+	for rows.Next() {
+		profile, err := scan(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, profile)
+	}
+	return out, rows.Err()
+}
+
+// Watch stars only a player the owner can see in discovery right now; a
+// repeat star or an unstar of a missing row is not an error.
+func (r *Postgres) Watch(ctx context.Context, owner, player string, on bool) error {
+	if !on {
+		_, err := r.db.ExecContext(ctx, `DELETE FROM player_watchlist WHERE owner_id=$1 AND player_id=$2`, owner, player)
+		return err
+	}
+	res, err := r.db.ExecContext(ctx, `INSERT INTO player_watchlist(owner_id,player_id) SELECT $3,u.id`+joins+` WHERE `+visible+` AND u.id=$2 AND `+moderation.NotBlocked("$3", "u.id")+`
+		ON CONFLICT(owner_id,player_id) DO NOTHING`, "player", player, owner)
+	if err != nil {
+		return err
+	}
+	if n, err := res.RowsAffected(); err != nil || n > 0 {
+		return err
+	}
+	var present bool
+	if err := r.db.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM player_watchlist WHERE owner_id=$1 AND player_id=$2)`, owner, player).Scan(&present); err != nil {
+		return err
+	}
+	if !present {
+		return domain.ErrNotFound
+	}
+	return nil
+}
+
+func (r *Postgres) WatchCount(ctx context.Context, owner string) (int, error) {
+	var n int
+	err := r.db.QueryRowContext(ctx, `SELECT count(*) FROM player_watchlist WHERE owner_id=$1`, owner).Scan(&n)
+	return n, err
+}

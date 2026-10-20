@@ -28,7 +28,7 @@ var sectionRules = []rule{
 	{"news", nil, regexp.MustCompile(`^/v1/me/club-news$`)},
 	{"tournaments", nil, regexp.MustCompile(`^/v1/me/tournament-entries(/|$)`)},
 	{"tournaments", []string{http.MethodPost}, regexp.MustCompile(`^/v1/tournaments/[^/]+/entries$`)},
-	{"profile", []string{http.MethodPut}, regexp.MustCompile(`^/v1/me/club-profile$`)},
+	{"profile", []string{http.MethodPut, http.MethodDelete}, regexp.MustCompile(`^/v1/me/club-profile(/tff)?$`)},
 	{"social", []string{http.MethodPost, http.MethodPut, http.MethodDelete}, regexp.MustCompile(`^/v1/social/`)},
 	{"social", []string{http.MethodPut}, regexp.MustCompile(`^/v1/discovery/[^/]+/[^/]+/follow$`)},
 }

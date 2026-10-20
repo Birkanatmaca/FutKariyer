@@ -6,10 +6,19 @@ import {
   type ClubArticleInput,
   type ClubCenter,
   type ClubCenterLeague,
+  type ClubLeagueDetail,
+  type ClubLeagues,
+  type ClubMatch,
   type ClubProfile,
+  type ClubWeek,
+  type ClubWeekMatch,
+  type CoachTeam,
+  type CoachTeams,
   type ClubProfileInput,
   type ClubRecentFixture,
   type ClubRepository,
+  type ClubStanding,
+  type ClubTffLink,
   type ClubUpcomingFixture,
 } from '../domain/models';
 
@@ -26,6 +35,26 @@ const withinLength = (value: unknown, max: number) =>
 const validDate = (value: unknown) =>
   typeof value === 'string' && Number.isFinite(Date.parse(value));
 
+const tffId = /^[0-9]{1,10}$/;
+
+export function isClubTffLink(value: unknown): value is ClubTffLink {
+  const item = value as ClubTffLink;
+  return (
+    !!item &&
+    typeof item === 'object' &&
+    typeof item.season === 'string' &&
+    tffId.test(item.season) &&
+    typeof item.league === 'string' &&
+    tffId.test(item.league) &&
+    typeof item.group === 'string' &&
+    (item.group === '' || tffId.test(item.group)) &&
+    typeof item.team === 'string' &&
+    item.team.length > 0 &&
+    withinLength(item.team, 120) &&
+    withinLength(item.label, 240)
+  );
+}
+
 export function isClubProfile(value: unknown): value is ClubProfile {
   const item = value as ClubProfile;
   return (
@@ -37,6 +66,7 @@ export function isClubProfile(value: unknown): value is ClubProfile {
     (
       Object.keys(clubProfileLimits) as (keyof typeof clubProfileLimits)[]
     ).every(key => withinLength(item[key], clubProfileLimits[key])) &&
+    (item.tff === null || isClubTffLink(item.tff)) &&
     validDate(item.updatedAt)
   );
 }
@@ -80,8 +110,13 @@ export function isClubUpcomingFixture(
     item.id.length > 0 &&
     isCount(item.round) &&
     typeof item.opponentName === 'string' &&
+    typeof item.opponentId === 'string' &&
+    (item.opponentId === '' || imageIdPattern.test(item.opponentId)) &&
+    isCount(item.opponentAvatarVersion) &&
     typeof item.isHome === 'boolean' &&
     isNullableDate(item.kickoffAt) &&
+    typeof item.dateOnly === 'boolean' &&
+    typeof item.venue === 'string' &&
     // Scores are not known before kickoff, so the server sends empty values.
     item.goalsFor === null &&
     item.goalsAgainst === null &&
@@ -100,13 +135,38 @@ export function isClubRecentFixture(
     item.id.length > 0 &&
     isCount(item.round) &&
     typeof item.opponentName === 'string' &&
+    typeof item.opponentId === 'string' &&
+    (item.opponentId === '' || imageIdPattern.test(item.opponentId)) &&
+    isCount(item.opponentAvatarVersion) &&
     typeof item.isHome === 'boolean' &&
     isNullableDate(item.kickoffAt) &&
+    typeof item.dateOnly === 'boolean' &&
+    typeof item.venue === 'string' &&
     isCount(item.goalsFor) &&
     isCount(item.goalsAgainst) &&
     matchResults.includes(item.result)
   );
 }
+
+export function isClubStanding(value: unknown): value is ClubStanding {
+  const item = value as ClubStanding;
+  return (
+    !!item &&
+    typeof item === 'object' &&
+    isCount(item.position) &&
+    typeof item.teamName === 'string' &&
+    isCount(item.played) &&
+    isCount(item.wins) &&
+    isCount(item.draws) &&
+    isCount(item.losses) &&
+    isInteger(item.goalDifference) &&
+    isInteger(item.points) &&
+    typeof item.own === 'boolean'
+  );
+}
+
+// TFF groups have no Fut Career id; the server names them tff:sezon:lig:grup.
+const tffLeagueId = /^tff:[0-9]{1,10}:[0-9]{1,10}:[0-9]{0,10}$/;
 
 export function isClubCenterLeague(value: unknown): value is ClubCenterLeague {
   const item = value as ClubCenterLeague;
@@ -114,7 +174,9 @@ export function isClubCenterLeague(value: unknown): value is ClubCenterLeague {
     !!item &&
     typeof item === 'object' &&
     typeof item.leagueId === 'string' &&
-    imageIdPattern.test(item.leagueId) &&
+    (item.source === 'tff'
+      ? tffLeagueId.test(item.leagueId)
+      : item.source === 'futcareer' && imageIdPattern.test(item.leagueId)) &&
     typeof item.leagueName === 'string' &&
     typeof item.season === 'string' &&
     leagueStatuses.includes(item.status) &&
@@ -129,7 +191,9 @@ export function isClubCenterLeague(value: unknown): value is ClubCenterLeague {
     Array.isArray(item.upcoming) &&
     item.upcoming.every(isClubUpcomingFixture) &&
     Array.isArray(item.recent) &&
-    item.recent.every(isClubRecentFixture)
+    item.recent.every(isClubRecentFixture) &&
+    Array.isArray(item.standings) &&
+    item.standings.every(isClubStanding)
   );
 }
 
@@ -145,8 +209,89 @@ export function isClubCenter(value: unknown): value is ClubCenter {
     isCount(item.pendingApplications) &&
     isCount(item.pendingNews) &&
     isCount(item.publishedNews) &&
+    typeof item.tffLinked === 'boolean' &&
     Array.isArray(item.leagues) &&
     item.leagues.every(isClubCenterLeague)
+  );
+}
+
+const isNullableCount = (value: unknown) => value === null || isCount(value);
+
+export function isClubWeekMatch(value: unknown): value is ClubWeekMatch {
+  const item = value as ClubWeekMatch;
+  return (
+    !!item &&
+    typeof item === 'object' &&
+    typeof item.id === 'string' &&
+    item.id.length > 0 &&
+    typeof item.homeName === 'string' &&
+    typeof item.awayName === 'string' &&
+    isNullableCount(item.homeGoals) &&
+    isNullableCount(item.awayGoals) &&
+    isNullableDate(item.kickoffAt) &&
+    typeof item.dateOnly === 'boolean' &&
+    typeof item.venue === 'string' &&
+    typeof item.own === 'boolean'
+  );
+}
+
+const isClubWeek = (value: unknown): value is ClubWeek =>
+  !!value &&
+  typeof value === 'object' &&
+  isCount((value as ClubWeek).number) &&
+  Array.isArray((value as ClubWeek).matches) &&
+  (value as ClubWeek).matches.every(isClubWeekMatch);
+
+// A club match is either still to play (no score) or played (score and result).
+const isClubMatch = (value: unknown): value is ClubMatch =>
+  isClubUpcomingFixture(value) || isClubRecentFixture(value);
+
+export function isClubLeagueDetail(value: unknown): value is ClubLeagueDetail {
+  const item = value as ClubLeagueDetail;
+  return (
+    isClubCenterLeague(item) &&
+    Array.isArray(item.matches) &&
+    item.matches.every(isClubMatch) &&
+    Array.isArray(item.weeks) &&
+    item.weeks.every(isClubWeek) &&
+    isCount(item.currentWeek)
+  );
+}
+
+export function isClubLeagues(value: unknown): value is ClubLeagues {
+  const item = value as ClubLeagues;
+  return (
+    !!item &&
+    typeof item === 'object' &&
+    typeof item.tffLinked === 'boolean' &&
+    Array.isArray(item.leagues) &&
+    item.leagues.every(isClubLeagueDetail)
+  );
+}
+
+export function isCoachTeams(value: unknown): value is CoachTeams {
+  const item = value as CoachTeams;
+  return (
+    !!item &&
+    typeof item === 'object' &&
+    isCount(item.invitations) &&
+    Array.isArray(item.teams) &&
+    item.teams.every(
+      (team: CoachTeam) =>
+        !!team &&
+        typeof team === 'object' &&
+        imageIdPattern.test(team.clubId) &&
+        typeof team.clubName === 'string' &&
+        isCount(team.avatarVersion) &&
+        typeof team.district === 'string' &&
+        typeof team.role === 'string' &&
+        Array.isArray(team.permissions) &&
+        team.permissions.every(p => typeof p === 'string') &&
+        isCount(team.pendingApplications) &&
+        isCount(team.squadCount) &&
+        typeof team.tffLinked === 'boolean' &&
+        (team.league === null || isClubCenterLeague(team.league)),
+    )
   );
 }
 
@@ -188,6 +333,33 @@ export const clubRepository: ClubRepository = {
   async center(token) {
     const result = await request<unknown>('/v1/me/club-center', { token });
     if (!isClubCenter(result)) invalid();
+    return result;
+  },
+  async leagues(token) {
+    const result = await request<unknown>('/v1/me/club-leagues', { token });
+    if (!isClubLeagues(result)) invalid();
+    return result;
+  },
+  async coachTeams(token) {
+    const result = await request<unknown>('/v1/me/coach-team', { token });
+    if (!isCoachTeams(result)) invalid();
+    return result;
+  },
+  async setTff(token, input) {
+    const result = await request<unknown>('/v1/me/club-profile/tff', {
+      method: 'PUT',
+      token,
+      body: input,
+    });
+    if (!isClubProfile(result)) invalid();
+    return result;
+  },
+  async clearTff(token) {
+    const result = await request<unknown>('/v1/me/club-profile/tff', {
+      method: 'DELETE',
+      token,
+    });
+    if (!isClubProfile(result)) invalid();
     return result;
   },
 };

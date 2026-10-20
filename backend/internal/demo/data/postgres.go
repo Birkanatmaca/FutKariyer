@@ -5,6 +5,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"strings"
 	"time"
@@ -16,10 +17,10 @@ import (
 // demoAdvisoryLock serialises concurrent seed runs.
 const demoAdvisoryLock = 721485191
 
-// demoUsers selects demo accounts: players by the reserved email domain, clubs
-// and organizers by the reserved email domain and the demo. username prefix.
+// demoUsers selects demo accounts: players and coaches by the reserved email
+// domain, clubs and organizers by that domain and the demo. username prefix.
 const demoUsers = `SELECT id FROM users WHERE right(lower(COALESCE(email,'')), length($1::text)) = $1::text
-	AND (role = 'player' OR left(COALESCE(username,''), length($2::text)) = $2::text)`
+	AND (role IN ('player','coach') OR left(COALESCE(username,''), length($2::text)) = $2::text)`
 
 type Postgres struct{ db *sql.DB }
 
@@ -105,6 +106,7 @@ func remove(ctx context.Context, tx *sql.Tx) (int, error) {
 	if _, err := tx.ExecContext(ctx, `DELETE FROM leagues WHERE id=$1`, domain.LeagueID); err != nil {
 		return 0, err
 	}
+
 	// Everything else cascades from users: sessions, profiles, clubs, applications,
 	// posts (likes and replies on them), follows, views, squads, listings,
 	// connections, news, tournaments and entries, games, gifts and notifications.
@@ -114,6 +116,12 @@ func remove(ctx context.Context, tx *sql.Tx) (int, error) {
 	}
 	n, err := result.RowsAffected()
 	if err != nil {
+		return 0, err
+	}
+	if _, err = tx.ExecContext(ctx, `DELETE FROM content_images i WHERE i.id IN (SELECT json_array_elements_text($1::json))
+		AND NOT EXISTS(SELECT 1 FROM news_articles WHERE image_id=i.id)
+		AND NOT EXISTS(SELECT 1 FROM advertisements WHERE image_id=i.id)
+		AND NOT EXISTS(SELECT 1 FROM popup_ads WHERE image_id=i.id)`, jsonList(domain.NewsImageIDs())); err != nil {
 		return 0, err
 	}
 	_, err = tx.ExecContext(ctx, `DROP TABLE demo_users`)
@@ -133,9 +141,10 @@ func insert(ctx context.Context, tx execer, ds domain.Dataset, hash string) erro
 			a.ID, a.FullName, a.Email, a.Username, hash, a.Role, a.Active, a.Verified, a.ApprovalStatus, a.CreatedAt)
 	}
 	for _, c := range ds.Clubs {
-		b.exec(`INSERT INTO clubs(user_id,football_type,district,description,venue_name,venue_address,training_ground_name,training_ground_address,training_schedule,updated_at)
-			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-			c.UserID, c.FootballType, c.District, c.Description, c.VenueName, c.VenueAddress, c.TrainingGroundName, c.TrainingGroundAddress, c.TrainingSchedule, c.UpdatedAt)
+		b.exec(`INSERT INTO clubs(user_id,football_type,district,description,venue_name,venue_address,training_ground_name,training_ground_address,training_schedule,updated_at,tff_season,tff_league,tff_group,tff_team,tff_label)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+			c.UserID, c.FootballType, c.District, c.Description, c.VenueName, c.VenueAddress, c.TrainingGroundName, c.TrainingGroundAddress, c.TrainingSchedule, c.UpdatedAt,
+			c.TFF.Season, c.TFF.League, c.TFF.Group, c.TFF.Team, c.TFF.Label)
 	}
 	for _, a := range ds.Applications {
 		b.exec(`INSERT INTO account_applications(user_id,role,contact_name,phone,district,note,submitted_at,decided_at,rejection_reason) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
@@ -147,7 +156,13 @@ func insert(ctx context.Context, tx execer, ds domain.Dataset, hash string) erro
 			p.UserID, p.Position, p.DominantFoot, p.ExperienceYears, p.CurrentClub, p.Availability, p.Discoverable, p.FootballType, p.LicenseStatus, p.UpdatedAt)
 	}
 	for _, p := range ds.Posts {
-		b.exec(`INSERT INTO social_posts(id,author_id,body,created_at) VALUES($1,$2,$3,$4)`, p.ID, p.AuthorID, p.Body, p.CreatedAt)
+		if p.Media == nil {
+			b.exec(`INSERT INTO social_posts(id,author_id,body,created_at) VALUES($1,$2,$3,$4)`, p.ID, p.AuthorID, p.Body, p.CreatedAt)
+			continue
+		}
+		m := p.Media
+		b.exec(`INSERT INTO social_posts(id,author_id,body,created_at,media_kind,media_mime,media_size,media_width,media_height,media_data,show_on_profile)
+			VALUES($1,$2,$3,$4,'image',$5,$6,$7,$8,$9,$10)`, p.ID, p.AuthorID, p.Body, p.CreatedAt, m.MIME, len(m.Data), m.Width, m.Height, m.Data, p.ShowOnProfile)
 	}
 	for _, l := range ds.Likes {
 		b.exec(`INSERT INTO social_likes(post_id,user_id,created_at) VALUES($1,$2,$3)`, l.PostID, l.UserID, l.CreatedAt)
@@ -184,9 +199,29 @@ func insert(ctx context.Context, tx execer, ds domain.Dataset, hash string) erro
 		b.exec(`INSERT INTO connection_requests(id,sender_id,recipient_id,player_id,partner_id,message,status,created_at,responded_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
 			c.ID, c.SenderID, c.RecipientID, c.PlayerID, c.PartnerID, c.Message, c.Status, c.CreatedAt, c.RespondedAt)
 	}
+	for _, img := range ds.Images {
+		b.exec(`INSERT INTO content_images(id,mime,data,created_at) VALUES($1,$2,$3,$4)`, img.ID, img.Photo.MIME, img.Photo.Data, ds.Now)
+	}
 	for _, n := range ds.News {
-		b.exec(`INSERT INTO news_articles(id,title,summary,body,published,show_on_home,author_user_id,review_status,created_at,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-			n.ID, n.Title, n.Summary, n.Body, n.Published, n.ShowOnHome, n.AuthorID, n.ReviewStatus, n.CreatedAt, n.UpdatedAt)
+		b.exec(`INSERT INTO news_articles(id,title,summary,body,image_id,published,show_on_home,author_user_id,review_status,created_at,updated_at) VALUES($1,$2,$3,$4,NULLIF($5,''),$6,$7,$8,$9,$10,$11)`,
+			n.ID, n.Title, n.Summary, n.Body, n.ImageID, n.Published, n.ShowOnHome, n.AuthorID, n.ReviewStatus, n.CreatedAt, n.UpdatedAt)
+	}
+	for _, a := range ds.Avatars {
+		b.exec(`INSERT INTO user_avatars(user_id,mime,size,data,updated_at) VALUES($1,$2,$3,$4,$5)`, a.UserID, a.Photo.MIME, len(a.Photo.Data), a.Photo.Data, ds.Now)
+		b.exec(`UPDATE users SET avatar_version=1 WHERE id=$1`, a.UserID)
+	}
+	for _, g := range ds.Gallery {
+		b.exec(`INSERT INTO player_media(id,owner_id,kind,mime,size,width,height,data,created_at) VALUES($1,$2,'image',$3,$4,$5,$6,$7,$8)`,
+			g.ID, g.OwnerID, g.Photo.MIME, len(g.Photo.Data), g.Photo.Width, g.Photo.Height, g.Photo.Data, g.CreatedAt)
+	}
+	for _, c := range ds.Coaches {
+		b.exec(`INSERT INTO coach_profiles(user_id,license_level,specialties,experience_years,football_type,availability,past_clubs,show_license,show_experience,show_football,show_clubs,updated_at)
+			VALUES($1,$2,ARRAY(SELECT json_array_elements_text($3::json)),$4,$5,$6,ARRAY(SELECT json_array_elements_text($7::json)),$8,$9,$10,$11,$12)`,
+			c.UserID, c.LicenseLevel, jsonList(c.Specialties), c.ExperienceYears, c.FootballType, c.Availability, jsonList(c.PastClubs), c.ShowLicense, c.ShowExperience, c.ShowFootball, c.ShowClubs, c.UpdatedAt)
+	}
+	for _, s := range ds.Staff {
+		b.exec(`INSERT INTO club_staff(club_user_id,coach_user_id,status,role,permissions,invited_at,joined_at) VALUES($1,$2,'active',$3,ARRAY(SELECT json_array_elements_text($4::json)),$5,$6)`,
+			s.ClubID, s.CoachID, s.Role, jsonList(s.Permissions), s.InvitedAt, s.JoinedAt)
 	}
 	l := ds.League
 	b.exec(`INSERT INTO leagues(id,name,season,description,status,created_at,updated_at) VALUES($1,$2,$3,$4,'active',$5,$5)`, l.ID, l.Name, l.Season, l.Description, l.CreatedAt)
@@ -215,6 +250,12 @@ func insert(ctx context.Context, tx execer, ds domain.Dataset, hash string) erro
 		b.notification(n)
 	}
 	return b.err
+}
+
+// jsonList passes a text array as JSON, so values with commas stay whole.
+func jsonList(values []string) string {
+	data, _ := json.Marshal(values)
+	return string(data)
 }
 
 type batch struct {
@@ -381,12 +422,19 @@ func (r *Postgres) Counts(ctx context.Context) (domain.Counts, error) {
 	 (SELECT count(*) FROM league_matches WHERE league_id=$3 AND home_goals IS NULL),
 	 (SELECT count(*) FROM tournaments WHERE organizer_id IN (SELECT id FROM d)),
 	 (SELECT count(*) FROM tournament_entries e JOIN tournaments t ON t.id=e.tournament_id WHERE t.organizer_id IN (SELECT id FROM d)),
-	 (SELECT count(*) FROM notifications WHERE recipient_id IN (SELECT id FROM d))`,
-		domain.EmailSuffix, domain.UsernamePrefix, domain.LeagueID).Scan(
+	 (SELECT count(*) FROM notifications WHERE recipient_id IN (SELECT id FROM d)),
+	 (SELECT count(*) FROM d WHERE role='coach'),
+	 (SELECT count(*) FROM user_avatars WHERE user_id IN (SELECT id FROM d)),
+	 (SELECT count(*) FROM social_posts WHERE author_id IN (SELECT id FROM d) AND media_kind<>''),
+	 (SELECT count(*) FROM player_media WHERE owner_id IN (SELECT id FROM d)),
+	 (SELECT count(*) FROM club_staff WHERE coach_user_id IN (SELECT id FROM d)),
+	 (SELECT count(*) FROM content_images WHERE id IN (SELECT json_array_elements_text($4::json)))`,
+		domain.EmailSuffix, domain.UsernamePrefix, domain.LeagueID, jsonList(domain.NewsImageIDs())).Scan(
 		&c.Players, &c.ActiveClubs, &c.Organizers, &c.PendingApplications, &c.RejectedApplications,
 		&c.Posts, &c.Likes, &c.Replies, &c.Follows, &c.ProfileViews, &c.Listings,
 		&c.JoinPending, &c.JoinAccepted, &c.JoinRejected, &c.SquadMembers, &c.Connections,
 		&c.NewsPublished, &c.NewsPending, &c.LeagueTeams, &c.MatchesPlayed, &c.MatchesScheduled,
-		&c.Tournaments, &c.TournamentEntries, &c.Notifications)
+		&c.Tournaments, &c.TournamentEntries, &c.Notifications,
+		&c.Coaches, &c.Avatars, &c.PostMedia, &c.GalleryItems, &c.StaffLinks, &c.NewsImages)
 	return c, err
 }

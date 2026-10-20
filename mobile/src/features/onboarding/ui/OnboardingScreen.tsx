@@ -35,7 +35,7 @@ export function OnboardingScreen(props: Props) {
       <Floodlight height={560} />
       <View style={styles.content}>
         <View style={styles.top}>
-          <Brand />
+          <Brand mark={false} />
           {props.mode === 'intro' ? (
             last ? null : (
               <Pressable

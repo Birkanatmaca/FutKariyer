@@ -29,6 +29,35 @@ Futbolcuları, kulüpleri ve antrenörleri bir araya getiren futbol ağı. React
 
 Oyuncu profili temel alanları Go API üzerinden kaydedilir. Keşifte görünme tercihi liste ve detay erişimini kontrol eder. Sporcular doğrulanmış kulüp/antrenörleri; doğrulanmış kulüp/antrenörler görünür oyuncuları keşfeder. Sporcu profil galerisine fotoğraf/video yüklenebilir; sosyal gönderi medyası da bağlıdır. E-posta doğrulama ve şifre kurtarma henüz eklenmemiştir. Kullanıcı kararıyla üyelik yaş sınırı ve yaş onayı kaldırılmıştır.
 
+## Güncel geliştirme durumu — 20 Ekim 2026: Kulüp ana sayfası ve TFF Ankara bağlantısı
+
+- **Antrenör Saha menüsü:** aktif kulübü olan antrenörde Takımlar yerine Takımım (kulüp, görev, kadro, bekleyen başvuru, yetkiler, Kulübe geç, lig kartı) ve yeni Keşif sayfası (Keşfet filtreleri + İzleme listem). `00038_player_watchlist.sql`; `mobile/src/app/CoachTeamTab.tsx`, `mobile/src/features/clubs/ui/CoachTeamView.tsx`, `mobile/src/features/discovery/ui/ScoutScreen.tsx`.
+- **Kulüp Ligler sekmesi:** Maçlarım | Ligler; Maçlarım kulübün fikstürü, tam puan tablosu ve haftalık grup maçları (`mobile/src/features/clubs/ui/ClubMatchesView.tsx`, `backend/internal/clubs/application/leagues.go`).
+- **Kulüp ana sayfası:** Merhaba kartı (bekleyen işler kartın içinde), yaklaşan maç / puan durumu / son maç sayfalı kaydırılan lig kartı, yan yana ince haber düğmeleri ve Sporcular/Kadro/Turnuvalar bölümlerinin yerine Hızlı işlemler kutucukları (`mobile/src/features/clubs/ui/ClubHelloCard.tsx`, `ClubLeagueCarousel.tsx`, `ClubHomeSections.tsx`). Profil tamamlanma kartı Profili düzenle ekranına taşındı. Ürün kuralları PROJECT.md "Kulüp profili ve ana sayfası" bölümündedir.
+- **TFF Ankara bağlantısı:** `00037_club_tff_link.sql` (`clubs.tff_season/league/group/team/label`). Kulüp takımını Profili düzenle > TFF Ankara ligi'nden seçer (`ClubTffLinkScreen`, futbol özelliğindeki `AnkaraTeamPicker`). Kulüp merkezi bağlı grubu önbellekli TFF Ankara puan/fikstür sayfasından okur (`backend/internal/clubs/application/tff.go`). Demo verisinde Barışspor ve Mamak Belediyespor 2026-2027 U14 Ligi 1. GRUP'a bağlıdır.
+
+| Metot | Yol | İşlev |
+|---|---|---|
+| PUT | /v1/me/club-profile/tff | `{ season, league, group, team }`; takım o grubun TFF tablosunda yoksa 422, TFF sayfasına ulaşılamazsa 503; güncel kulüp profilini döner |
+| DELETE | /v1/me/club-profile/tff | TFF bağlantısını kaldırır; güncel kulüp profilini döner |
+| GET | /v1/me/club-center | Artık `tffLinked`, her ligde `source` ve `standings`, maçlarda `dateOnly`, `venue`, `opponentId` ve `opponentAvatarVersion` alanlarıyla |
+| GET | /v1/me/coach-team | Antrenörün Takımım'ı: `{ invitations, teams: [{ clubId, clubName, avatarVersion, district, role, permissions, pendingApplications, squadCount, tffLinked, league }] }` |
+| GET | /v1/me/watchlist | Doğrulanmış antrenörün İzleme listesi (keşifte görünen oyuncular, en yeni önce) |
+| PUT / DELETE | /v1/me/watchlist/{playerId} | Oyuncuyu listeye ekler / çıkarır (204; en fazla 200) |
+| GET | /v1/me/club-leagues | Maçlarım: `{ tffLinked, leagues: [{ ...lig özeti, matches, weeks: [{ number, matches: [{ homeName, awayName, homeGoals, awayGoals, kickoffAt, dateOnly, venue, own }] }], currentWeek }] }` |
+
+## Güncel geliştirme durumu — 19 Ekim 2026: Popup reklamlar ve görselli demo verisi
+
+- **Popup reklamlar:** `00036_popup_ads.sql` (`popup_ads`, `popup_ad_views`). Ürün kuralları PROJECT.md "Popup reklamlar" bölümündedir. Web panelinde yeni **Popup reklamlar** bölümü (`frontend/src/features/popups`), mobil yöneticide İçerik > Popup sekmesi, uygulamada açılış popup'ı (`mobile/src/features/content/ui/LaunchPopup.tsx`).
+- **Demo verisi:** her etkin demo hesabına profil fotoğrafı veya arma, 18 görselli gönderi (sporcu ve antrenör fotoğrafları profilde de görünür), 5 galeri fotoğrafı, 5 haber kapağı ve Barışspor teknik ekibinde doğrulanmış demo antrenör. Fotoğraflar Unsplash Lisanslı stok fotoğraflardır; kaynaklar `backend/internal/demo/domain/assets/SOURCES.md`.
+
+| Metot | Yol | İşlev |
+|---|---|---|
+| GET | /v1/content/popup | Bu hesap için şimdi gösterilecek popup (`{ popup: { id, imageId, format } }`) veya `{ popup: null }` |
+| POST | /v1/content/popup/{id}/views | Popup gösterildi; aralık ve sınır dışındaki tekrarlar sayılmaz (204) |
+| GET | /v1/admin/content/popups?page=N | Yönetici: popup listesi, gösterim ve ulaşılan hesap sayısıyla |
+| POST, PUT, DELETE | /v1/admin/content/popups[/{id}] | Yönetici: `{ title, imageId, active, intervalMinutes, maxViews }`; biçim görsel boyutundan çıkarılır |
+
 ## Güncel geliştirme durumu — 19 Ekim 2026: Antrenör profili, teknik ekip ve kulüp hesabına geçiş
 
 Ürün kuralları PROJECT.md "Antrenör profili ve kulüp teknik ekibi" bölümündedir. Teknik özet:
@@ -233,6 +262,7 @@ Kullanıcı kararıyla demo/test ortamı için kurgusal veri hazırlandı. Karar
 - Doğum yılı şemada olmadığından 1995–2008 doğum yılları yalnızca deneyim yılını hesaplamak ve bazı gönderi metinlerinde kullanılır.
 - `--remove` ve yeniden kurulum, gerçek hesapların demo içerikle etkileşimlerini de siler (takip, beğeni, tanışma isteği, bildirim). Gerçek bir sporcunun demo kulübe yaptığı takım başvurusu da silinir; hak sahte bir takıma harcandığı için geri döner (yönetici panelinden kulüp silmede başvuru korunur, bu bilinçli bir farktır).
 - Kod: `backend/cmd/seed`, `backend/internal/demo` (domain: sabit veri seti, application: şifre ve doğrulama, data: PostgreSQL kurulum/kaldırma).
+- Görseller ve antrenör (19 Ekim 2026): etkin her demo hesabının profil fotoğrafı (kişiler) veya arması (kulüp, organizasyon) vardır; 18 gönderi görsellidir, Emre, Zeynep, Tolga ve Elif'in galerisinde fotoğraf, 5 haberin kapağı vardır. Doğrulanmış demo antrenör `selim.kara@demo.futcareer.test`, Barışspor teknik ekibinde baş antrenördür (Başvurular, Kadro, İlanlar, Haberler, Sosyal paylaşım izinleri); "Geçiş yap" bu hesapla denenebilir. Fotoğraflar Unsplash Lisanslı stok fotoğraflardır (`backend/internal/demo/domain/assets/SOURCES.md`); fotoğraftaki kişilerin kurgusal adlarla ilgisi yoktur. Görseller seed ikilisine gömülüdür (~2,9 MB).
 
 ## Web yönetici paneli
 

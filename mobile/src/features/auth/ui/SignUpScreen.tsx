@@ -113,73 +113,88 @@ export function SignUpScreen({
       step={2}
     >
       <View style={styles.form}>
-        <Field
-          label={copy.signUp.name}
-          icon={UserRound}
-          value={fullName}
-          onChangeText={setFullName}
-          error={fields.fullName}
-          placeholder={copy.signUp.namePlaceholder}
-          autoComplete="name"
-          textContentType="name"
-          editable={!busy}
-          maxLength={80}
-        />
-        <Field
-          label={copy.form.email}
-          icon={Mail}
-          value={email}
-          onChangeText={setEmail}
-          error={fields.email}
-          placeholder={copy.form.emailPlaceholder}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="email"
-          textContentType="emailAddress"
-          editable={!busy}
-        />
-        <Field
-          label={copy.form.password}
-          icon={LockKeyhole}
-          value={password}
-          onChangeText={setPassword}
-          error={fields.password}
-          placeholder={copy.form.passwordPlaceholder}
-          password
-          autoCapitalize="none"
-          autoComplete="new-password"
-          textContentType="newPassword"
-          hint={copy.signUp.passwordHelp}
-          editable={!busy}
-        />
-        <FootballTypePicker
-          value={footballType}
-          error={fields.footballType}
-          disabled={busy}
-          onChange={chooseFootballType}
-        />
-        {coach ? (
-          <CoachLicensePicker
-            value={licenseLevel}
-            error={fields.licenseLevel}
-            disabled={busy}
-            onChange={chooseLicenseLevel}
+        <View style={styles.group}>
+          <Text accessibilityRole="header" style={styles.groupTitle}>
+            {copy.signUp.accountGroup}
+          </Text>
+          <Field
+            label={copy.signUp.name}
+            icon={UserRound}
+            value={fullName}
+            onChangeText={setFullName}
+            error={fields.fullName}
+            placeholder={copy.signUp.namePlaceholder}
+            autoComplete="name"
+            textContentType="name"
+            editable={!busy}
+            maxLength={80}
           />
-        ) : (
-          <LicenseCheck
-            checked={licenseStatus === 'licensed'}
-            disabled={busy}
-            onChange={checked =>
-              setLicenseStatus(checked ? 'licensed' : 'unlicensed')
-            }
+          <Field
+            label={copy.form.email}
+            icon={Mail}
+            value={email}
+            onChangeText={setEmail}
+            error={fields.email}
+            placeholder={copy.form.emailPlaceholder}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            autoComplete="email"
+            textContentType="emailAddress"
+            editable={!busy}
           />
-        )}
-        <Text style={styles.privacy}>
-          {coach ? copy.signUp.coachPrivacy : copy.signUp.privacy}
-        </Text>
+          <Field
+            label={copy.form.password}
+            icon={LockKeyhole}
+            value={password}
+            onChangeText={setPassword}
+            error={fields.password}
+            placeholder={copy.form.passwordPlaceholder}
+            password
+            autoCapitalize="none"
+            autoComplete="new-password"
+            textContentType="newPassword"
+            hint={copy.signUp.passwordHelp}
+            editable={!busy}
+          />
+        </View>
+        <View style={styles.group}>
+          <Text accessibilityRole="header" style={styles.groupTitle}>
+            {copy.signUp.footballGroup}
+          </Text>
+          <FootballTypePicker
+            value={footballType}
+            error={fields.footballType}
+            disabled={busy}
+            onChange={chooseFootballType}
+          />
+          {coach ? (
+            <CoachLicensePicker
+              value={licenseLevel}
+              error={fields.licenseLevel}
+              disabled={busy}
+              onChange={chooseLicenseLevel}
+            />
+          ) : (
+            <LicenseCheck
+              checked={licenseStatus === 'licensed'}
+              disabled={busy}
+              onChange={checked =>
+                setLicenseStatus(checked ? 'licensed' : 'unlicensed')
+              }
+            />
+          )}
+          <Text style={styles.privacy}>
+            {coach ? copy.signUp.coachPrivacy : copy.signUp.privacy}
+          </Text>
+        </View>
         <ErrorBanner message={error} />
-        <Button label={copy.signUp.button} onPress={submit} loading={busy} />
+        <Button
+          label={copy.signUp.button}
+          onPress={submit}
+          loading={busy}
+          compact
+        />
         <View style={styles.switch}>
           <Text style={styles.question}>{copy.signUp.question}</Text>
           <Pressable
@@ -196,7 +211,9 @@ export function SignUpScreen({
   );
 }
 const styles = StyleSheet.create({
-  form: { gap: space.lg },
+  form: { gap: space.xl },
+  group: { gap: space.lg },
+  groupTitle: { color: colors.text, fontSize: 15, fontWeight: '800' },
   privacy: { color: colors.secondary, fontSize: 12, lineHeight: 19 },
   switch: {
     flexDirection: 'row',
@@ -205,6 +222,6 @@ const styles = StyleSheet.create({
     gap: space.sm,
     paddingVertical: space.sm,
   },
-  question: { color: colors.secondary, fontSize: 13 },
-  link: { color: colors.brand, fontSize: 13, fontWeight: '700' },
+  question: { color: colors.secondary, fontSize: 14 },
+  link: { color: colors.brand, fontSize: 14, fontWeight: '700' },
 });

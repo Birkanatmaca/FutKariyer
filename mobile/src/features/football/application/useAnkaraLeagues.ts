@@ -8,8 +8,10 @@ export function useAnkaraLeagues(
   service: FootballService,
   token: string,
   enabled = true,
+  // Opens on a saved selection, e.g. the club's linked TFF group.
+  initial: AnkaraQuery = emptyAnkaraQuery,
 ) {
-  const [query, setQuery] = useState<AnkaraQuery>(emptyAnkaraQuery);
+  const [query, setQuery] = useState<AnkaraQuery>(initial);
   const load = useCallback(
     () => service.ankara(token, query),
     [service, token, query],

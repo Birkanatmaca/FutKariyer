@@ -19,8 +19,11 @@ type Repository interface {
 	Applications(context.Context, string) ([]domain.ApplicationItem, error)
 	Profile(context.Context, string) (domain.Profile, error)
 	UpdateProfile(context.Context, string, domain.Profile) (domain.Profile, error)
+	SetTFF(context.Context, string, *domain.TFFLink) (domain.Profile, error)
 	Counts(context.Context, string) (domain.Counts, error)
 	LeagueIDs(context.Context, string) ([]string, error)
+	AvatarVersions(context.Context, []string) (map[string]int, error)
+	CoachLinks(context.Context, string) ([]domain.StaffLink, int, error)
 }
 
 // LeagueDetails is the public league read the club center uses for standings and fixtures.
@@ -31,10 +34,13 @@ type LeagueDetails interface {
 type Service struct {
 	repo    Repository
 	leagues LeagueDetails
+	ankara  Ankara
 }
 
-func New(repo Repository, leagues LeagueDetails) *Service {
-	return &Service{repo: repo, leagues: leagues}
+// New wires the club service. ankara may be nil; TFF links then cannot be set
+// and the center shows only leagues run on Fut Career.
+func New(repo Repository, leagues LeagueDetails, ankara Ankara) *Service {
+	return &Service{repo: repo, leagues: leagues, ankara: ankara}
 }
 
 // ProfileInput is what a club may edit. Football type and account name stay admin-managed.
@@ -89,8 +95,9 @@ var profileFields = []struct {
 	{"Antrenman programı", func(p domain.Profile) string { return p.TrainingSchedule }},
 }
 
-// Center assembles the club home summary. Leagues come from the public league
-// detail, so the club sees exactly what players see.
+// Center assembles the club home summary. The club's TFF Ankara group comes
+// first; Fut Career leagues come from the public league detail, so the club
+// sees exactly what players see.
 func (s *Service) Center(ctx context.Context, userID string) (domain.Center, error) {
 	out := domain.Center{MissingFields: []string{}, Leagues: []domain.LeagueView{}}
 	profile, err := s.repo.Profile(ctx, userID)
@@ -111,73 +118,15 @@ func (s *Service) Center(ctx context.Context, userID string) (domain.Center, err
 		return out, err
 	}
 	out.PendingApplications, out.PendingNews, out.PublishedNews = counts.PendingApplications, counts.PendingNews, counts.PublishedNews
-	ids, err := s.repo.LeagueIDs(ctx, userID)
+	linked, leagues, err := s.clubLeagues(ctx, userID, profile)
 	if err != nil {
 		return out, err
 	}
-	for _, id := range ids {
-		detail, err := s.leagues.Get(ctx, id, false)
-		if err != nil {
-			continue
-		}
-		if view, ok := leagueView(detail, userID); ok {
-			out.Leagues = append(out.Leagues, view)
-		}
+	out.TFFLinked = linked
+	for _, l := range leagues {
+		out.Leagues = append(out.Leagues, l.LeagueView)
 	}
 	return out, nil
-}
-
-func leagueView(detail leaguedomain.Detail, clubID string) (domain.LeagueView, bool) {
-	teamID := ""
-	for _, team := range detail.Teams {
-		if team.ClubID == clubID {
-			teamID = team.ID
-		}
-	}
-	if teamID == "" {
-		return domain.LeagueView{}, false
-	}
-	view := domain.LeagueView{LeagueID: detail.League.ID, LeagueName: detail.League.Name, Season: detail.League.Season, Status: detail.League.Status, TeamCount: len(detail.Teams), Upcoming: []domain.MatchView{}, Recent: []domain.MatchView{}}
-	for _, row := range detail.Standings {
-		if row.TeamID == teamID {
-			view.Position, view.Points, view.Played = row.Position, row.Points, row.Played
-			view.Wins, view.Draws, view.Losses, view.GoalDifference = row.Wins, row.Draws, row.Losses, row.GoalDiff
-		}
-	}
-	for _, m := range detail.Matches {
-		if m.HomeTeamID != teamID && m.AwayTeamID != teamID {
-			continue
-		}
-		isHome := m.HomeTeamID == teamID
-		opponent := m.AwayName
-		goalsFor, goalsAgainst := m.HomeGoals, m.AwayGoals
-		if !isHome {
-			opponent = m.HomeName
-			goalsFor, goalsAgainst = m.AwayGoals, m.HomeGoals
-		}
-		item := domain.MatchView{ID: m.ID, Round: m.Round, OpponentName: opponent, IsHome: isHome, KickoffAt: m.KickoffAt}
-		if goalsFor == nil || goalsAgainst == nil {
-			view.Upcoming = append(view.Upcoming, item)
-			continue
-		}
-		item.GoalsFor, item.GoalsAgainst = goalsFor, goalsAgainst
-		switch {
-		case *goalsFor > *goalsAgainst:
-			item.Result = "win"
-		case *goalsFor == *goalsAgainst:
-			item.Result = "draw"
-		default:
-			item.Result = "loss"
-		}
-		view.Recent = append(view.Recent, item)
-	}
-	if len(view.Upcoming) > 3 {
-		view.Upcoming = view.Upcoming[:3]
-	}
-	if len(view.Recent) > 3 {
-		view.Recent = view.Recent[len(view.Recent)-3:]
-	}
-	return view, true
 }
 
 // Overview gathers everything an administrator needs about one club on a single screen.

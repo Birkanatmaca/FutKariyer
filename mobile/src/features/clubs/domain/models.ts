@@ -28,8 +28,22 @@ export type ClubProfile = {
   trainingGroundName: string;
   trainingGroundAddress: string;
   trainingSchedule: string;
+  // The club's team on the TFF Ankara standings page; null until linked.
+  tff: ClubTffLink | null;
   updatedAt: string;
 };
+
+// Ids are the federation page's sezon, lig and grup values; team is the name
+// exactly as the page's table writes it.
+export type ClubTffLink = {
+  season: string;
+  league: string;
+  group: string;
+  team: string;
+  label: string;
+};
+
+export type ClubTffInput = Omit<ClubTffLink, 'label'>;
 
 export type ClubProfileInput = {
   district: string;
@@ -68,12 +82,19 @@ export type ClubLeagueStatus = 'active' | 'finished';
 export type ClubMatchResult = 'win' | 'draw' | 'loss';
 
 // Upcoming fixtures carry no score; the server sends null scores and an empty result.
+// dateOnly: the day is set but the kick-off time is not announced yet.
 export type ClubUpcomingFixture = {
   id: string;
   round: number;
   opponentName: string;
+  // The rival club's account in Fut Career leagues, for its crest; empty for
+  // TFF teams. A version of 0 means no photo.
+  opponentId: string;
+  opponentAvatarVersion: number;
   isHome: boolean;
   kickoffAt: string | null;
+  dateOnly: boolean;
+  venue: string;
 };
 
 export type ClubRecentFixture = ClubUpcomingFixture & {
@@ -82,8 +103,24 @@ export type ClubRecentFixture = ClubUpcomingFixture & {
   result: ClubMatchResult;
 };
 
+export type ClubStanding = {
+  position: number;
+  teamName: string;
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goalDifference: number;
+  points: number;
+  own: boolean;
+};
+
+// "tff": the club's TFF Ankara group; "futcareer": a league run in the app.
+export type ClubLeagueSource = 'tff' | 'futcareer';
+
 export type ClubCenterLeague = {
   leagueId: string;
+  source: ClubLeagueSource;
   leagueName: string;
   season: string;
   status: ClubLeagueStatus;
@@ -97,7 +134,60 @@ export type ClubCenterLeague = {
   goalDifference: number;
   upcoming: ClubUpcomingFixture[];
   recent: ClubRecentFixture[];
+  standings: ClubStanding[];
 };
+
+// A club match on the Maçlarım page: played ones carry the score and result.
+export type ClubMatch = ClubUpcomingFixture & {
+  goalsFor: number | null;
+  goalsAgainst: number | null;
+  result: ClubMatchResult | '';
+};
+
+// One match of a week in the club's group, both sides named.
+export type ClubWeekMatch = {
+  id: string;
+  homeName: string;
+  awayName: string;
+  homeGoals: number | null;
+  awayGoals: number | null;
+  kickoffAt: string | null;
+  dateOnly: boolean;
+  venue: string;
+  own: boolean;
+};
+
+export type ClubWeek = { number: number; matches: ClubWeekMatch[] };
+
+// Maçlarım (20 Oct 2026): the league summary plus every club match oldest
+// week first and every week of the group.
+export type ClubLeagueDetail = ClubCenterLeague & {
+  matches: ClubMatch[];
+  weeks: ClubWeek[];
+  currentWeek: number;
+};
+
+export type ClubLeagues = {
+  tffLinked: boolean;
+  leagues: ClubLeagueDetail[];
+};
+
+// Takımım (20 Oct 2026): a club the coach works for, with its main league.
+export type CoachTeam = {
+  clubId: string;
+  clubName: string;
+  avatarVersion: number;
+  district: string;
+  role: string;
+  permissions: string[];
+  // Counted only for coaches with the applications right.
+  pendingApplications: number;
+  squadCount: number;
+  tffLinked: boolean;
+  league: ClubCenterLeague | null;
+};
+
+export type CoachTeams = { teams: CoachTeam[]; invitations: number };
 
 export type ClubCenter = {
   completenessPercent: number;
@@ -105,6 +195,8 @@ export type ClubCenter = {
   pendingApplications: number;
   pendingNews: number;
   publishedNews: number;
+  // True once the club picked its TFF team, even if the page could not be read.
+  tffLinked: boolean;
   leagues: ClubCenterLeague[];
 };
 
@@ -114,4 +206,8 @@ export interface ClubRepository {
   news(token: string): Promise<ClubArticle[]>;
   createNews(token: string, input: ClubArticleInput): Promise<ClubArticle>;
   center(token: string): Promise<ClubCenter>;
+  leagues(token: string): Promise<ClubLeagues>;
+  coachTeams(token: string): Promise<CoachTeams>;
+  setTff(token: string, input: ClubTffInput): Promise<ClubProfile>;
+  clearTff(token: string): Promise<ClubProfile>;
 }

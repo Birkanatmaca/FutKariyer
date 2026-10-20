@@ -19,11 +19,13 @@ import { hubImages } from './hub-images';
 // The centre hub of the tab bar (19 Oct 2026): four pages share the raised
 // button, each with its own object artwork in the lit night-stadium style of
 // the ball. The artworks have no backdrop, so they sit on any surface.
-export type HubRoute = 'Social' | 'Profile' | 'Teams' | 'Games';
+// Keşif (20 Oct 2026) is the coach's fifth page, between Takımlar and Oyunlar.
+export type HubRoute = 'Social' | 'Profile' | 'Teams' | 'Scout' | 'Games';
 export const hubRoutes: readonly HubRoute[] = [
   'Social',
   'Profile',
   'Teams',
+  'Scout',
   'Games',
 ];
 export function isHubRoute(name: string): name is HubRoute {
@@ -268,9 +270,101 @@ function GamepadArt({ size }: { size: number }) {
   );
 }
 
+// Keşif: teal scouting binoculars whose lenses glow with the pitch's lime.
+function BinocularsArt({ size }: { size: number }) {
+  const barrels = [
+    { x: 7, lens: 17.5 },
+    { x: 36, lens: 46.5 },
+  ];
+  return (
+    <Svg width={size} height={size} viewBox="0 0 64 64" aria-hidden>
+      <Defs>
+        <LinearGradient id="scopeShade" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0.25" stopColor={colors.brandInk} stopOpacity={0} />
+          <Stop offset="1" stopColor={colors.brandInk} stopOpacity={0.45} />
+        </LinearGradient>
+        <RadialGradient id="scopeLens" cx="0.4" cy="0.35" r="0.75">
+          <Stop offset="0" stopColor={colors.floodlight} />
+          <Stop offset="0.45" stopColor={colors.brand} />
+          <Stop offset="1" stopColor={colors.brandInk} />
+        </RadialGradient>
+      </Defs>
+      <Rect x={26} y={22} width={12} height={12} rx={3} fill={colors.accent} />
+      <Rect
+        x={26}
+        y={22}
+        width={12}
+        height={12}
+        rx={3}
+        fill="url(#scopeShade)"
+      />
+      {barrels.map(({ x, lens }) => (
+        <React.Fragment key={x}>
+          <Rect
+            x={x + 4}
+            y={9}
+            width={13}
+            height={9}
+            rx={3}
+            fill={colors.brandInk}
+            stroke={colors.accent}
+            strokeOpacity={0.6}
+            strokeWidth={1.2}
+          />
+          <Rect
+            x={x}
+            y={16}
+            width={21}
+            height={32}
+            rx={8}
+            fill={colors.accent}
+          />
+          <Rect
+            x={x}
+            y={16}
+            width={21}
+            height={32}
+            rx={8}
+            fill="url(#scopeShade)"
+          />
+          <Path
+            d={`M${x + 4} 22 Q${x + 4} 19 ${x + 7} 19`}
+            fill="none"
+            stroke={colors.text}
+            strokeOpacity={0.5}
+            strokeWidth={1.6}
+            strokeLinecap="round"
+          />
+          <Circle cx={lens} cy={47} r={9} fill={colors.brandInk} />
+          <Circle cx={lens} cy={47} r={6.4} fill="url(#scopeLens)" />
+          <Circle
+            cx={lens - 2.2}
+            cy={44.6}
+            r={1.5}
+            fill={colors.text}
+            fillOpacity={0.85}
+          />
+          <Rect
+            x={x}
+            y={16}
+            width={21}
+            height={32}
+            rx={8}
+            fill="none"
+            stroke={colors.brandInk}
+            strokeOpacity={0.5}
+            strokeWidth={1.4}
+          />
+        </React.Fragment>
+      ))}
+    </Svg>
+  );
+}
+
 export const hubArt: Record<HubRoute, Art> = {
   Social: SocialArt,
   Profile: ProfileArt,
   Teams: StadiumArt,
+  Scout: BinocularsArt,
   Games: GamepadArt,
 };

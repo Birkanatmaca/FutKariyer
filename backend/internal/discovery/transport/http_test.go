@@ -171,6 +171,63 @@ func TestDiscoveryVisibilityVerificationAndPrivacy(t *testing.T) {
 		call("players/"+id, clubSession.Token, 404)
 	}
 	call("clubs/"+coach.ID, player.Token, 404)
+	// İzleme listesi: verified coaches only, visible players only.
+	watch := func(method, id, token string, status int) {
+		t.Helper()
+		r := httptest.NewRequest(method, "/v1/me/watchlist/"+id, nil)
+		r.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		if w.Code != status {
+			t.Fatalf("watch %s %s: got %d want %d: %s", method, id, w.Code, status, w.Body)
+		}
+	}
+	watchlist := func(token string, status int) []application.Profile {
+		t.Helper()
+		r := httptest.NewRequest("GET", "/v1/me/watchlist", nil)
+		r.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, r)
+		if w.Code != status {
+			t.Fatalf("watchlist: got %d want %d: %s", w.Code, status, w.Body)
+		}
+		var out struct{ Items []application.Profile }
+		if status == 200 {
+			if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+				t.Fatal(err)
+			}
+		}
+		return out.Items
+	}
+	watch("PUT", player.User.ID, player.Token, 403)
+	watch("PUT", player.User.ID, clubSession.Token, 403)
+	watch("PUT", private.User.ID, coachSession.Token, 404)
+	watch("PUT", "missing", coachSession.Token, 404)
+	watch("PUT", player.User.ID, coachSession.Token, 204)
+	watch("PUT", player.User.ID, coachSession.Token, 204)
+	if items := watchlist(coachSession.Token, 200); len(items) != 1 || items[0].ID != player.User.ID || items[0].PlayerProfile == nil {
+		t.Fatalf("watchlist: %+v", items)
+	}
+	hidden := input
+	hidden.Discoverable = false
+	if _, err := players.Save(ctx, player.User.ID, hidden); err != nil {
+		t.Fatal(err)
+	}
+	if items := watchlist(coachSession.Token, 200); len(items) != 0 {
+		t.Fatalf("a hidden player left the list: %+v", items)
+	}
+	if _, err := players.Save(ctx, player.User.ID, input); err != nil {
+		t.Fatal(err)
+	}
+	if items := watchlist(coachSession.Token, 200); len(items) != 1 {
+		t.Fatal("the star must come back when the player is visible again")
+	}
+	watch("DELETE", player.User.ID, coachSession.Token, 204)
+	watch("DELETE", player.User.ID, coachSession.Token, 204)
+	if items := watchlist(coachSession.Token, 200); len(items) != 0 {
+		t.Fatalf("unstar: %+v", items)
+	}
+	watchlist(player.Token, 403)
 	call("players/"+player.User.ID, clubSession.Token, 200)
 	call("players/"+player.User.ID, clubSession.Token, 200)
 	insights := func(token string, status int) domain.Insights {

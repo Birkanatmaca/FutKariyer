@@ -49,6 +49,7 @@ export const copy = {
   },
   panel: {
     ads: 'Reklamlar',
+    popups: 'Popup reklamlar',
     news: 'Haberler',
     leagues: 'Ligler',
     payments: 'Ödemeler',
@@ -148,6 +149,52 @@ export const copy = {
       rejected: 'Reddedildi',
     },
     club: (name: string) => 'Kulüp: ' + name,
+  },
+  popups: {
+    hint: 'Uygulama açılırken gösterilen tam ekran veya kart reklamları yönet.',
+    create: 'Popup ekle',
+    edit: 'Popup reklamı düzenle',
+    preview: 'Popup önizlemesi',
+    format: 'Biçim',
+    formats: {
+      square: 'Kare',
+      portrait: 'Dikey',
+      story: 'Tam ekran',
+    },
+    selected: (name: string, format: string) =>
+      'Seçilen görsel: ' + name + ' · ' + format,
+    sizeError:
+      'Görsel 1080×1080 (kare), 1080×1350 (dikey) veya 1080×1920 (tam ekran) piksel olmalı.',
+    wrongSize: (width: number, height: number) =>
+      'Bu görsel ' +
+      width +
+      '×' +
+      height +
+      ' piksel. Kabul edilen boyutlar: 1080×1080, 1080×1350 veya 1080×1920.',
+    interval: 'Gösterim aralığı',
+    unit: 'Birim',
+    units: { minutes: 'Dakika', hours: 'Saat', days: 'Gün' },
+    intervalHint: 'Aralık 1 dakika ile 30 gün arasında olmalı.',
+    maxViews: 'Bir hesaba en fazla gösterim',
+    summary: (minutes: number, views: number) => {
+      const every =
+        minutes % 1440 === 0
+          ? minutes / 1440 + ' günde'
+          : minutes % 60 === 0
+          ? minutes / 60 + ' saatte'
+          : minutes + ' dakikada';
+      return 'Her ' + every + ' bir, hesap başına en fazla ' + views + ' kez';
+    },
+    frequency: 'Sıklık',
+    stats: 'Gösterim',
+    reach: (views: number, viewers: number) =>
+      views + ' gösterim · ' + viewers + ' hesap',
+    active: 'Popup reklamı yayına al',
+    empty: 'Henüz popup reklam yok',
+    emptyHint: 'Uygulama açılışında gösterilecek bir görsel ekleyerek başla.',
+    remove: 'Popup reklamı sil',
+    deleteConfirm:
+      'Bu popup reklam ve gösterim kayıtları kalıcı silinecek. Devam etmek için sil düğmesine bas.',
   },
   leagues: {
     eyebrow: 'LİG YÖNETİMİ',

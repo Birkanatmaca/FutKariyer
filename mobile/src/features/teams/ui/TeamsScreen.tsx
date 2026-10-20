@@ -30,7 +30,10 @@ const service = createTeamsService(teamsRepository);
 export function TeamsScreen({
   onOpenRights,
   open,
+  header,
 }: {
+  // Shown under the logo, e.g. a coach's Takımım | Takımlar switch.
+  header?: React.ReactNode;
   // Opens the team application rights screen from the header badge (players only).
   onOpenRights?(): void;
   // Opens one team's page, e.g. from a search result; `at` makes a repeat open of the same team count.
@@ -76,6 +79,7 @@ export function TeamsScreen({
   return (
     <Screen>
       <Brand mark={false} />
+      {header}
       <PageHeader
         eyebrow={copy.teams.eyebrow}
         title={copy.teams.title}

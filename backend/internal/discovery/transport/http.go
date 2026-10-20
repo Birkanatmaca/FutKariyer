@@ -28,6 +28,9 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 	mux.HandleFunc("PUT /v1/discovery/{kind}/{id}/follow", h.follow)
 	mux.HandleFunc("GET /v1/me/insights", h.insights)
 	mux.HandleFunc("GET /v1/me/profile-visitors", h.visitors)
+	mux.HandleFunc("GET /v1/me/watchlist", h.watchlist)
+	mux.HandleFunc("PUT /v1/me/watchlist/{playerId}", h.watch(true))
+	mux.HandleFunc("DELETE /v1/me/watchlist/{playerId}", h.watch(false))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -145,6 +148,34 @@ func (h *Handler) visitors(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	write(w, 200, out)
+}
+
+// watchlist is the coach's İzleme listesi: starred players still in discovery.
+func (h *Handler) watchlist(w http.ResponseWriter, r *http.Request) {
+	viewer, ok := h.viewer(w, r)
+	if !ok {
+		return
+	}
+	items, err := h.service.Watchlist(r.Context(), viewer)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, map[string]any{"items": items})
+}
+
+func (h *Handler) watch(on bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		viewer, ok := h.viewer(w, r)
+		if !ok {
+			return
+		}
+		if err := h.service.Watch(r.Context(), viewer, r.PathValue("playerId"), on); err != nil {
+			failure(w, err)
+			return
+		}
+		w.WriteHeader(204)
+	}
 }
 
 func (h *Handler) follow(w http.ResponseWriter, r *http.Request) {

@@ -25,6 +25,7 @@ import {
   ClubOverviewScreen,
   ContentEditorScreen,
   ContentScreen,
+  PopupEditorScreen,
   LeagueEditorScreen,
   LeaguesScreen,
   LeagueWorkspaceScreen,
@@ -39,6 +40,7 @@ import {
   type AdminServices,
   type ContentItem,
   type ContentSection,
+  type PopupAd,
   type ContentTab,
   type League,
   type LeagueMatch,
@@ -66,6 +68,7 @@ type AccountsRoutes = {
 type ContentRoutes = {
   ContentHome: ({ tab?: ContentTab } & Changed) | undefined;
   ContentEditor: { section: ContentSection; item?: ContentItem };
+  PopupEditor: { item?: PopupAd } | undefined;
 };
 type AdminMoreRoutes = {
   MoreHome: undefined;
@@ -275,6 +278,24 @@ function ContentNavigator({ services }: { services: AdminServices }) {
             }
             onEdit={(section, item) =>
               navigation.navigate('ContentEditor', { section, item })
+            }
+            onCreatePopup={() => navigation.navigate('PopupEditor')}
+            onEditPopup={item => navigation.navigate('PopupEditor', { item })}
+          />
+        )}
+      </ContentStack.Screen>
+      <ContentStack.Screen name="PopupEditor">
+        {({ navigation, route }) => (
+          <PopupEditorScreen
+            services={services}
+            item={route.params?.item}
+            onBack={() => navigation.goBack()}
+            onDone={notice =>
+              navigation.popTo('ContentHome', {
+                tab: 'popups',
+                changedAt: Date.now(),
+                notice,
+              })
             }
           />
         )}

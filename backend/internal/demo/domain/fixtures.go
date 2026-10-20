@@ -10,6 +10,13 @@ type clubFixture struct {
 	ageDays                                                  int
 }
 
+// tffLinks put two demo clubs on their real TFF Ankara group (2026-2027 U14
+// Ligi, 1. GRUP), so the club home shows the federation's fixture and table.
+var tffLinks = map[string]TFFLink{
+	"barisspor": {Season: "20", League: "1166", Group: "1289", Team: "BARIŞSPOR", Label: "2026-2027 Sezonu · U14 Ligi · 1. GRUP"},
+	"mamakbld":  {Season: "20", League: "1166", Group: "1289", Team: "MAMAK BELEDİYESİ SPOR", Label: "2026-2027 Sezonu · U14 Ligi · 1. GRUP"},
+}
+
 var clubFixtures = []clubFixture{
 	{"barisspor", "Barışspor", "demo.barisspor", "amateur", "Altındağ",
 		"Altındağ'ın köklü amatör kulüplerinden biriyiz. Gençlere süre veren, tempolu ve top tutan bir oyun anlayışımız var.",
@@ -172,6 +179,68 @@ var postFixtures = []postFixture{
 	{"golbasiyildiz", 5, 13, "Kış Kupası'na başvurduk. Perşembe 21:00 antrenmanına herkes davetli.", []replyFixture{{"tolga", "Hazırız hocam!"}}},
 	{"tuncaltindag", 3, 11, "Cumartesi antrenmanı 18:30'da Karapürçek'te. Yeni oyuncu adaylarını da bekliyoruz.", nil},
 	{"keciorensportif", 11, 10, "Teknik ekibimiz yeni sezon için oyuncu takibine başladı. Profilini güncel tutan oyuncuları inceliyoruz.", nil},
+	{"selim", 6, 11, "Altyapı grubumuzla cumartesi sabahı top tekniği ve oyun içinde karar verme çalıştık. Çocukların her hafta biraz daha cesur oynadığını görmek en büyük motivasyonum.", nil},
+	{"selim", 2, 20, "Barışspor'da bu sezon teknik ekibin başındayım. Önde pres ve hızlı geçiş üzerine çalışıyoruz; pazar maçında sahada görüşmek üzere.", []replyFixture{{"emre", "Hazırız hocam!"}, {"barisspor", "Başarılar hocam, birlikte büyüyeceğiz."}}},
+}
+
+// The demo coach (19 Oct 2026) signed up from the app, was verified, and runs
+// Barışspor's technical staff with section permissions.
+type coachFixture struct {
+	key, name, emailLocal    string
+	license, footballType    string
+	availability             string
+	specialties, pastClubs   []string
+	experienceYears, ageDays int
+	club, role               string
+	permissions              []string
+}
+
+var demoCoach = coachFixture{
+	key: "selim", name: "Selim Kara", emailLocal: "selim.kara",
+	license: "uefa_b", footballType: "amateur", availability: "open_to_offers",
+	specialties: []string{"head_coach", "youth"}, pastClubs: []string{"Etimesgut Belediyespor", "Ankara Demirspor Altyapı"},
+	experienceYears: 14, ageDays: 34,
+	club: "barisspor", role: "head_coach", permissions: []string{"applications", "squad", "listings", "news", "social"},
+}
+
+// Photos on posts, keyed "author/day" (one post per author and day).
+var postPhotos = map[string]string{
+	"emre/4":             "post-sunday-match",
+	"emre/1":             "post-shot",
+	"burak/3":            "post-tackle",
+	"mert/12":            "post-team-photo",
+	"oguzhan/14":         "post-keeper-gloves",
+	"can/9":              "post-boot-on-ball",
+	"berkay/13":          "post-ball-on-grass",
+	"berkay/0":           "post-night-pitch",
+	"kaan/15":            "post-futsal-ball",
+	"tolga/18":           "post-futsal",
+	"zeynep/16":          "post-keeper-ready",
+	"zeynep/2":           "post-keeper-save",
+	"barisspor/4":        "post-match",
+	"ankara1910/9":       "post-stadium",
+	"golbasiyildiz/5":    "post-turf-goal",
+	"keciorensportif/11": "post-tactics-board",
+	"selim/6":            "post-youth-training",
+	"selim/2":            "post-pitch-above",
+}
+
+// Extra photos in a few players' profile galleries.
+var galleryPhotos = []struct{ player, photo string }{
+	{"emre", "post-duel"},
+	{"emre", "post-match"},
+	{"zeynep", "post-keeper-ready"},
+	{"tolga", "post-futsal-ball"},
+	{"elif", "post-night-pitch"},
+}
+
+// News covers.
+var newsPhotos = map[string]string{
+	"barisspor-sezon": "post-duel",
+	"ankara1910-kamp": "post-stadium",
+	"yildiz-kupa":     "post-turf-goal",
+	"tunc-deplasman":  "post-tackle",
+	"ulubey-kadro":    "post-sunday-match",
 }
 
 type newsFixture struct {

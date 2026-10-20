@@ -9,6 +9,7 @@ import {
 } from './http-messaging-repositories';
 import { createPaymentsRepository } from './http-payments-repository';
 import { createReportsRepository } from './http-reports-repository';
+import { createPopupsRepository } from './http-popups-repository';
 
 export function createAdminRepositories(
   gateway: AdminGateway,
@@ -17,6 +18,7 @@ export function createAdminRepositories(
     accounts: createAccountsRepository(gateway),
     applications: createApplicationsRepository(gateway),
     content: createContentRepository(gateway),
+    popups: createPopupsRepository(gateway),
     leagues: createLeaguesRepository(gateway),
     gifts: createGiftsRepository(gateway),
     announcements: createAnnouncementsRepository(gateway),

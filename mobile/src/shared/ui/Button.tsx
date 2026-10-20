@@ -9,6 +9,8 @@ type Props = {
   loading?: boolean;
   disabled?: boolean;
   secondary?: boolean;
+  // A slimmer, centred button without the arrow (sign-in and sign-up).
+  compact?: boolean;
   accessibilityLabel?: string;
 };
 export function Button({
@@ -17,6 +19,7 @@ export function Button({
   loading,
   disabled,
   secondary,
+  compact,
   accessibilityLabel,
 }: Props) {
   const foreground = secondary ? colors.text : colors.brandInk;
@@ -33,6 +36,7 @@ export function Button({
       style={({ pressed }) => [
         styles.button,
         secondary && styles.secondary,
+        compact && styles.compact,
         pressed && styles.pressed,
         loading && styles.loading,
         disabled && styles.disabled,
@@ -42,8 +46,18 @@ export function Button({
         <ActivityIndicator color={foreground} />
       ) : (
         <>
-          <Text style={[styles.label, { color: foreground }]}>{label}</Text>
-          <ArrowUpRight size={20} color={foreground} strokeWidth={2} />
+          <Text
+            style={[
+              styles.label,
+              compact && styles.compactLabel,
+              { color: foreground },
+            ]}
+          >
+            {label}
+          </Text>
+          {compact ? null : (
+            <ArrowUpRight size={20} color={foreground} strokeWidth={2} />
+          )}
         </>
       )}
     </Pressable>
@@ -75,6 +89,15 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
     flexShrink: 1,
   },
+  compact: {
+    minHeight: 50,
+    paddingVertical: space.md,
+    justifyContent: 'center',
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  compactLabel: { fontSize: 15, fontWeight: '700', letterSpacing: 0 },
   pressed: { opacity: 0.88, transform: [{ scale: 0.98 }] },
   loading: { justifyContent: 'center' },
   disabled: { opacity: 0.45, shadowOpacity: 0, elevation: 0 },

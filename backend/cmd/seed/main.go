@@ -102,7 +102,7 @@ func printCounts(w io.Writer, c domain.Counts) {
 		label string
 		n     int
 	}{
-		{"Sporcu", c.Players}, {"Etkin kulüp", c.ActiveClubs}, {"Etkin organizasyon", c.Organizers},
+		{"Sporcu", c.Players}, {"Antrenör", c.Coaches}, {"Etkin kulüp", c.ActiveClubs}, {"Etkin organizasyon", c.Organizers},
 		{"Bekleyen başvuru", c.PendingApplications}, {"Reddedilen başvuru", c.RejectedApplications},
 		{"Gönderi", c.Posts}, {"Beğeni", c.Likes}, {"Yanıt", c.Replies}, {"Takip", c.Follows}, {"Profil görüntüleme", c.ProfileViews},
 		{"Açık ilan", c.Listings}, {"Takım başvurusu (bekleyen)", c.JoinPending}, {"Takım başvurusu (kabul)", c.JoinAccepted},
@@ -110,6 +110,8 @@ func printCounts(w io.Writer, c domain.Counts) {
 		{"Yayındaki kulüp haberi", c.NewsPublished}, {"Onay bekleyen kulüp haberi", c.NewsPending},
 		{"Lig takımı", c.LeagueTeams}, {"Oynanmış maç", c.MatchesPlayed}, {"Planlanmış maç", c.MatchesScheduled},
 		{"Turnuva", c.Tournaments}, {"Turnuva başvurusu", c.TournamentEntries}, {"Bildirim", c.Notifications},
+		{"Profil fotoğrafı", c.Avatars}, {"Görselli gönderi", c.PostMedia}, {"Galeri fotoğrafı", c.GalleryItems},
+		{"Teknik ekip bağı", c.StaffLinks}, {"Haber kapağı", c.NewsImages},
 	}
 	for _, r := range rows {
 		fmt.Fprintf(w, "%-28s %d\n", r.label, r.n)

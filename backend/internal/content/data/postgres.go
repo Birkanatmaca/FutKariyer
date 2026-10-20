@@ -28,7 +28,7 @@ func (r *Postgres) SaveImage(ctx context.Context, in domain.Image) error {
 }
 func (r *Postgres) Image(ctx context.Context, id string, admin bool) (domain.Image, error) {
 	var out domain.Image
-	err := r.db.QueryRowContext(ctx, `SELECT id,mime,data FROM content_images i WHERE id=$1 AND ($2 OR EXISTS(SELECT 1 FROM advertisements WHERE image_id=i.id AND active) OR EXISTS(SELECT 1 FROM news_articles WHERE image_id=i.id AND published))`, id, admin).Scan(&out.ID, &out.MIME, &out.Data)
+	err := r.db.QueryRowContext(ctx, `SELECT id,mime,data FROM content_images i WHERE id=$1 AND ($2 OR EXISTS(SELECT 1 FROM advertisements WHERE image_id=i.id AND active) OR EXISTS(SELECT 1 FROM news_articles WHERE image_id=i.id AND published) OR EXISTS(SELECT 1 FROM popup_ads WHERE image_id=i.id AND active))`, id, admin).Scan(&out.ID, &out.MIME, &out.Data)
 	return out, found(err)
 }
 

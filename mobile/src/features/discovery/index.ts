@@ -5,3 +5,5 @@ export { createDiscoveryService } from './application/discovery-service';
 export { discoveryRepository } from './data/http-discovery-repository';
 export type { DiscoveryKind } from './domain/models';
 export type { DiscoveryProfile, DiscoveryQuery } from './domain/models';
+export { ScoutScreen } from './ui/ScoutScreen';
+export { WatchButton } from './ui/WatchButton';

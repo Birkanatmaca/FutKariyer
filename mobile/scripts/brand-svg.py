@@ -9,6 +9,7 @@
 # Writes:
 #   assets/brand/logo-mark.svg                   the mark (rounded square, flat lime)
 #   assets/brand/logo-lockup-{light,dark}.svg    mark + wordmark for light / dark surfaces
+#   assets/brand/logo-wordmark-{light,dark}.svg  the wordmark alone (launch screens)
 #   src/shared/ui/brand-paths.ts                 wordmark outlines for Wordmark.tsx
 #   ../frontend/src/shared/ui/brand-paths.ts     same outlines for the admin panel
 #   ../frontend/src/shared/ui/brand-mark.svg     the mark for the admin panel
@@ -82,6 +83,15 @@ def lockup_svg(variant, word):
          fut, fut_colour, career, career_colour)
 
 
+def wordmark_svg(variant, word):
+    width, height, (fut, career) = word
+    fut_colour, career_colour = WORDMARK[variant]
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 %.1f %.1f">'
+        '<path d="%s" fill="%s"/><path d="%s" fill="%s"/></svg>'
+    ) % (width, height, fut, fut_colour, career, career_colour)
+
+
 def ts_module(word):
     width, height, (fut, career) = word
     return (
@@ -106,6 +116,7 @@ def main():
     write("assets/brand/logo-mark.svg", mark_svg(512))
     for variant in WORDMARK:
         write("assets/brand/logo-lockup-%s.svg" % variant, lockup_svg(variant, word))
+        write("assets/brand/logo-wordmark-%s.svg" % variant, wordmark_svg(variant, word))
     module = ts_module(word)
     write("src/shared/ui/brand-paths.ts", module)
     write("../frontend/src/shared/ui/brand-paths.ts", module)

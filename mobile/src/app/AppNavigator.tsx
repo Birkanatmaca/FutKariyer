@@ -32,13 +32,17 @@ import { BlockedUsersScreen, moderationService } from '../features/moderation';
 import {
   DiscoverScreen,
   DiscoveryProfileScreen,
+  ScoutScreen,
+  WatchButton,
   createDiscoveryService,
   discoveryRepository,
   type DiscoveryKind,
 } from '../features/discovery';
+import { CoachTeamTab } from './CoachTeamTab';
 import {
   createContentService,
   contentRepository,
+  LaunchPopup,
   NewsScreen,
   NewsDetailScreen,
 } from '../features/content';
@@ -66,7 +70,9 @@ import {
   ClubHomeScreen,
   ClubNewsComposeScreen,
   ClubNewsMineScreen,
+  ClubMatchesView,
   ClubProfileEditScreen,
+  ClubTffLinkScreen,
   clubRepository,
   createClubService,
 } from '../features/clubs';
@@ -115,8 +121,6 @@ import {
   TeamApplicationsScreen,
   TeamJoinRequestsScreen,
   TeamsScreen,
-  createTeamsService,
-  teamsRepository,
 } from '../features/teams';
 import {
   OrganizerHomeScreen,
@@ -137,7 +141,8 @@ import {
   profileSharer,
   type ProfileCounts,
 } from '../features/players';
-import { Brand } from '../shared/ui/Brand';
+import { Wordmark } from '../shared/ui/Wordmark';
+import { wordmarkSize } from '../shared/ui/brand-paths';
 import { Button } from '../shared/ui/Button';
 import { ErrorBanner } from '../shared/ui/ErrorBanner';
 import { copy } from '../shared/lib/copy';
@@ -167,6 +172,7 @@ type MainRoutes = {
   Social: NavigatorScreenParams<SocialRoutes> | undefined;
   Profile: NavigatorScreenParams<ProfileRoutes> | undefined;
   Teams: { open?: { id: string; at: number } } | undefined;
+  Scout: NavigatorScreenParams<ScoutRoutes> | undefined;
   Games: undefined;
   Notifications: undefined;
   More: NavigatorScreenParams<MoreRoutes> | undefined;
@@ -178,6 +184,11 @@ type ProfileRoutes = {
   CoachProfile: undefined;
   PostThread: { id: string };
   PostPublish: undefined;
+};
+// Keşif (20 Oct 2026): a coach's scouting page and the players it opens.
+type ScoutRoutes = {
+  ScoutHome: undefined;
+  ScoutProfile: { id: string };
 };
 type DiscoveryRoutes = {
   DiscoveryList: undefined;
@@ -195,6 +206,7 @@ type MoreRoutes = {
   News: NavigatorScreenParams<NewsRoutes> | undefined;
   Gifts: undefined;
   ClubProfileEdit: undefined;
+  ClubTffLink: undefined;
   ClubNewsCompose: undefined;
   ClubNewsMine: undefined;
   Squad: undefined;
@@ -238,11 +250,15 @@ const contentService = createContentService(contentRepository);
 const Tabs = createBottomTabNavigator<MainRoutes>();
 const ProfileStack = createNativeStackNavigator<ProfileRoutes>();
 const DiscoveryStack = createNativeStackNavigator<DiscoveryRoutes>();
+const ScoutStack = createNativeStackNavigator<ScoutRoutes>();
 const MoreStack = createNativeStackNavigator<MoreRoutes>();
 const discoveryService = createDiscoveryService(discoveryRepository);
 const playerProfileService = createPlayerProfileService(
   playerProfileRepository,
 );
+// The native launch screens show the FUTCAREER wordmark alone at this width
+// (mobile/scripts/app-icon.sh); the startup screen repeats it in place.
+const launchWordmarkWidth = 216;
 const navigationRef = createNavigationContainerRef<MainRoutes>();
 const openNotifications = () => {
   if (navigationRef.isReady()) navigationRef.navigate('Notifications');
@@ -254,7 +270,6 @@ const socialService = createSocialService(socialRepository);
 const giftsService = createGiftsService(giftsRepository);
 const connectionsService = createConnectionsService(connectionsRepository);
 const clubService = createClubService(clubRepository);
-const teamsService = createTeamsService(teamsRepository);
 const squadService = createSquadService(squadRepository);
 const listingsService = createListingsService(listingsRepository);
 const tournamentsService = createTournamentsService(tournamentsRepository);
@@ -311,6 +326,24 @@ function MainTabs() {
       .catch(() => setUnreadCount(null));
   }, [token]);
   useEffect(refreshUnread, [refreshUnread]);
+  // A coach on a club's staff gets Takımım in place of Takımlar, and Keşif.
+  const coach = user?.role === 'coach' && !delegate;
+  const [hasTeam, setHasTeam] = useState(false);
+  const refreshTeam = useCallback(() => {
+    if (!token || !coach) {
+      setHasTeam(false);
+      return;
+    }
+    coachRepository
+      .memberships(token)
+      .then(items => setHasTeam(items.some(item => item.status === 'active')))
+      .catch(() => undefined);
+  }, [token, coach]);
+  useEffect(refreshTeam, [refreshTeam]);
+  const refreshTabs = useCallback(() => {
+    refreshUnread();
+    refreshTeam();
+  }, [refreshUnread, refreshTeam]);
   const renderTabBar = useCallback(
     (props: BottomTabBarProps) => {
       const route = props.state.routes[props.state.index];
@@ -319,12 +352,23 @@ function MainTabs() {
         getFocusedRouteNameFromRoute(route) === 'SocialPublish'
       )
         return null;
-      return <FutTabBar {...props} badges={{ Notifications: unreadCount }} />;
+      return (
+        <FutTabBar
+          {...props}
+          badges={{ Notifications: unreadCount }}
+          labels={{
+            ...copy.tabs,
+            Teams: hasTeam ? copy.tabs.MyTeam : copy.tabs.Teams,
+          }}
+        />
+      );
     },
-    [unreadCount],
+    [unreadCount, hasTeam],
   );
   return (
     <View style={styles.main}>
+      {/* A popup ad, when one is due, opens once as the signed-in app starts. */}
+      <LaunchPopup token={token} service={contentService} enabled={!delegate} />
       {delegate && user ? (
         <DelegateBanner
           clubName={user.fullName}
@@ -334,7 +378,7 @@ function MainTabs() {
       ) : null}
       <Tabs.Navigator
         tabBar={renderTabBar}
-        screenListeners={{ focus: refreshUnread }}
+        screenListeners={{ focus: refreshTabs }}
         screenOptions={{
           headerShown: false,
           sceneStyle: { backgroundColor: colors.bg },
@@ -357,11 +401,15 @@ function MainTabs() {
               <ClubHomeScreen
                 clubService={clubService}
                 contentService={contentService}
-                teamsService={teamsService}
-                discoveryService={discoveryService}
                 onProfile={() =>
                   navigation.navigate('More', {
                     screen: 'ClubProfileEdit',
+                    initial: false,
+                  })
+                }
+                onLinkTff={() =>
+                  navigation.navigate('More', {
+                    screen: 'ClubTffLink',
                     initial: false,
                   })
                 }
@@ -488,18 +536,40 @@ function MainTabs() {
           </Tabs.Screen>
         ) : null}
         <Tabs.Screen name="Teams">
-          {({ navigation, route }) => (
-            <TeamsScreen
-              open={route.params?.open}
-              onOpenRights={() =>
-                navigation.navigate('More', {
-                  screen: 'TeamRights',
-                  initial: false,
-                })
-              }
-            />
-          )}
+          {({ navigation, route }) =>
+            coach && hasTeam && token ? (
+              <CoachTeamTab
+                token={token}
+                clubService={clubService}
+                onSwitch={switchToClub}
+                onInvitations={() =>
+                  navigation.navigate('More', {
+                    screen: 'CoachClubs',
+                    initial: false,
+                  })
+                }
+                onLeagues={() => navigation.navigate('Leagues')}
+              />
+            ) : (
+              <TeamsScreen
+                open={route.params?.open}
+                onOpenRights={() =>
+                  navigation.navigate('More', {
+                    screen: 'TeamRights',
+                    initial: false,
+                  })
+                }
+              />
+            )
+          }
         </Tabs.Screen>
+        {coach ? (
+          <Tabs.Screen
+            name="Scout"
+            component={ScoutNavigator}
+            options={{ popToTopOnBlur: true }}
+          />
+        ) : null}
         {member && !delegate ? (
           <Tabs.Screen name="Games">
             {() => (token ? <GamesTab token={token} /> : null)}
@@ -692,6 +762,19 @@ function MoreNavigator() {
             <ClubProfileEditScreen
               token={token}
               service={clubService}
+              onBack={() => navigation.goBack()}
+              onTff={() => navigation.navigate('ClubTffLink')}
+            />
+          ) : null
+        }
+      </MoreStack.Screen>
+      <MoreStack.Screen name="ClubTffLink">
+        {({ navigation }) =>
+          token && user?.role === 'club' ? (
+            <ClubTffLinkScreen
+              token={token}
+              service={clubService}
+              footballService={footballService}
               onBack={() => navigation.goBack()}
             />
           ) : null
@@ -1031,6 +1114,13 @@ function DiscoveryNavigator({ onBack }: { onBack(): void }) {
             renderConnection={profile =>
               token ? (
                 <>
+                  {user.role === 'coach' && profile.role === 'player' ? (
+                    <WatchButton
+                      service={discoveryService}
+                      token={token}
+                      profile={profile}
+                    />
+                  ) : null}
                   {profile.role === 'coach' ? (
                     <CoachPublicCard
                       token={token}
@@ -1055,6 +1145,62 @@ function DiscoveryNavigator({ onBack }: { onBack(): void }) {
         )}
       </DiscoveryStack.Screen>
     </DiscoveryStack.Navigator>
+  );
+}
+
+// Keşif: a coach's scouting page; a player opens with the İzleme listesi star.
+function ScoutNavigator() {
+  const { token, user } = useAuth();
+  if (!token || !user || user.role !== 'coach') return null;
+  const viewer = { role: user.role, verified: user.verified };
+  return (
+    <ScoutStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.bg },
+      }}
+    >
+      <ScoutStack.Screen name="ScoutHome">
+        {({ navigation }) => (
+          <ScoutScreen
+            service={discoveryService}
+            token={token}
+            onOpen={id => navigation.navigate('ScoutProfile', { id })}
+          />
+        )}
+      </ScoutStack.Screen>
+      <ScoutStack.Screen name="ScoutProfile">
+        {({ navigation, route }) => (
+          <DiscoveryProfileScreen
+            usePostsSlot={useDiscoveryPostsSlot}
+            service={discoveryService}
+            token={token}
+            kind="players"
+            id={route.params.id}
+            onBack={() => navigation.goBack()}
+            renderConnection={profile => (
+              <>
+                <WatchButton
+                  service={discoveryService}
+                  token={token}
+                  profile={profile}
+                />
+                <ConnectionPanel
+                  token={token}
+                  service={connectionsService}
+                  viewer={viewer}
+                  profile={{
+                    id: profile.id,
+                    name: profile.fullName,
+                    role: profile.role,
+                  }}
+                />
+              </>
+            )}
+          />
+        )}
+      </ScoutStack.Screen>
+    </ScoutStack.Navigator>
   );
 }
 
@@ -1466,7 +1612,10 @@ function SocialNavigator() {
   );
 }
 function LeaguesNavigator() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  // Clubs get Maçlarım; their crest is the account photo.
+  const club = user?.role === 'club';
+  const account = useAccountProfile(accountRepository, club ? token : null);
   if (!token) return null;
   return (
     <LeaguesStack.Navigator
@@ -1480,6 +1629,37 @@ function LeaguesNavigator() {
           <LeaguesHomeScreen
             token={token}
             footballService={footballService}
+            clubMatches={
+              club ? (
+                <ClubMatchesView
+                  token={token}
+                  service={clubService}
+                  clubName={user.fullName}
+                  avatarUri={
+                    account.profile
+                      ? avatarUrl(
+                          account.profile.id,
+                          account.profile.avatarVersion,
+                        ) || undefined
+                      : undefined
+                  }
+                  onLinkTff={
+                    !user.delegate ||
+                    user.delegate.permissions.includes('profile')
+                      ? () =>
+                          (
+                            navigation.getParent() as
+                              | BottomTabNavigationProp<MainRoutes>
+                              | undefined
+                          )?.navigate('More', {
+                            screen: 'ClubTffLink',
+                            initial: false,
+                          })
+                      : undefined
+                  }
+                />
+              ) : undefined
+            }
             onOpenCompetition={competition =>
               navigation.navigate('Competition', { competition })
             }
@@ -1600,7 +1780,17 @@ export function AppNavigator() {
     return (
       <View style={styles.startup}>
         {/* Same size and place as the native launch logo, so the hand-over is seamless. */}
-        <Brand size={44} />
+        <View
+          accessible
+          accessibilityRole="image"
+          accessibilityLabel={copy.brand}
+        >
+          <Wordmark
+            height={
+              (launchWordmarkWidth * wordmarkSize.height) / wordmarkSize.width
+            }
+          />
+        </View>
         <View style={styles.startupStatus}>
           {restoring ? (
             <ActivityIndicator

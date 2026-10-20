@@ -99,21 +99,22 @@ export const copy = {
     button: 'Giriş yap',
     question: 'Henüz hesabın yok mu?',
     link: 'Hesap oluştur',
-    or: 'veya',
     loginHelp: 'E-posta adresin veya kullanıcı adınla giriş yapabilirsin.',
   },
   accountType: {
     title: 'Hesap türünü seç',
     description: 'Sana uyan seçenekle başla.',
+    instantTitle: 'Hemen başla',
+    applyTitle: 'Başvuru ile',
+    applyHint: 'Yönetici onayından sonra hesabın açılır.',
     player: 'Sporcu',
     playerDescription: 'Profilini oluştur, takımlara başvur',
     coach: 'Antrenör',
     coachDescription: 'Antrenör profilini aç, kulüp ekiplerine katıl',
     club: 'Kulüp',
-    clubDescription: 'Takımını tanıt, oyuncu bul; yönetici onayı gerekir',
+    clubDescription: 'Takımını tanıt, oyuncu bul',
     organizer: 'Organizasyon',
-    organizerDescription:
-      'Turnuva düzenle, takımlarla eşleş; yönetici onayı gerekir',
+    organizerDescription: 'Turnuva düzenle, takımlarla eşleş',
   },
   application: {
     clubTitle: 'Kulüp başvurusu',
@@ -164,6 +165,8 @@ export const copy = {
     title: 'Hesap oluştur',
     description: 'Birkaç bilgiyle profilini başlat.',
     coachDescription: 'Antrenör profilini birkaç bilgiyle başlat.',
+    accountGroup: 'Hesap bilgileri',
+    footballGroup: 'Futbol bilgileri',
     roleError: 'Kendi kaydını sporcu veya antrenör olarak oluşturabilirsin.',
     name: 'Ad soyad',
     namePlaceholder: 'Adın ve soyadın',
@@ -240,6 +243,9 @@ export const copy = {
     Social: 'Sosyal',
     Profile: 'Profil',
     Teams: 'Takımlar',
+    // A coach on a club's staff sees Takımım in place of Takımlar.
+    MyTeam: 'Takımım',
+    Scout: 'Keşif',
     Games: 'Oyunlar',
     // The centre hub's label while none of its pages is open.
     Hub: 'Saha',
@@ -1139,6 +1145,11 @@ export const copy = {
     cancel: 'Vazgeç',
     errorTitle: 'Çıkış tamamlanamadı',
   },
+  // Popup ads opened over the app at launch.
+  popupAd: {
+    label: 'Reklam',
+    close: 'Reklamı kapat',
+  },
   coaches: {
     licenses: {
       unknown: 'Belirtilmedi',
@@ -1441,6 +1452,199 @@ export const copy = {
     tournamentsTitle: 'Turnuvalar',
     tournamentsOpen: 'Açık turnuvalar',
     tournamentEntriesOpen: 'Turnuva başvurularım',
+    // Merhaba card (20 Oct 2026): the club, its league line and the work
+    // waiting for it in one card.
+    helloProfile: 'Kulüp profilini aç',
+    helloLeague: (league: string, position: number) =>
+      league + ' · ' + position + '. sıra',
+    workShort: {
+      applications: 'Başvuru',
+      pendingNews: 'Onayda haber',
+      publishedNews: 'Yayında haber',
+    },
+    // Quick action tiles under the news (20 Oct 2026).
+    quick: {
+      title: 'Hızlı işlemler',
+      applications: 'Bekleyen başvurular',
+      applicationsHint: (count?: number) =>
+        count === undefined
+          ? 'Takım başvuruları'
+          : count
+          ? count + ' sporcu bekliyor'
+          : 'Yeni başvuru yok',
+      discover: 'Sporcu ara',
+      discoverHint: 'Keşifte oyuncu bul',
+      squad: 'Kadrom',
+      squadHint: 'Kadrodaki sporcular',
+      listings: 'İlanlarım',
+      listingsHint: 'Oyuncu arayan ilanlar',
+      tournaments: 'Açık turnuvalar',
+      tournamentsHint: 'Katılabileceğin turnuvalar',
+      entries: 'Turnuva başvurularım',
+      entriesHint: 'Başvuru durumları',
+    },
+    // The swipeable league card under the Merhaba card.
+    match: {
+      carouselLabel: 'Lig kartı',
+      page: (index: number, total: number) => index + ' / ' + total,
+      upcomingTitle: 'Yaklaşan maç',
+      standingsTitle: 'Puan durumu',
+      lastTitle: 'Son maç',
+      week: (week: number) => week + '. hafta',
+      versus: 'VS',
+      home: 'İç saha',
+      away: 'Deplasman',
+      units: { days: 'gün', hours: 'saat', minutes: 'dk' },
+      countdownLabel: (days: number, hours: number, minutes: number) =>
+        'Maça ' + days + ' gün ' + hours + ' saat ' + minutes + ' dakika var',
+      daysLeft: (days: number) => (days === 1 ? 'Yarın' : days + ' gün kaldı'),
+      today: 'Bugün maç günü',
+      started: 'Sonuç bekleniyor',
+      dateUnknown: 'Tarih henüz açıklanmadı',
+      timeUnknown: 'Saat açıklanmadı',
+      venueUnknown: 'Saha açıklanmadı',
+      noUpcoming: 'Bu sezon kalan maç yok',
+      noRecent: 'Henüz oynanmış maç yok',
+      formTitle: 'Son maçlar',
+      table: {
+        position: '#',
+        team: 'Takım',
+        played: 'O',
+        difference: 'AV',
+        points: 'P',
+      },
+      fullTable: 'Tüm tablo',
+      tffSource: 'Kaynak: TFF Ankara İl Temsilciliği',
+      linkTitle: 'TFF ligini bağla',
+      linkBody:
+        'TFF Ankara’daki takımını seç; yaklaşan maçın, puan durumun ve son skorun burada görünsün.',
+      linkAction: 'Takımını seç',
+      tffDown: 'TFF Ankara verisi şu an alınamadı. Biraz sonra tekrar dene.',
+      months: [
+        'Ocak',
+        'Şubat',
+        'Mart',
+        'Nisan',
+        'Mayıs',
+        'Haziran',
+        'Temmuz',
+        'Ağustos',
+        'Eylül',
+        'Ekim',
+        'Kasım',
+        'Aralık',
+      ],
+      weekdays: [
+        'Pazar',
+        'Pazartesi',
+        'Salı',
+        'Çarşamba',
+        'Perşembe',
+        'Cuma',
+        'Cumartesi',
+      ],
+    },
+  },
+  // Takımım (20 Oct 2026): a coach's clubs in the Saha hub.
+  coachTeam: {
+    tabs: { mine: 'Takımım', teams: 'Takımlar' },
+    tabHints: {
+      mine: 'Çalıştığın kulüp, maçları ve kadro',
+      teams: 'Tüm takımlar',
+    },
+    eyebrow: 'TEKNİK EKİP',
+    switch: 'Kulübe geç',
+    switchHint: 'Kulüp hesabını, verilen yetkilerle yönet',
+    squad: 'Kadro',
+    applications: 'Bekleyen başvuru',
+    rights: 'Yetkilerin',
+    noRights: 'Yalnızca görüntüleme',
+    invitations: (count: number) =>
+      count === 1 ? '1 kulüp davetin var' : count + ' kulüp davetin var',
+    invitationsHint: 'Davetleri görüp yanıtla',
+    loading: 'Takımın yükleniyor',
+    noLeagueTitle: 'Lig bilgisi yok',
+    noLeagueBody:
+      'Kulüp TFF Ankara takımını bağladığında yaklaşan maç, puan durumu ve son skor burada görünür.',
+  },
+  // Keşif (20 Oct 2026): a coach's scouting page with İzleme listem.
+  scout: {
+    eyebrow: 'OYUNCU KEŞFİ',
+    title: 'Keşif',
+    tabs: { discover: 'Keşfet', watchlist: 'İzleme listem' },
+    watchlistCount: (count: number) => 'İzleme listem · ' + count,
+    search: 'Oyuncu adı ara',
+    positions: ['Kaleci', 'Stoper', 'Bek', 'Orta saha', 'Kanat', 'Santrfor'],
+    allPositions: 'Tüm mevkiler',
+    feet: { right: 'Sağ ayak', left: 'Sol ayak', both: 'İki ayak' },
+    seeking: 'Takım arıyor',
+    availability: {
+      seeking_team: 'Takım arıyor',
+      open_to_offers: 'Görüşmelere açık',
+      not_available: 'Görüşmüyor',
+    } as Record<string, string>,
+    results: (count: number) => count + ' oyuncu',
+    more: 'Daha fazla göster',
+    noResults: 'Bu filtrelerle oyuncu bulunamadı.',
+    watch: 'İzleme listeme ekle',
+    unwatch: 'İzleme listemden çıkar',
+    watching: 'İzleme listende',
+    emptyTitle: 'İzleme listen boş',
+    emptyBody:
+      'Keşfet’te beğendiğin oyuncunun yıldızına dokun; burada takip et.',
+    years: (count: number) => count + ' yıl',
+  },
+  // Ligler tab for clubs (20 Oct 2026): Maçlarım next to the usual Ligler.
+  clubMatches: {
+    tabs: { mine: 'Maçlarım', leagues: 'Ligler' },
+    tabHints: {
+      mine: 'Kulübünün maçları, grup fikstürü ve puan durumu',
+      leagues: 'Tüm ligler',
+    },
+    sections: {
+      fixture: 'Fikstürüm',
+      table: 'Puan durumu',
+      weeks: 'Grup maçları',
+    },
+    source: { tff: 'TFF Ankara', futcareer: 'Fut Career ligi' },
+    position: 'Sıra',
+    points: 'Puan',
+    played: 'Maç',
+    record: 'G-B-M',
+    difference: 'Averaj',
+    next: 'Sıradaki maç',
+    weekShort: (week: number) => week + '. H',
+    week: (week: number) => week + '. hafta',
+    previousWeek: 'Önceki hafta',
+    nextWeek: 'Sonraki hafta',
+    weekEmpty: 'Bu haftanın maçı yok.',
+    noMatches: 'Henüz maç programı yok.',
+    noDate: 'Tarih yok',
+    loading: 'Maçlar yükleniyor',
+    table: {
+      position: '#',
+      team: 'Takım',
+      played: 'O',
+      wins: 'G',
+      draws: 'B',
+      losses: 'M',
+      difference: 'AV',
+      points: 'P',
+    },
+    monthsShort: [
+      'Oca',
+      'Şub',
+      'Mar',
+      'Nis',
+      'May',
+      'Haz',
+      'Tem',
+      'Ağu',
+      'Eyl',
+      'Eki',
+      'Kas',
+      'Ara',
+    ],
   },
   clubProfile: {
     eyebrow: 'KULÜP PROFİLİ',
@@ -1463,6 +1667,21 @@ export const copy = {
     tooLong: (max: number) => 'En fazla ' + max + ' karakter olabilir.',
     save: 'Profili kaydet',
     saved: 'Kulüp profilin kaydedildi.',
+    // TFF Ankara link (20 Oct 2026).
+    tffTitle: 'TFF Ankara ligi',
+    tffEmpty:
+      'Takımını bağladığında ana sayfanda yaklaşan maç, puan durumu ve son skor görünür.',
+    tffPick: 'Takımını seç',
+    tffChange: 'Değiştir',
+    tffRemove: 'Kaldır',
+    tffRemoved: 'TFF bağlantısı kaldırıldı.',
+    tffScreenTitle: 'TFF takımını seç',
+    tffScreenBody:
+      'Sezonu, ligi ve grubu seç; ardından puan tablosundan kendi takımını işaretle.',
+    tffTeamsTitle: 'Takımın',
+    tffTeamsEmpty: 'Bu grubun puan tablosu henüz yayınlanmadı.',
+    tffConfirm: 'Bu takımı bağla',
+    tffSaved: 'TFF takımın bağlandı.',
   },
   clubNews: {
     eyebrow: 'KULÜP HABERLERİ',
@@ -2219,7 +2438,12 @@ export const copy = {
       eyebrow: 'İÇERİK YÖNETİMİ',
       title: 'İçerik',
       description: 'Reklamları, haberleri ve kulüp haberi onaylarını yönet.',
-      sections: { ads: 'Reklamlar', news: 'Haberler', reviews: 'Onay kuyruğu' },
+      sections: {
+        ads: 'Reklamlar',
+        popups: 'Popup',
+        news: 'Haberler',
+        reviews: 'Onay kuyruğu',
+      },
       newAd: 'Reklam ekle',
       newNews: 'Haber ekle',
       editAd: 'Reklamı düzenle',
@@ -2278,6 +2502,47 @@ export const copy = {
         '"' + title + '" yayınlanmayacak. Kulübe bildirim gider.',
       approved: 'Haber onaylandı ve yayına alındı.',
       rejectedNotice: 'Haber reddedildi.',
+    },
+    popups: {
+      create: 'Popup ekle',
+      createTitle: 'Yeni popup reklam',
+      editTitle: 'Popup reklamı düzenle',
+      hint: 'Uygulama açılırken gösterilir. Görsel boyutu biçimi belirler.',
+      sizes:
+        'Kare 1080×1080, dikey 1080×1350 veya tam ekran 1080×1920 piksel; JPEG veya PNG, en fazla 4 MiB.',
+      wrongSize: (width: number, height: number) =>
+        'Bu görsel ' +
+        width +
+        '×' +
+        height +
+        ' piksel. Kabul edilen boyutlar: 1080×1080, 1080×1350 veya 1080×1920.',
+      imageRequired: 'Popup için bir görsel seç.',
+      formats: { square: 'Kare', portrait: 'Dikey', story: 'Tam ekran' },
+      interval: 'Gösterim aralığı',
+      unit: 'Birim',
+      units: { minutes: 'Dakika', hours: 'Saat', days: 'Gün' },
+      intervalError: 'Aralık 1 dakika ile 30 gün arasında olmalı.',
+      maxViews: 'Bir hesaba en fazla gösterim',
+      maxViewsError: 'Gösterim sayısı 1 ile 100 arasında olmalı.',
+      summary: (minutes: number, views: number) => {
+        const every =
+          minutes % 1440 === 0
+            ? minutes / 1440 + ' günde'
+            : minutes % 60 === 0
+            ? minutes / 60 + ' saatte'
+            : minutes + ' dakikada';
+        return 'Her ' + every + ' bir, en fazla ' + views + ' kez';
+      },
+      reach: (views: number, viewers: number) =>
+        views + ' gösterim · ' + viewers + ' hesap',
+      active: 'Popup reklamı yayına al',
+      emptyTitle: 'Henüz popup reklam yok',
+      emptyBody: 'Uygulama açılışında gösterilecek bir görsel ekle.',
+      saved: 'Popup reklam kaydedildi.',
+      deleted: 'Popup reklam silindi.',
+      remove: 'Popup reklamı sil',
+      deleteTitle: 'Popup reklam silinsin mi?',
+      deleteBody: 'Popup reklam ve gösterim kayıtları kalıcı olarak silinecek.',
     },
     leagues: {
       eyebrow: 'LİG YÖNETİMİ',

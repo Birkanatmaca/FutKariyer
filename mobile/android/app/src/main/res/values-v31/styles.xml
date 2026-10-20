@@ -1,14 +1,15 @@
 <resources>
 
-    <!-- Android 12+ always shows the system splash (icon only): night
-         background with the football icon, then the app's own startup logo. -->
+    <!-- Android 12+ always shows a system splash. Its icon is left blank so
+         it is only the night background; the FUTCAREER wordmark follows from
+         the launch screen and the app's own startup screen. -->
     <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
         <item name="android:windowBackground">@drawable/launch_screen</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:windowLightNavigationBar">false</item>
         <item name="android:windowSplashScreenBackground">@color/launch_background</item>
-        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_round</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
 
 </resources>

@@ -2,6 +2,7 @@ export { createContentService } from './application/content-service';
 export type { ContentService } from './application/content-service';
 export { contentRepository } from './data/http-content-repository';
 export { AdvertisementBanner } from './ui/AdvertisementBanner';
+export { LaunchPopup } from './ui/LaunchPopup';
 export { HomeNews } from './ui/HomeNews';
 export { NewsScreen } from './ui/NewsScreen';
 export { NewsDetailScreen } from './ui/NewsDetailScreen';

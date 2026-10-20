@@ -7,6 +7,7 @@ export { ClubOverviewScreen } from './ui/accounts/ClubOverviewScreen';
 export { ApplicationsScreen } from './ui/applications/ApplicationsScreen';
 export { ContentScreen, type ContentTab } from './ui/content/ContentScreen';
 export { ContentEditorScreen } from './ui/content/ContentEditorScreen';
+export { PopupEditorScreen } from './ui/content/PopupEditorScreen';
 export { LeaguesScreen } from './ui/leagues/LeaguesScreen';
 export { LeagueEditorScreen } from './ui/leagues/LeagueEditorScreen';
 export { LeagueWorkspaceScreen } from './ui/leagues/LeagueWorkspaceScreen';
@@ -27,6 +28,7 @@ export type {
   AccountSection,
   ContentItem,
   ContentSection,
+  PopupAd,
   League,
   LeagueMatch,
   LeagueTeam,

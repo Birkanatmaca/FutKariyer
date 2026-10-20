@@ -62,4 +62,9 @@ type Repository interface {
 	Insights(context.Context, string) (Insights, error)
 	// Visitors returns the owner (with current Pro state) and the per-visitor aggregates of the window.
 	Visitors(context.Context, string) (VisitorOwner, []Visit, error)
+	// Watchlist returns the owner's starred players still visible in discovery, newest first.
+	Watchlist(ctx context.Context, owner string) ([]Profile, error)
+	// Watch stars (on) or unstars a player; starring needs a visible, unblocked player.
+	Watch(ctx context.Context, owner, player string, on bool) error
+	WatchCount(ctx context.Context, owner string) (int, error)
 }

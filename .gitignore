@@ -17,3 +17,4 @@ frontend/dist/
 
 deploy/out/
 deploy/.env
+*.tsbuildinfo

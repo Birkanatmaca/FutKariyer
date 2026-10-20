@@ -1,5 +1,8 @@
 export { ClubHomeScreen } from './ui/ClubHomeScreen';
 export { ClubProfileEditScreen } from './ui/ClubProfileEditScreen';
+export { ClubTffLinkScreen } from './ui/ClubTffLinkScreen';
+export { ClubMatchesView } from './ui/ClubMatchesView';
+export { CoachTeamView } from './ui/CoachTeamView';
 export { ClubNewsComposeScreen } from './ui/ClubNewsComposeScreen';
 export { ClubNewsMineScreen } from './ui/ClubNewsMineScreen';
 export { createClubService } from './application/club-service';

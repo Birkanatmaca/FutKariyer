@@ -104,6 +104,8 @@ test('late responses cannot overwrite a newer search, and refresh hides old resu
       .mockResolvedValueOnce(page)
       .mockReturnValueOnce(refresh),
     get: jest.fn(),
+    watchlist: jest.fn(),
+    watch: jest.fn(),
     insights: jest.fn(),
     follow: jest.fn(),
   };

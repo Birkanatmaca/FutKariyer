@@ -57,4 +57,5 @@ type Repository interface {
 	ClubArticles(context.Context, string) ([]Article, error)
 	ReviewClubArticle(context.Context, string, bool) (Article, error)
 	PendingClubArticles(context.Context) ([]Article, error)
+	PopupRepository
 }

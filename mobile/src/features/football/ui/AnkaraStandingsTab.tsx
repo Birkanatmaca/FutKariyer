@@ -62,7 +62,12 @@ export function AnkaraStandingsTab({
   return (
     <>
       {data ? (
-        <Pickers data={data} query={query} loading={loading} select={select} />
+        <AnkaraPickers
+          data={data}
+          query={query}
+          loading={loading}
+          select={select}
+        />
       ) : null}
       {loading && !data ? (
         <LoadingBlock />
@@ -83,7 +88,8 @@ export function AnkaraStandingsTab({
   );
 }
 
-function Pickers({
+// The season → league → group selects; the club's TFF team picker reuses them.
+export function AnkaraPickers({
   data,
   query,
   loading,

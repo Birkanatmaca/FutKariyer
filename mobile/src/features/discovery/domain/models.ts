@@ -57,4 +57,7 @@ export interface DiscoveryRepository {
     kind: DiscoveryKind,
     id: string,
   ): Promise<DiscoveryProfile>;
+  // İzleme listesi (20 Oct 2026): a verified coach's starred players.
+  watchlist(token: string): Promise<DiscoveryProfile[]>;
+  watch(token: string, playerId: string, on: boolean): Promise<void>;
 }

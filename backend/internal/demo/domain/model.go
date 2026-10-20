@@ -69,7 +69,14 @@ type Club struct {
 	TrainingGroundName    string
 	TrainingGroundAddress string
 	TrainingSchedule      string
-	UpdatedAt             time.Time
+	// TFF is the club's team on the public TFF Ankara standings page, if linked.
+	TFF       TFFLink
+	UpdatedAt time.Time
+}
+
+// TFFLink mirrors the clubs table's tff_* columns; empty means not linked.
+type TFFLink struct {
+	Season, League, Group, Team, Label string
 }
 
 type Application struct {
@@ -103,6 +110,9 @@ type Post struct {
 	AuthorID  string
 	Body      string
 	CreatedAt time.Time
+	// Media is an optional photo; ShowOnProfile also lists it on the author's profile.
+	Media         *Photo
+	ShowOnProfile bool
 }
 
 type Like struct {
@@ -171,8 +181,10 @@ type News struct {
 	Published    bool
 	ShowOnHome   bool
 	ReviewStatus string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	// ImageID is the cover in Dataset.Images, or empty.
+	ImageID   string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type LeagueTeam struct {
@@ -259,6 +271,12 @@ type Dataset struct {
 	League        League
 	Tournament    Tournament
 	Notifications []Notification
+	// Pictures and the demo coach (19 Oct 2026).
+	Avatars []Avatar
+	Gallery []GalleryItem
+	Images  []ContentImage
+	Coaches []CoachProfile
+	Staff   []StaffLink
 }
 
 // Account returns the account with the given key.
@@ -297,6 +315,12 @@ type Counts struct {
 	Tournaments          int
 	TournamentEntries    int
 	Notifications        int
+	Coaches              int
+	Avatars              int
+	PostMedia            int
+	GalleryItems         int
+	StaffLinks           int
+	NewsImages           int
 }
 
 // Expected returns the counts the dataset itself should produce.
@@ -306,6 +330,8 @@ func (d Dataset) Expected() Counts {
 		switch {
 		case a.Role == "player":
 			c.Players++
+		case a.Role == "coach":
+			c.Coaches++
 		case a.ApprovalStatus == "pending":
 			c.PendingApplications++
 		case a.ApprovalStatus == "rejected":
@@ -347,6 +373,12 @@ func (d Dataset) Expected() Counts {
 	c.Tournaments = 1
 	c.TournamentEntries = len(d.Tournament.Entries)
 	c.Notifications = len(d.Notifications)
+	for _, p := range d.Posts {
+		if p.Media != nil {
+			c.PostMedia++
+		}
+	}
+	c.Avatars, c.GalleryItems, c.StaffLinks, c.NewsImages = len(d.Avatars), len(d.Gallery), len(d.Staff), len(d.Images)
 	return c
 }
 

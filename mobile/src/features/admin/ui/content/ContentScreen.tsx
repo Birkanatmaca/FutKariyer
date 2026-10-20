@@ -15,6 +15,7 @@ import type {
   Article,
   ContentItem,
   ContentSection,
+  PopupAd,
 } from '../../domain/models';
 import { AdminList } from '../parts/AdminList';
 import {
@@ -30,9 +31,10 @@ import {
   formatDate,
 } from '../parts/AdminParts';
 import { confirm } from '../parts/confirm';
+import { PopupList } from './PopupList';
 
 const text = copy.admin.content;
-export type ContentTab = ContentSection | 'reviews';
+export type ContentTab = ContentSection | 'popups' | 'reviews';
 
 export function ContentScreen({
   services,
@@ -42,6 +44,8 @@ export function ContentScreen({
   notice,
   onCreate,
   onEdit,
+  onCreatePopup,
+  onEditPopup,
   onReviewed,
 }: {
   services: AdminServices;
@@ -51,6 +55,8 @@ export function ContentScreen({
   notice?: string;
   onCreate(section: ContentSection): void;
   onEdit(section: ContentSection, item: ContentItem): void;
+  onCreatePopup(): void;
+  onEditPopup(item: PopupAd): void;
   onReviewed?(): void;
 }) {
   const header = (
@@ -63,7 +69,7 @@ export function ContentScreen({
       <Segmented<ContentTab>
         value={tab}
         onChange={onTab}
-        options={(['ads', 'news', 'reviews'] as const).map(value => ({
+        options={(['ads', 'popups', 'news', 'reviews'] as const).map(value => ({
           value,
           label: text.sections[value],
         }))}
@@ -76,6 +82,15 @@ export function ContentScreen({
       header={header}
       onReviewed={onReviewed}
       changedAt={changedAt}
+    />
+  ) : tab === 'popups' ? (
+    <PopupList
+      services={services}
+      header={header}
+      changedAt={changedAt}
+      notice={notice}
+      onCreate={onCreatePopup}
+      onEdit={onEditPopup}
     />
   ) : (
     <ContentList

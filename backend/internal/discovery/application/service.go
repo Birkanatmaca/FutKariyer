@@ -21,7 +21,7 @@ type Profile struct {
 	Verified      bool             `json:"verified"`
 	IsPro         bool             `json:"isPro"`
 	District      string           `json:"district"`
-	AvatarVersion int `json:"avatarVersion"`
+	AvatarVersion int              `json:"avatarVersion"`
 	PlayerProfile *players.Profile `json:"playerProfile"`
 	IsFollowing   bool             `json:"isFollowing"`
 }

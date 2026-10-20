@@ -63,7 +63,7 @@ func TestClubStaffInviteSwitchAndRevoke(t *testing.T) {
 	for _, path := range []string{"/v1/me/coach-profile", "/v1/me/staff", "/v1/me/staff/", "/v1/me/coach-clubs", "/v1/me/coach-clubs/", "/v1/staff/"} {
 		routes.Handle(path, coaches)
 	}
-	clubs := clubtransport.New(auth, clubapp.New(clubdata.New(db.DB), leagueapp.New(leaguedata.New(db.DB))))
+	clubs := clubtransport.New(auth, clubapp.New(clubdata.New(db.DB), leagueapp.New(leaguedata.New(db.DB)), nil))
 	routes.Handle("/v1/me/squad", clubs)
 	routes.Handle("/v1/me/club-profile", clubs)
 	routes.Handle("/v1/teams/", teamstransport.New(auth, teamsapp.New(teamsdata.New(db.DB))))

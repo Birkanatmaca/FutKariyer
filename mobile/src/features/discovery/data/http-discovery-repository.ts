@@ -95,6 +95,25 @@ export const discoveryRepository: DiscoveryRepository = {
     }
     return result;
   },
+  async watchlist(token) {
+    const result = await request<{ items: unknown }>('/v1/me/watchlist', {
+      token,
+    });
+    const items = result?.items;
+    if (
+      !Array.isArray(items) ||
+      items.length > 200 ||
+      !items.every(item => isProfile(item, 'players'))
+    )
+      throw new ApiError(copy.form.unexpected);
+    return items;
+  },
+  async watch(token, playerId, on) {
+    await request<void>('/v1/me/watchlist/' + encodeURIComponent(playerId), {
+      token,
+      method: on ? 'PUT' : 'DELETE',
+    });
+  },
   async get(token, kind, id) {
     const result = await request<{ profile: unknown }>(
       '/v1/discovery/' + kind + '/' + encodeURIComponent(id),

@@ -774,6 +774,50 @@ input[type='checkbox'] {
   background: var(--bg);
   border-radius: var(--radius-sm);
 }
+/* Popup ads: accepted sizes, the preview in its format, interval + unit. */
+.popup-sizes {
+  margin: 0;
+  padding-left: var(--space-lg);
+  display: grid;
+  gap: 2px;
+}
+.popup-size {
+  display: block;
+  font-size: 12px;
+}
+.popup-preview {
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-xs);
+}
+.popup-preview img {
+  width: 180px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.popup-preview.square img {
+  aspect-ratio: 1 / 1;
+}
+.popup-preview.portrait img {
+  aspect-ratio: 4 / 5;
+}
+.popup-preview.story img {
+  width: 140px;
+  aspect-ratio: 9 / 16;
+}
+.popup-preview figcaption {
+  color: var(--muted);
+  font-size: 12px;
+}
+.popup-interval {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: var(--space-md);
+  align-items: start;
+}
 textarea {
   font: inherit;
   color: var(--text);

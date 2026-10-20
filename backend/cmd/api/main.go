@@ -21,12 +21,12 @@ import (
 	"futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/auth/data"
 	"futcareer/backend/internal/auth/transport"
-	coachapplication "futcareer/backend/internal/coaches/application"
-	coachdata "futcareer/backend/internal/coaches/data"
-	coachtransport "futcareer/backend/internal/coaches/transport"
 	clubapplication "futcareer/backend/internal/clubs/application"
 	clubdata "futcareer/backend/internal/clubs/data"
 	clubtransport "futcareer/backend/internal/clubs/transport"
+	coachapplication "futcareer/backend/internal/coaches/application"
+	coachdata "futcareer/backend/internal/coaches/data"
+	coachtransport "futcareer/backend/internal/coaches/transport"
 	connectionapplication "futcareer/backend/internal/connections/application"
 	connectiondata "futcareer/backend/internal/connections/data"
 	connectiontransport "futcareer/backend/internal/connections/transport"
@@ -199,7 +199,7 @@ func run() error {
 	applicationAdmin := registrationtransport.NewAdmin(registrationdata.New(db))
 	adminFeatures.Handle("/v1/admin/applications", applicationAdmin)
 	adminFeatures.Handle("/v1/admin/applications/", applicationAdmin)
-	adminFeatures.Handle("/v1/admin/club-overviews/", clubtransport.NewAdmin(clubapplication.New(clubdata.New(db), leagueService)))
+	adminFeatures.Handle("/v1/admin/club-overviews/", clubtransport.NewAdmin(clubapplication.New(clubdata.New(db), leagueService, footballService)))
 	adminFeatures.Handle("/v1/admin/announcements", notificationstransport.NewAdmin(notificationsapplication.NewAnnouncements(notificationsdata.New(db))))
 	moderationService := moderationapplication.New(moderationdata.New(db))
 	adminReports := moderationtransport.NewAdmin(moderationService)
@@ -232,12 +232,15 @@ func run() error {
 	contentHandler := contenttransport.New(authService, contentService)
 	routes.Handle("/v1/content/", contentHandler)
 	routes.Handle("/v1/me/club-news", contentHandler)
-	clubHandler := clubtransport.New(authService, clubapplication.New(clubdata.New(db), leagueService))
+	clubHandler := clubtransport.New(authService, clubapplication.New(clubdata.New(db), leagueService, footballService))
 	routes.Handle("/v1/me/club-profile", clubHandler)
+	routes.Handle("/v1/me/club-profile/tff", clubHandler)
 	connectionHandler := connectiontransport.New(authService, connectionapplication.New(connectiondata.New(db)))
 	routes.Handle("/v1/connections", connectionHandler)
 	routes.Handle("/v1/connections/", connectionHandler)
 	routes.Handle("/v1/me/club-center", clubHandler)
+	routes.Handle("/v1/me/club-leagues", clubHandler)
+	routes.Handle("/v1/me/coach-team", clubHandler)
 	routes.Handle("/v1/me/squad", clubHandler)
 	routes.Handle("/v1/me/squad/", clubHandler)
 	routes.Handle("/v1/me/memberships", clubHandler)

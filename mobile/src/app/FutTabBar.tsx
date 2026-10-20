@@ -207,6 +207,12 @@ const landings: Record<HubRoute | 'Hub', Landing> = {
       ],
     },
   },
+  // Keşif: the binoculars sweep left and right, scanning the pitch.
+  Scout: {
+    scale: arrive,
+    x: wiggle([-4, 4, -3, 3, 0], 120),
+    turn: wiggle([-8, 8, -5, 4, 0], 120),
+  },
   // Oyunlar: the pad rumbles like a vibrating controller.
   Games: {
     scale: arrive,
@@ -443,12 +449,14 @@ function HubFan({
   onSelect(route: HubRoute): void;
 }) {
   const angles = fanAngles(routes.length);
+  // Five options (a coach's hub) need a wider arc so the labels keep apart.
+  const reach = routes.length > 4 ? FAN_RADIUS * 1.2 : FAN_RADIUS;
   return (
     <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
       {routes.map((route, i) => {
         const angle = (angles[i] * Math.PI) / 180;
-        const dx = FAN_RADIUS * Math.cos(angle);
-        const dy = -FAN_RADIUS * Math.sin(angle);
+        const dx = reach * Math.cos(angle);
+        const dy = -reach * Math.sin(angle);
         // Later options start a little later, so the arc unfolds left to right.
         const start = i * 0.08;
         const along = (from: number, to: number) =>

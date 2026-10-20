@@ -1,3 +1,4 @@
+import type { PopupFormat } from '../../../shared/domain/popup-ads';
 // Admin mode mirrors the web admin panel (frontend/) against /v1/admin.
 // Every request carries the admin bearer token from the auth feature.
 
@@ -226,7 +227,38 @@ export type PickedImage = {
   name: string;
   mime: string;
   size: number;
+  // Pixel size when the picker reports it; popup ads need an exact size.
+  width?: number;
+  height?: number;
 };
+// Popup ads opened over the app at launch (19 Oct 2026); the server takes
+// the format from the image size.
+export type { PopupFormat };
+export type PopupAd = {
+  id: string;
+  title: string;
+  imageId: string;
+  format: PopupFormat;
+  active: boolean;
+  intervalMinutes: number;
+  maxViews: number;
+  views: number;
+  viewers: number;
+  createdAt: string;
+  updatedAt: string;
+};
+export type PopupForm = {
+  title: string;
+  imageId: string;
+  active: boolean;
+  intervalMinutes: number;
+  maxViews: number;
+};
+export interface PopupsRepository {
+  list(page: number): Promise<Page<PopupAd>>;
+  save(form: PopupForm, id?: string): Promise<void>;
+  remove(id: string): Promise<void>;
+}
 export interface ContentRepository {
   list(section: ContentSection, page: number): Promise<Page<ContentItem>>;
   save(section: ContentSection, form: ContentForm, id?: string): Promise<void>;
@@ -494,6 +526,7 @@ export type AdminRepositories = {
   accounts: AccountsRepository;
   applications: ApplicationsRepository;
   content: ContentRepository;
+  popups: PopupsRepository;
   leagues: LeaguesRepository;
   gifts: GiftsRepository;
   announcements: AnnouncementsRepository;

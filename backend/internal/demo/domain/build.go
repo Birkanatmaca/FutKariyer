@@ -24,12 +24,14 @@ func Build(now time.Time) Dataset {
 	b := &builder{now: now.UTC().Truncate(time.Second), names: map[string]string{}, types: map[string]string{}}
 	b.data.Now = b.now
 	b.accounts()
+	b.coach()
 	b.social()
 	b.teams()
 	b.connections()
 	b.news()
 	b.league()
 	b.tournament()
+	b.pictures()
 	return b.data
 }
 
@@ -61,7 +63,7 @@ func (b *builder) accounts() {
 		created := b.at(c.ageDays, 10+i%6, 15)
 		b.names[c.key], b.types[c.key] = c.name, c.footballType
 		b.data.Accounts = append(b.data.Accounts, Account{Key: c.key, ID: UserID(c.key), Role: "club", FullName: c.name, Email: c.username + EmailSuffix, Username: c.username, Active: true, Verified: true, ApprovalStatus: "approved", CreatedAt: created})
-		b.data.Clubs = append(b.data.Clubs, Club{UserID: UserID(c.key), FootballType: c.footballType, District: c.district, Description: c.description, VenueName: c.venue, VenueAddress: c.venueAddress, TrainingGroundName: c.ground, TrainingGroundAddress: c.groundAddress, TrainingSchedule: c.schedule, UpdatedAt: created.Add(26 * time.Hour)})
+		b.data.Clubs = append(b.data.Clubs, Club{UserID: UserID(c.key), FootballType: c.footballType, District: c.district, Description: c.description, VenueName: c.venue, VenueAddress: c.venueAddress, TrainingGroundName: c.ground, TrainingGroundAddress: c.groundAddress, TrainingSchedule: c.schedule, TFF: tffLinks[c.key], UpdatedAt: created.Add(26 * time.Hour)})
 	}
 	// The verified organizer applied from the app and was approved.
 	orgCreated := b.at(30, 11, 40)
@@ -91,6 +93,58 @@ func (b *builder) accounts() {
 		experience := 2026 - p.birthYear - 9
 		b.data.Players = append(b.data.Players, Player{UserID: UserID(p.key), BirthYear: p.birthYear, Position: p.position, DominantFoot: p.foot, ExperienceYears: experience, Availability: p.availability, Discoverable: p.discoverable, FootballType: p.footballType, LicenseStatus: p.license, UpdatedAt: created.Add(40 * time.Minute)})
 	}
+}
+
+// coach adds the demo coach: a verified account with a filled-in coach profile
+// on Barışspor's technical staff, so "Geçiş yap" can be tried.
+func (b *builder) coach() {
+	c := demoCoach
+	created := b.at(c.ageDays, 20, 5)
+	b.names[c.key], b.types[c.key] = c.name, c.footballType
+	b.data.Accounts = append(b.data.Accounts, Account{Key: c.key, ID: UserID(c.key), Role: "coach", FullName: c.name, Email: c.emailLocal + EmailSuffix, Active: true, Verified: true, ApprovalStatus: "approved", CreatedAt: created})
+	b.data.Coaches = append(b.data.Coaches, CoachProfile{
+		UserID: UserID(c.key), LicenseLevel: c.license, Specialties: c.specialties, ExperienceYears: c.experienceYears,
+		FootballType: c.footballType, Availability: c.availability, PastClubs: c.pastClubs,
+		ShowLicense: true, ShowExperience: true, ShowFootball: true, ShowClubs: true,
+		UpdatedAt: created.Add(30 * time.Minute),
+	})
+	invited := b.at(20, 14, 0)
+	b.data.Staff = append(b.data.Staff, StaffLink{ClubID: UserID(c.club), CoachID: UserID(c.key), Role: c.role, Permissions: c.permissions, InvitedAt: invited, JoinedAt: b.past(invited.Add(26 * time.Hour))})
+}
+
+// pictures gives every active account a profile photo or crest, and a few
+// players gallery photos.
+func (b *builder) pictures() {
+	for _, a := range b.data.Accounts {
+		if !a.Active {
+			continue
+		}
+		name := "crest-" + a.Key + ".png"
+		switch a.Role {
+		case "player":
+			name = "player-" + a.Key + ".jpg"
+		case "coach":
+			name = "coach.jpg"
+		}
+		b.data.Avatars = append(b.data.Avatars, Avatar{UserID: a.ID, Photo: photo(name)})
+	}
+	for i, g := range galleryPhotos {
+		b.data.Gallery = append(b.data.Gallery, GalleryItem{ID: ID("gallery", g.player+"/"+g.photo), OwnerID: UserID(g.player), Photo: photo(g.photo + ".jpg"), CreatedAt: b.at(10-i, 18, 30)})
+	}
+}
+
+// showsOnProfile: players and the coach also list their post photos on their
+// profile; clubs only post them.
+func showsOnProfile(author string) bool {
+	if author == demoCoach.key {
+		return true
+	}
+	for _, p := range playerFixtures {
+		if p.key == author {
+			return true
+		}
+	}
+	return false
 }
 
 func (b *builder) social() {
@@ -128,8 +182,17 @@ func (b *builder) social() {
 			follow(targets[k], c, b.at(14-(j+k)%10, 11+k, 30))
 		}
 	}
+	// Teammates and his club follow the demo coach.
+	for i, follower := range []string{"emre", "mert", "enes", "alperen", "barisspor"} {
+		follow(demoCoach.key, follower, b.at(18-i*2, 21, 10))
+	}
 	for i, f := range postFixtures {
 		post := Post{ID: ID("post", f.author+"/"+strconv.Itoa(i)), AuthorID: UserID(f.author), Body: f.body, CreatedAt: b.at(f.day, f.hour, (i*7)%60)}
+		if name, ok := postPhotos[f.author+"/"+strconv.Itoa(f.day)]; ok {
+			picture := photo(name + ".jpg")
+			post.Media = &picture
+			post.ShowOnProfile = showsOnProfile(f.author)
+		}
 		b.data.Posts = append(b.data.Posts, post)
 		likers := followed[f.author]
 		for k := 0; k < len(likers) && k < 1+(i*7)%6; k++ {
@@ -259,6 +322,10 @@ func (b *builder) news() {
 	for _, n := range newsFixtures {
 		created := b.at(n.day, 10, 45)
 		item := News{ID: ID("news", n.key), AuthorID: UserID(n.author), Title: n.title, Summary: n.summary, Body: n.body, ReviewStatus: n.status, CreatedAt: created, UpdatedAt: created}
+		if name, ok := newsPhotos[n.key]; ok {
+			item.ImageID = newsImageID(n.key)
+			b.data.Images = append(b.data.Images, ContentImage{ID: item.ImageID, Photo: photo(name + ".jpg")})
+		}
 		if n.status == "approved" {
 			item.Published, item.ShowOnHome = true, n.home
 			item.UpdatedAt = b.past(created.Add(5 * time.Hour))

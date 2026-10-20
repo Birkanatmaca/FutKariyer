@@ -1,12 +1,14 @@
 import { ApiError, request } from '../../../shared/api/client';
 import { config } from '../../../shared/lib/config';
 import { copy } from '../../../shared/lib/copy';
-import type {
-  Advertisement,
-  Article,
-  ContentRepository,
-  HomeContent,
-  NewsPage,
+import {
+  popupFormats,
+  type Advertisement,
+  type Article,
+  type ContentRepository,
+  type HomeContent,
+  type NewsPage,
+  type PopupAd,
 } from '../domain/models';
 function imageID(value: unknown, optional = false) {
   return (
@@ -53,7 +55,32 @@ function article(value: unknown): value is Article {
     typeof item.showOnHome === 'boolean'
   );
 }
+function popup(value: unknown): value is PopupAd {
+  const item = value as PopupAd;
+  return (
+    !!item &&
+    imageID(item.id) &&
+    imageID(item.imageId) &&
+    Object.prototype.hasOwnProperty.call(popupFormats, item.format)
+  );
+}
 export const contentRepository: ContentRepository = {
+  async popup(token) {
+    const out = await request<{ popup: unknown }>('/v1/content/popup', {
+      token,
+    });
+    if (!out || (out.popup !== null && !popup(out.popup)))
+      throw new ApiError(copy.form.unexpected);
+    if (!out.popup) return null;
+    const { id, imageId, format } = out.popup as PopupAd;
+    return { id, imageId, format };
+  },
+  async popupViewed(token, id) {
+    await request<void>(
+      '/v1/content/popup/' + encodeURIComponent(id) + '/views',
+      { method: 'POST', token },
+    );
+  },
   async home(token) {
     const out = await request<{
       advertisements: unknown[];

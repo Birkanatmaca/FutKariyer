@@ -111,7 +111,7 @@ export function ApplicationScreen({
             </Text>
             <Text style={styles.successText}>{text.successDescription}</Text>
           </View>
-          <Button label={text.successBack} onPress={onSignIn} />
+          <Button label={text.successBack} onPress={onSignIn} compact />
         </View>
       </AuthFrame>
     );
@@ -253,7 +253,12 @@ export function ApplicationScreen({
           maxLength={500}
         />
         <ErrorBanner message={error} />
-        <Button label={text.button} onPress={submit} loading={busy} />
+        <Button
+          label={text.button}
+          onPress={submit}
+          loading={busy}
+          compact
+        />
       </View>
     </AuthFrame>
   );

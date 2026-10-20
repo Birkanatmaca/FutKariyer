@@ -2,6 +2,7 @@ import type {
   ClubArticleInput,
   ClubProfileInput,
   ClubRepository,
+  ClubTffInput,
 } from '../domain/models';
 
 const trimAll = <T extends Record<string, string>>(input: T): T =>
@@ -18,6 +19,11 @@ export function createClubService(repository: ClubRepository) {
     createNews: (token: string, input: ClubArticleInput) =>
       repository.createNews(token, trimAll(input)),
     center: (token: string) => repository.center(token),
+    leagues: (token: string) => repository.leagues(token),
+    coachTeams: (token: string) => repository.coachTeams(token),
+    setTff: (token: string, input: ClubTffInput) =>
+      repository.setTff(token, input),
+    clearTff: (token: string) => repository.clearTff(token),
   };
 }
 

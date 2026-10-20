@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"testing"
 	"time"
 
@@ -97,7 +98,8 @@ func TestInstallIsIdempotentAndRemovable(t *testing.T) {
 	}
 	want := domain.Counts{Players: 18, ActiveClubs: 10, Organizers: 1, PendingApplications: 4, RejectedApplications: 1,
 		JoinPending: 6, JoinAccepted: 4, JoinRejected: 3, SquadMembers: 4, Connections: 5, NewsPublished: 4, NewsPending: 1,
-		LeagueTeams: 6, MatchesPlayed: 12, MatchesScheduled: 18, Tournaments: 1, TournamentEntries: 2, Listings: 3}
+		LeagueTeams: 6, MatchesPlayed: 12, MatchesScheduled: 18, Tournaments: 1, TournamentEntries: 2, Listings: 3,
+		Coaches: 1, Avatars: 30, PostMedia: 18, GalleryItems: 5, StaffLinks: 1, NewsImages: 5}
 	got := first.Counts
 	got.Posts, got.Likes, got.Replies, got.Follows, got.ProfileViews, got.Notifications = 0, 0, 0, 0, 0, 0
 	if got != want {
@@ -107,7 +109,8 @@ func TestInstallIsIdempotentAndRemovable(t *testing.T) {
 		t.Fatalf("social activity missing: %+v", first.Counts)
 	}
 	for _, a := range first.Accounts {
-		if a.Role == "player" && !domain.IsDemoEmail(a.Email) || a.Role != "player" && (a.Username[:5] != domain.UsernamePrefix || !domain.IsDemoEmail(a.Email)) {
+		people := a.Role == "player" || a.Role == "coach"
+		if people && !domain.IsDemoEmail(a.Email) || !people && (!strings.HasPrefix(a.Username, domain.UsernamePrefix) || !domain.IsDemoEmail(a.Email)) {
 			t.Fatalf("account not marked as demo: %+v", a)
 		}
 	}
@@ -137,6 +140,26 @@ func TestInstallIsIdempotentAndRemovable(t *testing.T) {
 	}
 	if _, err := authSvc.Login(ctx, auth.LoginInput{Identifier: "demo.gerede.onderspor", Password: first.Password}); !errors.Is(err, authdomain.ErrPendingApproval) {
 		t.Fatalf("pending demo club signed in: %v", err)
+	}
+	// The demo coach signs in, has a filled-in profile and runs Barışspor's staff.
+	if res, err := authSvc.Login(ctx, auth.LoginInput{Identifier: "selim.kara@" + domain.EmailDomain, Password: first.Password}); err != nil || res.User.Role != "coach" || !res.User.Verified {
+		t.Fatalf("demo coach login: %+v %v", res.User, err)
+	}
+	if n := count(t, db, `SELECT count(*) FROM coach_profiles WHERE user_id=$1 AND license_level='uefa_b' AND cardinality(past_clubs)=2 AND show_license`, domain.UserID("selim")); n != 1 {
+		t.Fatalf("demo coach profile missing")
+	}
+	if n := count(t, db, `SELECT count(*) FROM club_staff WHERE club_user_id=$1 AND coach_user_id=$2 AND status='active' AND 'squad'=ANY(permissions)`, domain.UserID("barisspor"), domain.UserID("selim")); n != 1 {
+		t.Fatalf("demo coach is not on the club's staff")
+	}
+	// Every active demo account has a picture the app will show.
+	if n := count(t, db, `SELECT count(*) FROM users u JOIN user_avatars a ON a.user_id=u.id WHERE lower(u.email) LIKE '%' || $1 AND u.active AND u.avatar_version=1`, domain.EmailSuffix); n != 30 {
+		t.Fatalf("demo avatars: %d", n)
+	}
+	if n := count(t, db, `SELECT count(*) FROM social_posts WHERE media_kind='image' AND show_on_profile AND author_id=$1`, domain.UserID("zeynep")); n != 2 {
+		t.Fatalf("zeynep's post photos on her profile: %d", n)
+	}
+	if n := count(t, db, `SELECT count(*) FROM news_articles WHERE image_id IS NOT NULL AND author_user_id=$1`, domain.UserID("barisspor")); n != 1 {
+		t.Fatalf("news cover missing")
 	}
 
 	// The admin queues show the demo applications and the pending club article.

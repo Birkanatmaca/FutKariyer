@@ -35,6 +35,7 @@ export function AdminLayout({
               'applications',
               'reports',
               'ads',
+              'popups',
               'news',
               'leagues',
               'payments',
@@ -67,6 +68,8 @@ export function AdminLayout({
                   ? '▱'
                   : value === 'ads'
                   ? '▧'
+                  : value === 'popups'
+                  ? '◱'
                   : value === 'leagues'
                   ? '🏆'
                   : value === 'payments'

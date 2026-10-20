@@ -14,9 +14,11 @@ import type {
   MatchForm,
   PaymentFilter,
   PickedImage,
+  PopupForm,
   ReportAction,
   ReportQueue,
 } from '../domain/models';
+import { popupFormats } from '../../../shared/domain/popup-ads';
 import {
   limits,
   normalizeAccountForm,
@@ -33,6 +35,7 @@ export function createAdminServices(
     accounts,
     applications,
     content,
+    popups,
     leagues,
     gifts,
     announcements,
@@ -102,6 +105,34 @@ export function createAdminServices(
       },
       upload: (image: PickedImage) => content.upload(image),
       imageSource: (imageId: string) => content.imageSource(imageId),
+    },
+    popups: {
+      list: (page: number) => popups.list(page),
+      save: (form: PopupForm, id?: string) =>
+        popups.save({ ...form, title: form.title.trim() }, id),
+      remove: (id: string) => popups.remove(id),
+      // Popups take only 1080×1080, 1080×1350 or 1080×1920 images. When the
+      // picker reports the size it is checked here; the server checks again.
+      async pickImage() {
+        const image = await pickImage();
+        if (!image) return null;
+        if (
+          !['image/jpeg', 'image/png'].includes(image.mime) ||
+          image.size > limits.imageBytes
+        )
+          throw new Error(copy.admin.content.imageHint);
+        if (
+          image.width &&
+          image.height &&
+          !Object.values(popupFormats).some(
+            size => size.width === image.width && size.height === image.height,
+          )
+        )
+          throw new Error(
+            copy.admin.popups.wrongSize(image.width, image.height),
+          );
+        return image;
+      },
     },
     leagues: {
       list: (page: number) => leagues.list(page),

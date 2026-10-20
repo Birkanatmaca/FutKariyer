@@ -5,6 +5,7 @@ export type PanelSection =
   | 'applications'
   | 'reports'
   | 'ads'
+  | 'popups'
   | 'news'
   | 'leagues'
   | 'payments'
@@ -28,6 +29,7 @@ function currentRoute(): Route {
   if (path === '/securityadmin/applications') return 'applications';
   if (path === '/securityadmin/reports') return 'reports';
   if (path === '/securityadmin/ads') return 'ads';
+  if (path === '/securityadmin/popups') return 'popups';
   if (path === '/securityadmin/news') return 'news';
   if (path === '/securityadmin/leagues') return 'leagues';
   if (path === '/securityadmin/payments') return 'payments';

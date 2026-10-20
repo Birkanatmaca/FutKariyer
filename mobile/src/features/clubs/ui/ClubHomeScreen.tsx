@@ -1,30 +1,23 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useAuth, type StaffPermission } from '../../auth';
+import { accountRepository, avatarUrl, useAccountProfile } from '../../account';
 import type { ContentService } from '../../content';
-import type { DiscoveryService } from '../../discovery';
-import type { TeamsService } from '../../teams';
 import { Brand } from '../../../shared/ui/Brand';
-import { PageHeader } from '../../../shared/ui/PageHeader';
 import { Screen } from '../../../shared/ui/Screen';
-import { copy } from '../../../shared/lib/copy';
 import { space } from '../../../styles/tokens';
 import type { ClubService } from '../application/club-service';
-import {
-  ClubNewsSection,
-  ClubPlayersSection,
-  ClubProfileSection,
-  ClubSquadSection,
-  ClubTournamentsSection,
-} from './ClubHomeSections';
+import { useClubCenter } from '../application/useClubCenter';
+import { ClubNewsSection, ClubQuickActions } from './ClubHomeSections';
 import { ClubCenterSection } from './ClubCenterSection';
 
+// The club home (20 Oct 2026): Merhaba card, league card, news with two slim
+// buttons, then the quick action tiles.
 export function ClubHomeScreen({
   clubService,
   contentService,
-  teamsService,
-  discoveryService,
   onProfile,
+  onLinkTff,
   onLeagues,
   onTeamRequests,
   onNews,
@@ -38,9 +31,9 @@ export function ClubHomeScreen({
 }: {
   clubService: ClubService;
   contentService: ContentService;
-  teamsService: TeamsService;
-  discoveryService: DiscoveryService;
   onProfile(): void;
+  // Opens the TFF Ankara team picker.
+  onLinkTff(): void;
   onLeagues(): void;
   onTeamRequests(): void;
   onNews(): void;
@@ -59,26 +52,27 @@ export function ClubHomeScreen({
     !user?.delegate || user.delegate.permissions.includes(section);
   const allowed = (section: StaffPermission, action: () => void) =>
     can(section) ? action : undefined;
+  // The crest is the club account's profile photo.
+  const account = useAccountProfile(accountRepository, token);
+  const center = useClubCenter(clubService, token);
   return (
     <Screen>
       <Brand mark={false} />
-      <PageHeader
-        eyebrow={copy.clubHome.eyebrow}
-        title={copy.home.welcome(user?.fullName ?? '')}
-      />
       <View style={styles.sections}>
         <ClubCenterSection
-          token={token}
-          service={clubService}
+          state={center}
+          clubName={user?.fullName ?? ''}
+          avatarUri={
+            account.profile
+              ? avatarUrl(account.profile.id, account.profile.avatarVersion) ||
+                undefined
+              : undefined
+          }
           onProfile={allowed('profile', onProfile)}
           onApplications={allowed('applications', onTeamRequests)}
           onNews={allowed('news', onMyNews)}
           onLeagues={onLeagues}
-        />
-        <ClubProfileSection
-          token={token}
-          service={clubService}
-          onEdit={allowed('profile', onProfile)}
+          onLinkTff={allowed('profile', onLinkTff)}
         />
         <ClubNewsSection
           token={token}
@@ -87,18 +81,12 @@ export function ClubHomeScreen({
           onCompose={allowed('news', onComposeNews)}
           onMine={allowed('news', onMyNews)}
         />
-        <ClubPlayersSection
-          token={token}
-          teamsService={teamsService}
-          discoveryService={discoveryService}
-          applications={can('applications')}
+        <ClubQuickActions
+          pendingApplications={center.center?.pendingApplications}
+          onApplications={allowed('applications', onTeamRequests)}
           onDiscover={onDiscover}
-        />
-        <ClubSquadSection
           onSquad={allowed('squad', onSquad)}
           onListings={allowed('listings', onListings)}
-        />
-        <ClubTournamentsSection
           onTournaments={onTournaments}
           onEntries={allowed('tournaments', onTournamentEntries)}
         />

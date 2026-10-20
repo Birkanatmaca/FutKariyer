@@ -100,6 +100,8 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 		}
 		write(w, 200, out)
 	})
+	mux.HandleFunc("GET /v1/content/popup", h.nextPopup)
+	mux.HandleFunc("POST /v1/content/popup/{id}/views", h.popupViewed)
 	mux.HandleFunc("GET /v1/content/news", func(w http.ResponseWriter, r *http.Request) {
 		out, err := h.service.News(r.Context(), false, false, page(r))
 		if err != nil {
@@ -189,6 +191,7 @@ func NewAdmin(service *application.Service) http.Handler {
 		}
 		w.WriteHeader(204)
 	})
+	h.registerAdminPopups(mux)
 	return secure(mux)
 }
 func (h *Handler) upload(w http.ResponseWriter, r *http.Request) {

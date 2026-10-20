@@ -24,7 +24,11 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /v1/me/club-profile", h.get)
 	mux.HandleFunc("PUT /v1/me/club-profile", h.update)
+	mux.HandleFunc("PUT /v1/me/club-profile/tff", h.setTFF)
+	mux.HandleFunc("DELETE /v1/me/club-profile/tff", h.clearTFF)
 	mux.HandleFunc("GET /v1/me/club-center", h.center)
+	mux.HandleFunc("GET /v1/me/club-leagues", h.leagues)
+	mux.HandleFunc("GET /v1/me/coach-team", h.coachTeam)
 	mux.HandleFunc("GET /v1/me/squad", h.squad)
 	mux.HandleFunc("DELETE /v1/me/squad/{playerId}", h.removeMember)
 	mux.HandleFunc("GET /v1/me/memberships", h.memberships)
@@ -52,6 +56,9 @@ func failure(w http.ResponseWriter, err error) {
 		status, code, message = 404, "not_found", "Kulüp profili bulunamadı."
 	case errors.Is(err, domain.ErrNotMember):
 		status, code, message = 404, "not_member", "Bu oyuncu kadroda değil."
+	case errors.Is(err, domain.ErrTFFUnavailable):
+		status, code, message = 503, "tff_unavailable", "TFF Ankara sayfasına şu an ulaşılamıyor. Biraz sonra tekrar dene."
+		slog.Warn("tff link check failed", "error", err)
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
@@ -115,6 +122,57 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	write(w, 200, p)
 }
 
+func (h *Handler) setTFF(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r)
+	if !ok {
+		return
+	}
+	if !strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+		failure(w, auth.ValidationError{"team": "JSON biçiminde takım gönder."})
+		return
+	}
+	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, 2048))
+	decoder.DisallowUnknownFields()
+	var in application.TFFInput
+	if err := decoder.Decode(&in); err != nil || decoder.Decode(&struct{}{}) != io.EOF {
+		failure(w, auth.ValidationError{"team": "Geçerli bir takım seçimi gönder."})
+		return
+	}
+	p, err := h.service.SetTFF(r.Context(), id, in)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, p)
+}
+
+func (h *Handler) clearTFF(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r)
+	if !ok {
+		return
+	}
+	p, err := h.service.ClearTFF(r.Context(), id)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, p)
+}
+
+// leagues is the club's Maçlarım page: table, club matches and group weeks.
+func (h *Handler) leagues(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r)
+	if !ok {
+		return
+	}
+	out, err := h.service.Leagues(r.Context(), id)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, out)
+}
+
 func (h *Handler) center(w http.ResponseWriter, r *http.Request) {
 	id, ok := h.actor(w, r)
 	if !ok {
@@ -149,6 +207,31 @@ func NewAdmin(service *application.Service) http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		mux.ServeHTTP(w, r)
 	})
+}
+
+// coachTeam is a coach's Takımım page. A coach switched into a club session
+// acts as the club and gets 403, like every other coach-only endpoint.
+func (h *Handler) coachTeam(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Fields(r.Header.Get("Authorization"))
+	token := ""
+	if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+		token = parts[1]
+	}
+	u, err := h.auth.Me(r.Context(), token)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	if u.Role != "coach" {
+		write(w, 403, map[string]any{"error": map[string]any{"code": "forbidden", "message": "Bu alan yalnızca antrenör hesaplarına açık.", "fields": nil}})
+		return
+	}
+	out, err := h.service.CoachTeams(r.Context(), u.ID)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, out)
 }
 
 // player resolves an active player account for membership endpoints.

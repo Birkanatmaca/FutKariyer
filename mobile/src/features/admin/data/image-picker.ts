@@ -19,6 +19,8 @@ export async function pickContentImage(): Promise<PickedImage | null> {
     name: asset.fileName || 'image.jpg',
     mime: asset.type || '',
     size: asset.fileSize || 0,
+    width: asset.width,
+    height: asset.height,
   };
 }
 export function appendImage(form: FormData, image: PickedImage) {

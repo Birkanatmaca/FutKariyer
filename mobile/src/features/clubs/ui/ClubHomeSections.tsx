@@ -1,81 +1,23 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Check } from 'lucide-react-native';
-import { Button } from '../../../shared/ui/Button';
-import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
+import {
+  ArrowUpRight,
+  ClipboardCheck,
+  ClipboardList,
+  Megaphone,
+  Newspaper,
+  PenLine,
+  Trophy,
+  UserSearch,
+  UsersRound,
+  type LucideIcon,
+} from 'lucide-react-native';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
-import { colors, radius, space } from '../../../styles/tokens';
-import type { TeamJoinRequest } from '../../teams';
-import type { DiscoveryProfile, DiscoveryQuery } from '../../discovery';
-import type { DiscoveryService } from '../../discovery';
+import { colors, radius, space, type } from '../../../styles/tokens';
 import type { ContentService } from '../../content';
 import { HomeNews } from '../../content';
-import type { TeamsService } from '../../teams';
-import type { ClubService } from '../application/club-service';
-import {
-  clubStyles,
-  ClubSection,
-  EmptyText,
-  SectionStatus,
-  sessionError,
-} from './ClubPrimitives';
-
-// Every section fetches its own data and handles its own loading, error and empty states.
-const previewQuery: DiscoveryQuery = {
-  kind: 'players',
-  search: '',
-  position: '',
-  dominantFoot: '',
-  availability: '',
-  footballType: '',
-  licenseStatus: '',
-  page: 1,
-};
-
-export function ClubProfileSection({
-  token,
-  service,
-  onEdit,
-}: {
-  token: string | null;
-  service: ClubService;
-  onEdit?(): void;
-}) {
-  const state = useFocusedResource(
-    useCallback(
-      () => (token ? service.profile(token) : sessionError()),
-      [service, token],
-    ),
-  );
-  const profile = state.data;
-  return (
-    <ClubSection title={copy.clubHome.profileTitle}>
-      <SectionStatus
-        loading={state.loading}
-        error={state.error}
-        onRetry={state.retry}
-      />
-      {profile ? (
-        <View style={clubStyles.card}>
-          <Text accessibilityRole="header" style={styles.clubName}>
-            {profile.name}
-          </Text>
-          <Text style={styles.meta}>
-            {copy.football.types[profile.footballType]} ·{' '}
-            {profile.district || copy.clubHome.noDistrict}
-          </Text>
-          <Text numberOfLines={3} style={styles.body}>
-            {profile.description || copy.clubHome.noDescription}
-          </Text>
-        </View>
-      ) : null}
-      {onEdit ? (
-        <Button label={copy.clubHome.profileEdit} secondary onPress={onEdit} />
-      ) : null}
-    </ClubSection>
-  );
-}
+import { ClubSection, SectionStatus, sessionError } from './ClubPrimitives';
 
 export function ClubNewsSection({
   token,
@@ -110,342 +52,280 @@ export function ClubNewsSection({
           onNews={onNews}
         />
       ) : null}
-      {onCompose ? (
-        <Button label={copy.clubHome.newsWrite} onPress={onCompose} />
-      ) : null}
-      {onMine ? (
-        <Button label={copy.clubHome.newsMine} secondary onPress={onMine} />
-      ) : null}
-    </View>
-  );
-}
-
-export function ClubPlayersSection({
-  token,
-  teamsService,
-  discoveryService,
-  applications = true,
-  onDiscover,
-}: {
-  token: string | null;
-  teamsService: TeamsService;
-  discoveryService: DiscoveryService;
-  // False for a switched coach without the applications section.
-  applications?: boolean;
-  onDiscover(): void;
-}) {
-  return (
-    <ClubSection title={copy.clubHome.playersTitle}>
-      {applications ? (
-        <PendingApplications token={token} service={teamsService} />
-      ) : null}
-      <PlayerDiscoveryPreview
-        token={token}
-        service={discoveryService}
-        onAll={onDiscover}
-      />
-    </ClubSection>
-  );
-}
-
-// Entry points only; the squad and listing screens load their own data.
-export function ClubSquadSection({
-  onSquad,
-  onListings,
-}: {
-  onSquad?(): void;
-  onListings?(): void;
-}) {
-  if (!onSquad && !onListings) return null;
-  return (
-    <ClubSection title={copy.clubHome.squadTitle}>
-      {onSquad ? (
-        <Button label={copy.clubHome.squadOpen} secondary onPress={onSquad} />
-      ) : null}
-      {onListings ? (
-        <Button
-          label={copy.clubHome.listingsOpen}
-          secondary
-          onPress={onListings}
-        />
-      ) : null}
-    </ClubSection>
-  );
-}
-
-export function ClubTournamentsSection({
-  onTournaments,
-  onEntries,
-}: {
-  onTournaments(): void;
-  onEntries?(): void;
-}) {
-  return (
-    <ClubSection title={copy.clubHome.tournamentsTitle}>
-      <Button
-        label={copy.clubHome.tournamentsOpen}
-        secondary
-        onPress={onTournaments}
-      />
-      {onEntries ? (
-        <Button
-          label={copy.clubHome.tournamentEntriesOpen}
-          secondary
-          onPress={onEntries}
-        />
-      ) : null}
-    </ClubSection>
-  );
-}
-
-function PendingApplications({
-  token,
-  service,
-}: {
-  token: string | null;
-  service: TeamsService;
-}) {
-  const state = useFocusedResource(
-    useCallback(
-      () => (token ? service.requests(token, 'pending', 1) : sessionError()),
-      [service, token],
-    ),
-  );
-  const [busyId, setBusyId] = useState('');
-  const [rejectingId, setRejectingId] = useState('');
-  const [error, setError] = useState('');
-  async function decide(id: string, decision: 'accepted' | 'rejected') {
-    if (!token || busyId) return;
-    setBusyId(id);
-    setError('');
-    try {
-      await service.decide(token, id, decision);
-      setRejectingId('');
-      state.retry();
-    } catch (failure) {
-      setError(
-        failure instanceof Error ? failure.message : copy.clubHome.decideFailed,
-      );
-    } finally {
-      setBusyId('');
-    }
-  }
-  return (
-    <ClubSection title={copy.clubHome.applicationsTitle}>
-      <SectionStatus
-        loading={state.loading}
-        error={state.error}
-        onRetry={state.retry}
-      />
-      {error ? <ErrorBanner message={error} /> : null}
-      {state.data ? (
-        <>
-          <Text style={styles.count}>
-            {copy.clubHome.applicationsCount(state.data.total)}
-          </Text>
-          {state.data.items.length ? (
-            state.data.items
-              .slice(0, 3)
-              .map(item => (
-                <ApplicationRow
-                  key={item.id}
-                  item={item}
-                  busy={busyId === item.id}
-                  disabled={!!busyId}
-                  rejecting={rejectingId === item.id}
-                  onAccept={() => decide(item.id, 'accepted')}
-                  onAskReject={() => setRejectingId(item.id)}
-                  onCancelReject={() => setRejectingId('')}
-                  onConfirmReject={() => decide(item.id, 'rejected')}
-                />
-              ))
-          ) : (
-            <EmptyText>{copy.clubHome.applicationsEmpty}</EmptyText>
-          )}
-        </>
-      ) : null}
-    </ClubSection>
-  );
-}
-
-function ApplicationRow({
-  item,
-  busy,
-  disabled,
-  rejecting,
-  onAccept,
-  onAskReject,
-  onCancelReject,
-  onConfirmReject,
-}: {
-  item: TeamJoinRequest;
-  busy: boolean;
-  disabled: boolean;
-  rejecting: boolean;
-  onAccept(): void;
-  onAskReject(): void;
-  onCancelReject(): void;
-  onConfirmReject(): void;
-}) {
-  return (
-    <View style={clubStyles.card}>
-      <Text numberOfLines={1} style={styles.rowTitle}>
-        {item.playerName || copy.teams.unknownPlayer}
-      </Text>
-      <Text style={styles.meta}>
-        {copy.teams.receivedAt(
-          new Date(item.createdAt).toLocaleDateString('tr-TR'),
-        )}
-      </Text>
-      {rejecting ? (
-        <>
-          <Text style={styles.meta}>{copy.clubHome.rejectConfirm}</Text>
-          <View style={styles.actions}>
-            <SmallButton
-              label={copy.clubHome.rejectConfirmYes}
-              danger
-              busy={busy}
-              disabled={disabled}
-              onPress={onConfirmReject}
+      {/* Two slim buttons side by side instead of two full-width ones. */}
+      {onCompose || onMine ? (
+        <View style={styles.newsActions}>
+          {onCompose ? (
+            <SlimButton
+              icon={PenLine}
+              label={copy.clubHome.newsWrite}
+              primary
+              onPress={onCompose}
             />
-            <SmallButton
-              label={copy.profile.cancel}
-              disabled={disabled}
-              onPress={onCancelReject}
+          ) : null}
+          {onMine ? (
+            <SlimButton
+              icon={Newspaper}
+              label={copy.clubHome.newsMine}
+              onPress={onMine}
             />
-          </View>
-        </>
-      ) : (
-        <View style={styles.actions}>
-          <SmallButton
-            label={copy.teams.accept}
-            busy={busy}
-            disabled={disabled}
-            onPress={onAccept}
-          />
-          <SmallButton
-            label={copy.teams.reject}
-            danger
-            disabled={disabled}
-            onPress={onAskReject}
-          />
+          ) : null}
         </View>
-      )}
-    </View>
-  );
-}
-
-function PlayerDiscoveryPreview({
-  token,
-  service,
-  onAll,
-}: {
-  token: string | null;
-  service: DiscoveryService;
-  onAll(): void;
-}) {
-  const state = useFocusedResource(
-    useCallback(
-      () => (token ? service.list(token, previewQuery) : sessionError()),
-      [service, token],
-    ),
-  );
-  return (
-    <ClubSection
-      title={copy.clubHome.discoveryTitle}
-      action={{ label: copy.clubHome.viewAll, onPress: onAll }}
-    >
-      <SectionStatus
-        loading={state.loading}
-        error={state.error}
-        onRetry={state.retry}
-      />
-      {state.data ? (
-        state.data.items.length ? (
-          <View style={styles.list}>
-            {state.data.items.slice(0, 3).map(profile => (
-              <PlayerRow key={profile.id} profile={profile} />
-            ))}
-          </View>
-        ) : (
-          <EmptyText>{copy.clubHome.discoveryEmpty}</EmptyText>
-        )
       ) : null}
-    </ClubSection>
-  );
-}
-
-function PlayerRow({ profile }: { profile: DiscoveryProfile }) {
-  return (
-    <View style={clubStyles.card}>
-      <Text numberOfLines={1} style={styles.rowTitle}>
-        {profile.fullName}
-      </Text>
-      <Text style={styles.meta}>
-        {profile.playerProfile?.position || copy.discover.noPosition} ·{' '}
-        {profile.district || copy.clubHome.noDistrict}
-      </Text>
     </View>
   );
 }
 
-function SmallButton({
+function SlimButton({
+  icon: Icon,
   label,
-  busy,
-  disabled,
-  danger,
+  primary,
   onPress,
 }: {
+  icon: LucideIcon;
   label: string;
-  busy?: boolean;
-  disabled: boolean;
-  danger?: boolean;
+  primary?: boolean;
   onPress(): void;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled: disabled || !!busy, busy: !!busy }}
-      disabled={disabled || !!busy}
       onPress={onPress}
-      style={[
-        styles.action,
-        danger && styles.actionDanger,
-        (disabled || busy) && styles.disabled,
+      style={({ pressed }) => [
+        styles.slim,
+        primary && styles.slimPrimary,
+        pressed && styles.pressed,
       ]}
     >
-      {danger ? null : <Check size={15} color={colors.success} />}
-      <Text style={[styles.actionText, danger && styles.actionTextDanger]}>
-        {busy ? copy.clubHome.loading : label}
+      <Icon
+        size={15}
+        color={primary ? colors.brandInk : colors.text}
+        strokeWidth={2.4}
+      />
+      <Text style={[styles.slimText, primary && styles.slimTextPrimary]}>
+        {label}
       </Text>
+    </Pressable>
+  );
+}
+
+type QuickAction = {
+  key: string;
+  icon: LucideIcon;
+  tint: string;
+  wash: string;
+  title: string;
+  hint: string;
+  count?: number;
+  onPress(): void;
+};
+
+// Rectangular shortcuts to the club's tools (20 Oct 2026), two per row. A
+// switched coach only sees the tools the club gave them.
+export function ClubQuickActions({
+  pendingApplications,
+  onApplications,
+  onDiscover,
+  onSquad,
+  onListings,
+  onTournaments,
+  onEntries,
+}: {
+  // Undefined while the club center loads.
+  pendingApplications?: number;
+  onApplications?(): void;
+  onDiscover(): void;
+  onSquad?(): void;
+  onListings?(): void;
+  onTournaments(): void;
+  onEntries?(): void;
+}) {
+  const text = copy.clubHome.quick;
+  const all: (Omit<QuickAction, 'onPress'> & { onPress?(): void })[] = [
+    {
+      key: 'applications',
+      icon: ClipboardList,
+      tint: colors.brand,
+      wash: colors.brandWash,
+      title: text.applications,
+      hint: text.applicationsHint(pendingApplications),
+      count: pendingApplications,
+      onPress: onApplications,
+    },
+    {
+      key: 'discover',
+      icon: UserSearch,
+      tint: colors.accent,
+      wash: colors.accentWash,
+      title: text.discover,
+      hint: text.discoverHint,
+      onPress: onDiscover,
+    },
+    {
+      key: 'squad',
+      icon: UsersRound,
+      tint: colors.info,
+      wash: colors.infoWash,
+      title: text.squad,
+      hint: text.squadHint,
+      onPress: onSquad,
+    },
+    {
+      key: 'listings',
+      icon: Megaphone,
+      tint: colors.warning,
+      wash: colors.overlay,
+      title: text.listings,
+      hint: text.listingsHint,
+      onPress: onListings,
+    },
+    {
+      key: 'tournaments',
+      icon: Trophy,
+      tint: colors.success,
+      wash: colors.overlay,
+      title: text.tournaments,
+      hint: text.tournamentsHint,
+      onPress: onTournaments,
+    },
+    {
+      key: 'entries',
+      icon: ClipboardCheck,
+      tint: colors.accent,
+      wash: colors.accentWash,
+      title: text.entries,
+      hint: text.entriesHint,
+      onPress: onEntries,
+    },
+  ];
+  const actions = all.filter((item): item is QuickAction => !!item.onPress);
+  const rows: QuickAction[][] = [];
+  for (let i = 0; i < actions.length; i += 2)
+    rows.push(actions.slice(i, i + 2));
+  return (
+    <ClubSection title={text.title}>
+      <View style={styles.grid}>
+        {rows.map(row => (
+          <View key={row[0].key} style={styles.row}>
+            {row.map(item => (
+              <QuickTile key={item.key} item={item} />
+            ))}
+            {row.length === 1 ? <View style={styles.spacer} /> : null}
+          </View>
+        ))}
+      </View>
+    </ClubSection>
+  );
+}
+
+function QuickTile({ item }: { item: QuickAction }) {
+  const { icon: Icon, tint, wash, title, hint, count } = item;
+  const waiting = !!count;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint={hint}
+      onPress={item.onPress}
+      style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+    >
+      <View style={styles.tileTop}>
+        <View style={[styles.icon, { backgroundColor: wash }]}>
+          <Icon size={18} color={tint} strokeWidth={2.2} />
+        </View>
+        {waiting ? (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
+              {count > 99 ? '99+' : String(count)}
+            </Text>
+          </View>
+        ) : (
+          <ArrowUpRight size={16} color={colors.muted} />
+        )}
+      </View>
+      <View style={styles.tileText}>
+        <Text numberOfLines={1} style={styles.tileTitle}>
+          {title}
+        </Text>
+        <Text
+          numberOfLines={1}
+          style={[styles.tileHint, waiting && { color: tint }]}
+        >
+          {hint}
+        </Text>
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   stack: { gap: space.md },
-  clubName: { color: colors.text, fontSize: 18, fontWeight: '800' },
-  meta: { color: colors.muted, fontSize: 12, lineHeight: 18 },
-  body: { color: colors.secondary, fontSize: 13, lineHeight: 20 },
-  count: { color: colors.brand, fontSize: 13, fontWeight: '700' },
-  list: { gap: space.sm },
-  rowTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
-  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  action: {
-    minHeight: 42,
-    paddingHorizontal: space.md,
+  pressed: { opacity: 0.75 },
+  newsActions: { flexDirection: 'row', gap: space.sm },
+  slim: {
+    flex: 1,
+    minHeight: 40,
     flexDirection: 'row',
-    gap: space.xs,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radius.sm,
+    gap: space.sm,
+    paddingHorizontal: space.md,
+    borderRadius: radius.pill,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.hairline,
     backgroundColor: colors.raised,
   },
-  actionDanger: { borderColor: colors.dangerWash },
-  actionText: { color: colors.success, fontSize: 12, fontWeight: '700' },
-  actionTextDanger: { color: colors.danger },
-  disabled: { opacity: 0.45 },
+  slimPrimary: { backgroundColor: colors.brand, borderColor: colors.brand },
+  slimText: {
+    ...type.caption,
+    fontSize: 13,
+    color: colors.text,
+    fontWeight: '700',
+  },
+  slimTextPrimary: { color: colors.brandInk },
+  grid: { gap: space.sm },
+  row: { flexDirection: 'row', gap: space.sm },
+  spacer: { flex: 1 },
+  tile: {
+    flex: 1,
+    minHeight: 112,
+    justifyContent: 'space-between',
+    gap: space.md,
+    padding: space.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    backgroundColor: colors.surface,
+  },
+  tileTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  icon: {
+    width: 38,
+    height: 38,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badge: {
+    minWidth: 24,
+    height: 24,
+    paddingHorizontal: space.sm,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.brand,
+  },
+  badgeText: {
+    ...type.number,
+    fontSize: 12,
+    fontWeight: '800',
+    color: colors.brandInk,
+  },
+  tileText: { gap: 2 },
+  tileTitle: { ...type.body, color: colors.text, fontWeight: '700' },
+  tileHint: { ...type.caption, color: colors.muted },
 });

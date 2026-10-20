@@ -25,6 +25,9 @@ export function createDiscoveryService(repository: DiscoveryRepository) {
     },
     get: (token: string, kind: DiscoveryKind, id: string) =>
       repository.get(token, kind, id),
+    watchlist: (token: string) => repository.watchlist(token),
+    watch: (token: string, playerId: string, on: boolean) =>
+      repository.watch(token, playerId, on),
   };
 }
 export type DiscoveryService = ReturnType<typeof createDiscoveryService>;
