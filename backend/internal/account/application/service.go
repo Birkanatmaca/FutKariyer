@@ -112,9 +112,9 @@ func (s *Service) DeleteAvatar(ctx context.Context, userID string) (domain.Profi
 	return s.repo.DeleteAvatar(ctx, userID)
 }
 
-func (s *Service) Avatar(ctx context.Context, userID string) (domain.Avatar, error) {
+func (s *Service) Avatar(ctx context.Context, viewerID, userID string) (domain.Avatar, error) {
 	if !validID.MatchString(userID) {
 		return domain.Avatar{}, domain.ErrNotFound
 	}
-	return s.repo.Avatar(ctx, userID)
+	return s.repo.Avatar(ctx, viewerID, userID)
 }

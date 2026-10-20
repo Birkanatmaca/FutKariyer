@@ -131,9 +131,11 @@ func lockActor(ctx context.Context, tx *sql.Tx, userID string) (domain.Author, e
 	}
 	return a, err
 }
-func lockPost(ctx context.Context, tx *sql.Tx, id string) error {
+// lockPost locks a post the viewer may see; a block either way hides it, so
+// blocked users cannot like or reply to each other's posts.
+func lockPost(ctx context.Context, tx *sql.Tx, viewerID, id string) error {
 	var found string
-	err := tx.QueryRowContext(ctx, `SELECT p.id FROM social_posts p JOIN users u ON u.id=p.author_id WHERE p.id=$1 AND `+activeAuthor+` FOR UPDATE OF p`, id).Scan(&found)
+	err := tx.QueryRowContext(ctx, `SELECT p.id FROM social_posts p JOIN users u ON u.id=p.author_id WHERE p.id=$2 AND `+activeAuthor+` AND `+visibleToViewer+` FOR UPDATE OF p`, viewerID, id).Scan(&found)
 	if errors.Is(err, sql.ErrNoRows) {
 		return domain.ErrNotFound
 	}
@@ -203,7 +205,7 @@ func (r *Postgres) SetLike(ctx context.Context, userID, id string, liked bool) (
 	if _, err = lockActor(ctx, tx, userID); err != nil {
 		return domain.Post{}, err
 	}
-	if err = lockPost(ctx, tx, id); err != nil {
+	if err = lockPost(ctx, tx, userID, id); err != nil {
 		return domain.Post{}, err
 	}
 	if liked {
@@ -255,7 +257,7 @@ func (r *Postgres) CreateReply(ctx context.Context, userID, postID, id, body str
 	if err != nil {
 		return domain.Reply{}, err
 	}
-	if err = lockPost(ctx, tx, postID); err != nil {
+	if err = lockPost(ctx, tx, userID, postID); err != nil {
 		return domain.Reply{}, err
 	}
 	if err = consumeWriteSlot(ctx, tx, userID, true); err != nil {
@@ -283,9 +285,10 @@ func (r *Postgres) DeleteReply(ctx context.Context, userID, postID, id string) e
 	return nil
 }
 
-func (r *Postgres) Media(ctx context.Context, id string) (domain.Attachment, error) {
+// Media serves a post's file under the same visibility as the post itself.
+func (r *Postgres) Media(ctx context.Context, viewerID, id string) (domain.Attachment, error) {
 	var out domain.Attachment
-	err := r.db.QueryRowContext(ctx, `SELECT p.media_kind,p.media_mime,p.media_size,p.media_width,p.media_height,p.media_data FROM social_posts p JOIN users u ON u.id=p.author_id WHERE p.id=$1 AND p.media_kind<>'' AND `+activeAuthor, id).Scan(&out.Kind, &out.MIME, &out.Size, &out.Width, &out.Height, &out.Data)
+	err := r.db.QueryRowContext(ctx, `SELECT p.media_kind,p.media_mime,p.media_size,p.media_width,p.media_height,p.media_data FROM social_posts p JOIN users u ON u.id=p.author_id WHERE p.id=$2 AND p.media_kind<>'' AND `+activeAuthor+` AND `+visibleToViewer, viewerID, id).Scan(&out.Kind, &out.MIME, &out.Size, &out.Width, &out.Height, &out.Data)
 	if errors.Is(err, sql.ErrNoRows) {
 		return out, domain.ErrNotFound
 	}
@@ -294,14 +297,11 @@ func (r *Postgres) Media(ctx context.Context, id string) (domain.Attachment, err
 // notifyFollow tells the followed account once per follower; unfollowing
 // and following again does not repeat it.
 func notifyFollow(ctx context.Context, tx *sql.Tx, followerID, profileID string) error {
-	var name string
-	if err := tx.QueryRowContext(ctx, `SELECT full_name FROM users WHERE id=$1`, followerID).Scan(&name); err != nil {
-		return err
-	}
 	return notifications.CreateInTx(ctx, tx, notificationdomain.NewNotification{
 		RecipientID: profileID,
 		Kind:        notificationdomain.KindFollow,
-		Title:       name,
+		ActorID:     followerID,
+		Title:       notificationdomain.Actor,
 		Body:        "seni takip etmeye başladı.",
 		ResourceID:  followerID,
 		SourceKey:   "follow:" + followerID,
@@ -330,6 +330,14 @@ func (r *Postgres) SetFollow(ctx context.Context, userID, id string, following b
 		return domain.ErrNotFound
 	}
 	if following {
+		// Neither side of a block can follow the other.
+		var blocked bool
+		if blocked, err = moderation.BlockedInTx(ctx, tx, userID, id); err != nil {
+			return err
+		}
+		if blocked {
+			return domain.ErrNotFound
+		}
 		var result sql.Result
 		result, err = tx.ExecContext(ctx, `INSERT INTO profile_follows(profile_id,follower_id) VALUES($1,$2) ON CONFLICT DO NOTHING`, id, userID)
 		if err == nil && id != userID {

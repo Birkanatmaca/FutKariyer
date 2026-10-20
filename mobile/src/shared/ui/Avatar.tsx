@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { colors, radius } from '../../styles/tokens';
+import { useAvatarSource } from '../lib/avatar';
 
 export function initialsOf(name: string) {
   const [first, second] = name.trim().split(/\s+/);
@@ -26,6 +27,7 @@ export function Avatar({
   square?: boolean;
   style?: ViewStyle;
 }) {
+  const source = useAvatarSource(uri);
   const [failed, setFailed] = useState('');
   useEffect(() => setFailed(''), [uri]);
   const shape = {
@@ -35,9 +37,9 @@ export function Avatar({
   };
   return (
     <View style={[styles.frame, shape, style]} accessibilityIgnoresInvertColors>
-      {uri && failed !== uri ? (
+      {source && uri && failed !== uri ? (
         <Image
-          source={{ uri }}
+          source={source}
           style={StyleSheet.absoluteFill}
           resizeMode="cover"
           onError={() => setFailed(uri)}

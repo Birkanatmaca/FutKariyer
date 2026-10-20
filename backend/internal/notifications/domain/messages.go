@@ -103,34 +103,37 @@ func NewNewsReview(recipientID, articleID, title string, approved bool) NewNotif
 	return n
 }
 
-func NewConnectionRequest(recipientID, requestID, senderName string) NewNotification {
+func NewConnectionRequest(recipientID, requestID, senderID string) NewNotification {
 	return NewNotification{
 		RecipientID: recipientID,
 		Kind:        KindConnection,
+		ActorID:     senderID,
 		Title:       "Yeni tanışma isteği",
-		Body:        senderName + " seninle tanışmak istiyor. İstekler ekranından yanıtlayabilirsin.",
+		Body:        Actor + " seninle tanışmak istiyor. İstekler ekranından yanıtlayabilirsin.",
 		ResourceID:  requestID,
 		SourceKey:   "connection:" + requestID + ":new",
 	}
 }
 
-func NewConnectionAccepted(recipientID, requestID, accepterName string) NewNotification {
+func NewConnectionAccepted(recipientID, requestID, accepterID string) NewNotification {
 	return NewNotification{
 		RecipientID: recipientID,
 		Kind:        KindConnection,
+		ActorID:     accepterID,
 		Title:       "Tanışma isteğin kabul edildi",
-		Body:        accepterName + " isteğini kabul etti. İletişim bilgisi artık Bağlantılarım ekranında.",
+		Body:        Actor + " isteğini kabul etti. İletişim bilgisi artık Bağlantılarım ekranında.",
 		ResourceID:  requestID,
 		SourceKey:   "connection:" + requestID + ":accepted",
 	}
 }
 
-func NewTournamentEntry(organizerID, entryID, clubName, tournamentName string) NewNotification {
+func NewTournamentEntry(organizerID, entryID, clubID, tournamentName string) NewNotification {
 	return NewNotification{
 		RecipientID: organizerID,
 		Kind:        KindTournament,
+		ActorID:     clubID,
 		Title:       "Yeni turnuva başvurusu",
-		Body:        clubName + ", " + tournamentName + " turnuvasına başvurdu.",
+		Body:        Actor + ", " + tournamentName + " turnuvasına başvurdu.",
 		ResourceID:  entryID,
 		SourceKey:   "tournament-entry:" + entryID + ":new",
 	}

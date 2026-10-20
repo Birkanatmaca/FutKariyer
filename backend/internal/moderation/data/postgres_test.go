@@ -82,3 +82,34 @@ func TestBlockHidesPostsBothWaysAndReportsResolve(t *testing.T) {
 		t.Fatalf("a resolved report was reopened: %v", err)
 	}
 }
+
+// Deleting an account removes its words from the review queue: the excerpt
+// with the reported account, the note with the reporter. The report and its
+// decision stay (20 Oct 2026).
+func TestDeletedAccountsLeaveNoWordsInReports(t *testing.T) {
+	db := testpostgres.New(t)
+	ctx := context.Background()
+	for _, id := range []string{viewer, author} {
+		if _, err := db.DB.ExecContext(ctx, `INSERT INTO users(id,full_name,email,password_hash,role,city,created_at) VALUES($1,$1,$1||'@example.test','unused','player','Ankara',now())`, id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	report := func(id, reporter, target string) {
+		t.Helper()
+		if _, err := db.DB.ExecContext(ctx, `INSERT INTO content_reports(id,reporter_id,target_kind,target_id,target_user_id,target_excerpt,reason,note) VALUES($1,$2,'user',$3,$3,'Kişisel metin','harassment','Bana yazdı')`, id, reporter, target); err != nil {
+			t.Fatal(err)
+		}
+	}
+	report("e0000000000000000000000000000001", viewer, author)
+	report("e0000000000000000000000000000002", author, viewer)
+	if _, err := db.DB.ExecContext(ctx, `DELETE FROM users WHERE id=$1`, author); err != nil {
+		t.Fatal(err)
+	}
+	var excerpt, note string
+	if err := db.DB.QueryRowContext(ctx, `SELECT target_excerpt,note FROM content_reports WHERE id='e0000000000000000000000000000001'`).Scan(&excerpt, &note); err != nil || excerpt != "" || note != "Bana yazdı" {
+		t.Fatalf("report about the deleted account: %q %q %v", excerpt, note, err)
+	}
+	if err := db.DB.QueryRowContext(ctx, `SELECT target_excerpt,note FROM content_reports WHERE id='e0000000000000000000000000000002'`).Scan(&excerpt, &note); err != nil || note != "" || excerpt != "Kişisel metin" {
+		t.Fatalf("report by the deleted account: %q %q %v", excerpt, note, err)
+	}
+}

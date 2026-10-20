@@ -136,6 +136,10 @@ func TestClubStaffInviteSwitchAndRevoke(t *testing.T) {
 	if me["role"] != "club" || me["delegate"].(map[string]any)["coachName"] != "Ayşe Hoca" {
 		t.Fatalf("switched session must be the club with the coach as delegate: %v", me)
 	}
+	if me["email"] != "" {
+		t.Fatalf("the club's email must stay private from the coach: %v", me["email"])
+	}
+	call("GET", "/v1/connections", delegated, nil, 403)
 	call("POST", "/v1/auth/switch", delegated, map[string]string{"clubId": club.ID}, 403)
 	call("GET", "/v1/me/squad", delegated, nil, 200)
 	if body := call("GET", "/v1/teams/me/join-requests", delegated, nil, 403); !strings.Contains(body["error"].(map[string]any)["code"].(string), "delegate") {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { avatarUrl } from '../../../shared/lib/avatar';
+import { avatarUrl, useAvatarSource } from '../../../shared/lib/avatar';
 import { colors, radius } from '../../../styles/tokens';
 import { monogram } from '../application/club-center';
 import type { ClubUpcomingFixture } from '../domain/models';
@@ -18,6 +18,7 @@ export function ClubCrest({
   own: boolean;
   size?: number;
 }) {
+  const source = useAvatarSource(uri);
   const [failed, setFailed] = useState(false);
   return (
     <View
@@ -27,9 +28,9 @@ export function ClubCrest({
         own && styles.crestOwn,
       ]}
     >
-      {uri && !failed ? (
+      {source && !failed ? (
         <Image
-          source={{ uri }}
+          source={source}
           style={StyleSheet.absoluteFill}
           resizeMode="cover"
           onError={() => setFailed(true)}

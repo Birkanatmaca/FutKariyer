@@ -10,6 +10,7 @@ import {
 } from 'lucide-react-native';
 import { Button } from '../shared/ui/Button';
 import { ErrorBanner } from '../shared/ui/ErrorBanner';
+import { useAvatarSource } from '../shared/lib/avatar';
 import { copy } from '../shared/lib/copy';
 import { colors, radius, shadow, space, type } from '../styles/tokens';
 
@@ -69,6 +70,7 @@ export function HomeProfileCard({
   onVisitors?(): void;
   onRetry(): void;
 }) {
+  const avatarSource = useAvatarSource(avatarUri);
   const [size, setSize] = useState({ width: 0, height: 0 });
   return (
     <View
@@ -97,9 +99,9 @@ export function HomeProfileCard({
       >
         <View style={styles.avatarRing}>
           <View style={styles.avatar}>
-            {avatarUri ? (
+            {avatarSource ? (
               <Image
-                source={{ uri: avatarUri }}
+                source={avatarSource}
                 style={StyleSheet.absoluteFill}
                 resizeMode="cover"
               />

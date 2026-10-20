@@ -10,6 +10,7 @@ import { ArrowLeft } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
 import { Button } from '../../../shared/ui/Button';
+import { useAvatarSource } from '../../../shared/lib/avatar';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import type { ProfileCounts } from './PlayerProfileHeader';
@@ -50,6 +51,7 @@ export function PlayerOverviewScreen({
   // Own profile only: shares the player card to other apps.
   sharer?: ProfileSharer;
 }) {
+  const avatarSource = useAvatarSource(avatarUri);
   const { profile, error, loading, retry } = usePlayerProfile(service, token);
   const [sharing, setSharing] = useState(false);
   return (
@@ -81,7 +83,7 @@ export function PlayerOverviewScreen({
             profile={profile}
             onEdit={onEdit}
             onShare={sharer ? () => setSharing(true) : undefined}
-            avatarSource={avatarUri ? { uri: avatarUri } : undefined}
+            avatarSource={avatarSource}
             counts={counts}
             posts={posts}
             isPro={isPro}

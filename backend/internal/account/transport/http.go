@@ -27,7 +27,7 @@ type Handler struct {
 //	PUT    /v1/me/profile
 //	PUT    /v1/me/avatar      multipart, single "avatar" part
 //	DELETE /v1/me/avatar
-//	GET    /v1/users/{id}/avatar
+//	GET    /v1/users/{id}/avatar  signed in; 404 across a block
 func New(authService *auth.Service, service *application.Service) http.Handler {
 	h := &Handler{auth: authService, service: service}
 	mux := http.NewServeMux()
@@ -68,6 +68,11 @@ func failure(w http.ResponseWriter, err error) {
 }
 
 func (h *Handler) actor(w http.ResponseWriter, r *http.Request) (string, bool) {
+	u, ok := h.user(w, r)
+	return u.ID, ok
+}
+
+func (h *Handler) user(w http.ResponseWriter, r *http.Request) (auth.PublicUser, bool) {
 	parts := strings.Fields(r.Header.Get("Authorization"))
 	token := ""
 	if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
@@ -76,9 +81,9 @@ func (h *Handler) actor(w http.ResponseWriter, r *http.Request) (string, bool) {
 	u, err := h.auth.Me(r.Context(), token)
 	if err != nil {
 		failure(w, err)
-		return "", false
+		return u, false
 	}
-	return u.ID, true
+	return u, true
 }
 
 func profileJSON(p domain.Profile) map[string]any {
@@ -94,14 +99,18 @@ func profileJSON(p domain.Profile) map[string]any {
 }
 
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
-	id, ok := h.actor(w, r)
+	u, ok := h.user(w, r)
 	if !ok {
 		return
 	}
-	p, err := h.service.Get(r.Context(), id)
+	p, err := h.service.Get(r.Context(), u.ID)
 	if err != nil {
 		failure(w, err)
 		return
+	}
+	if u.Delegate != nil {
+		// A coach running the club sees its photo and details, not its email.
+		p.Email = ""
 	}
 	write(w, 200, profileJSON(p))
 }
@@ -192,9 +201,14 @@ func (h *Handler) remove(w http.ResponseWriter, r *http.Request) {
 	write(w, 200, profileJSON(p))
 }
 
-// avatar is public; clients add ?v=avatarVersion, so the file may be cached.
+// avatar needs a session and hides photos across a block; clients add
+// ?v=avatarVersion, so the device may cache the file but shared caches not.
 func (h *Handler) avatar(w http.ResponseWriter, r *http.Request) {
-	a, err := h.service.Avatar(r.Context(), r.PathValue("id"))
+	viewer, ok := h.actor(w, r)
+	if !ok {
+		return
+	}
+	a, err := h.service.Avatar(r.Context(), viewer, r.PathValue("id"))
 	if err != nil {
 		if errors.Is(err, domain.ErrNotFound) {
 			http.NotFound(w, r)
@@ -205,7 +219,7 @@ func (h *Handler) avatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", a.MIME)
-	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.Header().Set("Cache-Control", "private, max-age=86400")
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
 	http.ServeContent(w, r, "", a.UpdatedAt, strings.NewReader(string(a.Data)))
 }

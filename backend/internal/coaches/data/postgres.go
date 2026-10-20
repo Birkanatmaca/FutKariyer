@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	notificationdomain "futcareer/backend/internal/notifications/domain"
 	"strings"
 	"time"
 
@@ -149,19 +150,17 @@ func escapeLike(s string) string {
 	return strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`).Replace(s)
 }
 
-// notify adds one in-app notification inside the caller's transaction.
+// notify adds one in-app notification inside the caller's transaction. The
+// resource is the other account (club or coach); its name is not stored but
+// shown in place of actor (20 Oct 2026).
 func notify(ctx context.Context, tx *sql.Tx, recipient, title, body, resource string) error {
-	_, err := tx.ExecContext(ctx, `INSERT INTO notifications(id,recipient_id,kind,title,body,resource_id,source_key)
-		VALUES(md5(random()::text || clock_timestamp()::text || $1),$1,'staff',$2,$3,$4,'staff:' || md5(random()::text || clock_timestamp()::text))`,
+	_, err := tx.ExecContext(ctx, `INSERT INTO notifications(id,recipient_id,kind,title,body,resource_id,source_key,actor_id)
+		VALUES(md5(random()::text || clock_timestamp()::text || $1),$1,'staff',$2,$3,$4,'staff:' || md5(random()::text || clock_timestamp()::text),$4)`,
 		recipient, title, body, resource)
 	return err
 }
 
-func name(ctx context.Context, tx *sql.Tx, id string) (string, error) {
-	var n string
-	err := tx.QueryRowContext(ctx, `SELECT full_name FROM users WHERE id=$1`, id).Scan(&n)
-	return n, err
-}
+const actor = notificationdomain.Actor
 
 func (r *Postgres) Invite(ctx context.Context, clubID, coachID, role string, permissions []string) error {
 	tx, err := r.db.BeginTx(ctx, nil)
@@ -202,7 +201,7 @@ func (r *Postgres) Invite(ctx context.Context, clubID, coachID, role string, per
 		}
 		return domain.ErrNotFound
 	}
-	if err := notify(ctx, tx, coachID, club+" seni teknik ekibine davet etti",
+	if err := notify(ctx, tx, coachID, actor+" seni teknik ekibine davet etti",
 		"Daveti Kulüplerim ekranından kabul edebilir veya reddedebilirsin.", clubID); err != nil {
 		return err
 	}
@@ -248,11 +247,7 @@ func (r *Postgres) RemoveMember(ctx context.Context, clubID, coachID string) err
 		return err
 	}
 	if status == "active" {
-		club, err := name(ctx, tx, clubID)
-		if err != nil {
-			return err
-		}
-		if err := notify(ctx, tx, coachID, club+" teknik ekibinden çıkarıldın",
+		if err := notify(ctx, tx, coachID, actor+" teknik ekibinden çıkarıldın",
 			"Kulübün hesabına geçiş yetkin kaldırıldı.", clubID); err != nil {
 			return err
 		}
@@ -296,10 +291,6 @@ func (r *Postgres) Respond(ctx context.Context, coachID, clubID string, accept b
 		return err
 	}
 	defer tx.Rollback()
-	coach, err := name(ctx, tx, coachID)
-	if err != nil {
-		return err
-	}
 	if accept {
 		result, err := tx.ExecContext(ctx, `UPDATE club_staff SET status='active', joined_at=$3
 			WHERE club_user_id=$1 AND coach_user_id=$2 AND status='invited'`, clubID, coachID, time.Now().UTC())
@@ -312,7 +303,7 @@ func (r *Postgres) Respond(ctx context.Context, coachID, clubID string, accept b
 			}
 			return err
 		}
-		if err := notify(ctx, tx, clubID, coach+" teknik ekibine katıldı",
+		if err := notify(ctx, tx, clubID, actor+" teknik ekibine katıldı",
 			"Davetini kabul etti; verdiğin izinlerle kulüp hesabına geçebilir.", coachID); err != nil {
 			return err
 		}
@@ -328,7 +319,7 @@ func (r *Postgres) Respond(ctx context.Context, coachID, clubID string, accept b
 		}
 		return err
 	}
-	if err := notify(ctx, tx, clubID, coach+" teknik ekip davetini reddetti", "Dilersen başka bir antrenörü davet edebilirsin.", coachID); err != nil {
+	if err := notify(ctx, tx, clubID, actor+" teknik ekip davetini reddetti", "Dilersen başka bir antrenörü davet edebilirsin.", coachID); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -347,11 +338,7 @@ func (r *Postgres) Leave(ctx context.Context, coachID, clubID string) error {
 	if status != "active" {
 		return domain.ErrNotFound
 	}
-	coach, err := name(ctx, tx, coachID)
-	if err != nil {
-		return err
-	}
-	if err := notify(ctx, tx, clubID, coach+" teknik ekipten ayrıldı", "Antrenörün kulüp hesabına geçiş yetkisi sona erdi.", coachID); err != nil {
+	if err := notify(ctx, tx, clubID, actor+" teknik ekipten ayrıldı", "Antrenörün kulüp hesabına geçiş yetkisi sona erdi.", coachID); err != nil {
 		return err
 	}
 	return tx.Commit()

@@ -85,7 +85,7 @@ type Repository interface {
 	UserPosts(ctx context.Context, viewerID, authorID string, after Cursor, profileMedia bool) ([]Post, error)
 	CreatePost(context.Context, string, string, string, *Attachment) (Post, error)
 	DeletePost(context.Context, string, string) error
-	Media(context.Context, string) (Attachment, error)
+	Media(ctx context.Context, viewerID, id string) (Attachment, error)
 	SetFollow(context.Context, string, string, bool) error
 	SetLike(context.Context, string, string, bool) (Post, error)
 	Replies(context.Context, string, string, Cursor) ([]Reply, error)

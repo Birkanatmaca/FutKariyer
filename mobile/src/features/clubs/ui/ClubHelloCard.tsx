@@ -8,6 +8,7 @@ import {
   Newspaper,
   type LucideIcon,
 } from 'lucide-react-native';
+import { useAvatarSource } from '../../../shared/lib/avatar';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, shadow, space, type } from '../../../styles/tokens';
 import { monogram } from '../application/club-center';
@@ -40,6 +41,7 @@ export function ClubHelloCard({
   onApplications?(): void;
   onNews?(): void;
 }) {
+  const avatarSource = useAvatarSource(avatarUri);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [failed, setFailed] = useState(false);
   const text = copy.clubHome;
@@ -84,9 +86,9 @@ export function ClubHelloCard({
     <>
       <View style={styles.avatarRing}>
         <View style={styles.avatar}>
-          {avatarUri && !failed ? (
+          {avatarSource && !failed ? (
             <Image
-              source={{ uri: avatarUri }}
+              source={avatarSource}
               style={StyleSheet.absoluteFill}
               resizeMode="cover"
               onError={() => setFailed(true)}

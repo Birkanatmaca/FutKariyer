@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { AppState } from 'react-native';
 import { ApiError } from '../../../shared/api/client';
+import { AvatarTokenProvider } from '../../../shared/lib/avatar';
 import { copy } from '../../../shared/lib/copy';
 import type {
   AccountApplicationInput,
@@ -331,7 +332,11 @@ export function AuthProvider({
         switchBack,
       }}
     >
-      {children}
+      <AvatarTokenProvider
+        value={current?.kind === 'user' ? current.saved.token : null}
+      >
+        {children}
+      </AvatarTokenProvider>
     </AuthContext.Provider>
   );
 }

@@ -146,11 +146,11 @@ func (s *Service) CreatePost(ctx context.Context, userID, body string, data []by
 	}
 	return s.repo.CreatePost(ctx, userID, id, body, media)
 }
-func (s *Service) Media(ctx context.Context, id string) (domain.Attachment, error) {
+func (s *Service) Media(ctx context.Context, viewerID, id string) (domain.Attachment, error) {
 	if !idPattern.MatchString(id) {
 		return domain.Attachment{}, domain.ErrNotFound
 	}
-	return s.repo.Media(ctx, id)
+	return s.repo.Media(ctx, viewerID, id)
 }
 func (s *Service) SetFollow(ctx context.Context, userID, id string, following bool) error {
 	if !idPattern.MatchString(id) {

@@ -94,7 +94,7 @@ func (r *Postgres) Send(ctx context.Context, id, senderID, recipientID, message 
 	if err != nil {
 		return domain.Connection{}, err
 	}
-	if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewConnectionRequest(recipientID, id, sender.name)); err != nil {
+	if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewConnectionRequest(recipientID, id, senderID)); err != nil {
 		return domain.Connection{}, err
 	}
 	out, err := one(ctx, tx, senderID, id)
@@ -207,11 +207,7 @@ func (r *Postgres) Respond(ctx context.Context, userID, id, action string) (doma
 		return domain.Connection{}, err
 	}
 	if target == "accepted" {
-		var name string
-		if err = tx.QueryRowContext(ctx, `SELECT full_name FROM users WHERE id=$1`, userID).Scan(&name); err != nil {
-			return domain.Connection{}, err
-		}
-		if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewConnectionAccepted(senderID, id, name)); err != nil {
+		if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewConnectionAccepted(senderID, id, userID)); err != nil {
 			return domain.Connection{}, err
 		}
 	}

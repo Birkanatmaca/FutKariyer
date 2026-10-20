@@ -20,7 +20,7 @@ func (r *Postgres) ClaimPending(ctx context.Context, limit int) ([]domain.PushMe
 	// Older than a day is stale for a push; it stays in the notification centre.
 	rows, err := r.db.QueryContext(ctx, `UPDATE notifications SET pushed_at=now() WHERE id IN (
 		SELECT id FROM notifications WHERE pushed_at IS NULL ORDER BY created_at,id LIMIT $1 FOR UPDATE SKIP LOCKED)
-		RETURNING id,recipient_id,kind,title,body,resource_id,created_at>now()-interval '1 day'`, limit)
+		RETURNING id,recipient_id,kind,`+rendered("notifications", "title")+`,`+rendered("notifications", "body")+`,resource_id,created_at>now()-interval '1 day'`, limit)
 	if err != nil {
 		return nil, err
 	}

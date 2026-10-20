@@ -67,7 +67,8 @@ export function SocialFeedScreen({
   requestCount?: number;
   // Changes on each fresh count; a pending count shows a one-second hint.
   requestsLoadedAt?: number;
-  onRequests(): void;
+  // Absent for a coach running a club account: the club's requests stay private.
+  onRequests?: () => void;
   onMenu(): void;
 }) {
   // Oyunlar left this screen for its own hub page on 19 Oct 2026.
@@ -210,26 +211,32 @@ export function SocialFeedScreen({
         >
           <Wordmark height={26} />
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.social.requests}
-          accessibilityHint={
-            requestCount ? copy.social.requestsBadge(requestCount) : undefined
-          }
-          onPress={onRequests}
-          hitSlop={6}
-          style={styles.headerButton}
-        >
-          <HeartHandshake size={20} color={colors.text} />
-          {requestCount > 0 ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {requestCount > 99 ? '99+' : requestCount}
-              </Text>
-            </View>
-          ) : null}
-        </Pressable>
-        <RequestsHint count={requestCount} loadedAt={requestsLoadedAt} />
+        {onRequests ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={copy.social.requests}
+            accessibilityHint={
+              requestCount ? copy.social.requestsBadge(requestCount) : undefined
+            }
+            onPress={onRequests}
+            hitSlop={6}
+            style={styles.headerButton}
+          >
+            <HeartHandshake size={20} color={colors.text} />
+            {requestCount > 0 ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {requestCount > 99 ? '99+' : requestCount}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+        ) : (
+          <View style={styles.headerButton} />
+        )}
+        {onRequests ? (
+          <RequestsHint count={requestCount} loadedAt={requestsLoadedAt} />
+        ) : null}
       </View>
 
       {tabsShown ? (

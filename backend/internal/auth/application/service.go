@@ -229,6 +229,8 @@ func (s *Service) me(ctx context.Context, token, audience string) (PublicUser, e
 			return PublicUser{}, err
 		}
 		public.Delegate = delegate
+		// The club's sign-in email stays private from the coach running it.
+		public.Email = ""
 	}
 	return public, nil
 }

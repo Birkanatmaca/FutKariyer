@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	auth "futcareer/backend/internal/auth/application"
 	"futcareer/backend/internal/notifications/application"
 	"futcareer/backend/internal/notifications/data"
+	"futcareer/backend/internal/notifications/domain"
 	"futcareer/backend/internal/testsupport/testpostgres"
 )
 
@@ -107,5 +109,57 @@ func TestDeleteRemovesOnlyTheRecipientsChosenNotifications(t *testing.T) {
 	}
 	if count(owner) != 0 || count(other) != 1 {
 		t.Fatalf("delete all: owner %d other %d (%s %s)", count(owner), count(other), second, third)
+	}
+}
+
+// Notifications store who acted, never their name: the current name is shown
+// and pushed, and a deleted account reads "Silinmiş hesap" (20 Oct 2026).
+func TestActorNameIsReadNotStored(t *testing.T) {
+	db := testpostgres.New(t).DB
+	ctx := context.Background()
+	repo := data.New(db)
+	recipient := account(t, db, 601, "player")
+	actor := account(t, db, 602, "player")
+	if _, err := db.Exec(`UPDATE users SET full_name='Deniz Kaya' WHERE id=$1`, actor); err != nil {
+		t.Fatal(err)
+	}
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = data.CreateInTx(ctx, tx, domain.NewConnectionRequest(recipient, actor, actor)); err != nil {
+		t.Fatal(err)
+	}
+	// A placeholder without an actor is refused.
+	if err = data.CreateInTx(ctx, tx, domain.NewNotification{RecipientID: recipient, Kind: domain.KindFollow, Title: domain.Actor, Body: "x", ResourceID: actor, SourceKey: "orphan"}); err == nil {
+		t.Fatal("actor placeholder accepted without an actor")
+	}
+	if err = tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	var stored string
+	if err = db.QueryRow(`SELECT title||' '||body FROM notifications WHERE recipient_id=$1`, recipient).Scan(&stored); err != nil || strings.Contains(stored, "Deniz") {
+		t.Fatalf("name stored in the row: %q %v", stored, err)
+	}
+	body := func() string {
+		t.Helper()
+		page, err := repo.List(ctx, recipient, 1, 20)
+		if err != nil || len(page.Items) != 1 {
+			t.Fatalf("list: %+v %v", page, err)
+		}
+		return page.Items[0].Body
+	}
+	if got := body(); !strings.HasPrefix(got, "Deniz Kaya seninle") {
+		t.Fatalf("current name not shown: %q", got)
+	}
+	pushed, err := repo.ClaimPending(ctx, 10)
+	if err != nil || len(pushed) != 1 || !strings.HasPrefix(pushed[0].Body, "Deniz Kaya seninle") {
+		t.Fatalf("push text: %+v %v", pushed, err)
+	}
+	if _, err = db.Exec(`DELETE FROM users WHERE id=$1`, actor); err != nil {
+		t.Fatal(err)
+	}
+	if got := body(); !strings.HasPrefix(got, domain.DeletedActor+" seninle") {
+		t.Fatalf("deleted actor still named: %q", got)
 	}
 }

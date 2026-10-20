@@ -8,6 +8,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 
 	"futcareer/backend/internal/account/domain"
+	moderation "futcareer/backend/internal/moderation/data"
 )
 
 type Postgres struct{ db *sql.DB }
@@ -121,11 +122,11 @@ func (r *Postgres) DeleteAvatar(ctx context.Context, userID string) (domain.Prof
 	return out, tx.Commit()
 }
 
-// Avatar is public (19 Oct 2026: photos are visible to everyone) but only for
-// active accounts.
-func (r *Postgres) Avatar(ctx context.Context, userID string) (domain.Avatar, error) {
+// Avatar is visible to every signed-in account (19 Oct 2026) of an active
+// user, except across a block in either direction (20 Oct 2026).
+func (r *Postgres) Avatar(ctx context.Context, viewerID, userID string) (domain.Avatar, error) {
 	var a domain.Avatar
-	err := r.db.QueryRowContext(ctx, `SELECT a.mime,a.data,a.updated_at FROM user_avatars a JOIN users u ON u.id=a.user_id WHERE a.user_id=$1 AND u.active`, userID).Scan(&a.MIME, &a.Data, &a.UpdatedAt)
+	err := r.db.QueryRowContext(ctx, `SELECT a.mime,a.data,a.updated_at FROM user_avatars a JOIN users u ON u.id=a.user_id WHERE a.user_id=$2 AND u.active AND `+moderation.NotBlocked("$1", "$2"), viewerID, userID).Scan(&a.MIME, &a.Data, &a.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return a, domain.ErrNotFound
 	}

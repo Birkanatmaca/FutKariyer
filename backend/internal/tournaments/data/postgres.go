@@ -400,7 +400,7 @@ func (r *Postgres) Enter(ctx context.Context, clubID, tournamentID, entryID, mes
 			return domain.Entry{}, err
 		}
 	}
-	if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewTournamentEntry(organizerID, entryID, clubName, name)); err != nil {
+	if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewTournamentEntry(organizerID, entryID, clubID, name)); err != nil {
 		return domain.Entry{}, err
 	}
 	out, err := oneEntry(ctx, tx, entryID)

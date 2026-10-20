@@ -40,5 +40,5 @@ type Repository interface {
 	SaveProfile(ctx context.Context, p Profile) (Profile, error)
 	SetAvatar(ctx context.Context, userID, mime string, data []byte) (Profile, error)
 	DeleteAvatar(ctx context.Context, userID string) (Profile, error)
-	Avatar(ctx context.Context, userID string) (Avatar, error)
+	Avatar(ctx context.Context, viewerID, userID string) (Avatar, error)
 }

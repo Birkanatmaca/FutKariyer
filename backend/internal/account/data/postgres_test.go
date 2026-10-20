@@ -85,15 +85,28 @@ func TestProfileFieldsAndAvatar(t *testing.T) {
 	if second.AvatarVersion != 2 {
 		t.Fatal("each upload must bump the version")
 	}
-	file, err := svc.Avatar(ctx, player)
+	file, err := svc.Avatar(ctx, club, player)
 	if err != nil || file.MIME != "image/png" || len(file.Data) == 0 {
 		t.Fatalf("read avatar: %v", err)
+	}
+	// A block either way hides the photo from both sides.
+	if _, err = db.Exec(`INSERT INTO user_blocks(blocker_id,blocked_id) VALUES($1,$2)`, player, club); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = svc.Avatar(ctx, club, player); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("blocked viewer got the photo: %v", err)
+	}
+	if _, err = svc.Avatar(ctx, player, player); err != nil {
+		t.Fatalf("owner lost their own photo: %v", err)
+	}
+	if _, err = db.Exec(`DELETE FROM user_blocks`); err != nil {
+		t.Fatal(err)
 	}
 	removed, err := svc.DeleteAvatar(ctx, player)
 	if err != nil || removed.AvatarVersion != 0 {
 		t.Fatalf("delete: %+v %v", removed, err)
 	}
-	if _, err = svc.Avatar(ctx, player); !errors.Is(err, domain.ErrNotFound) {
+	if _, err = svc.Avatar(ctx, club, player); !errors.Is(err, domain.ErrNotFound) {
 		t.Fatal("deleted avatar still served")
 	}
 	if _, err = db.Exec(`UPDATE users SET active=false WHERE id=$1`, club); err != nil {

@@ -97,7 +97,7 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 	})
 	mux.HandleFunc("GET /v1/social/posts/{id}/media", func(w http.ResponseWriter, r *http.Request) {
 		extendMediaDeadline(w)
-		media, err := service.Media(r.Context(), r.PathValue("id"))
+		media, err := service.Media(r.Context(), viewerID(r), r.PathValue("id"))
 		if err != nil {
 			failure(w, err)
 			return

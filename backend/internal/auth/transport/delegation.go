@@ -12,9 +12,10 @@ import (
 )
 
 // The single policy for switched sessions (a staff coach running a club
-// account, 19 Oct 2026). Reads are open; a club section's reads and writes
-// need that section's permission; every other write is refused, so new
-// endpoints stay closed to switched sessions until listed here.
+// account, 19 Oct 2026). The club's private areas are closed outright; a club
+// section's reads and writes need that section's permission; other reads are
+// open and every other write is refused, so new endpoints stay closed to
+// switched sessions until listed here.
 type rule struct {
 	permission string
 	methods    []string // nil: any method
@@ -31,6 +32,21 @@ var sectionRules = []rule{
 	{"profile", []string{http.MethodPut, http.MethodDelete}, regexp.MustCompile(`^/v1/me/club-profile(/tff)?$`)},
 	{"social", []string{http.MethodPost, http.MethodPut, http.MethodDelete}, regexp.MustCompile(`^/v1/social/`)},
 	{"social", []string{http.MethodPut}, regexp.MustCompile(`^/v1/discovery/[^/]+/[^/]+/follow$`)},
+}
+
+// The club account's own private areas (20 Oct 2026): its connections and
+// their contact emails, profile visitors, blocks, technical staff, gifts,
+// purchases and push devices. Closed for every method, whatever the club
+// granted. The club's email is also blanked in /v1/auth/me and /v1/me/profile.
+var privateAreas = []*regexp.Regexp{
+	regexp.MustCompile(`^/v1/connections(/|$)`),
+	regexp.MustCompile(`^/v1/me/profile-visitors(/|$)`),
+	regexp.MustCompile(`^/v1/me/blocks(/|$)`),
+	regexp.MustCompile(`^/v1/me/staff(/|$)`),
+	regexp.MustCompile(`^/v1/gifts(/|$)`),
+	regexp.MustCompile(`^/v1/me/pro(/|$)`),
+	regexp.MustCompile(`^/v1/me/(pro-payments|team-request-payments|store-orders|store-purchases)(/|$)`),
+	regexp.MustCompile(`^/v1/me/push-devices(/|$)`),
 }
 
 // Writes a switched session may always make: leaving the club session and
@@ -68,6 +84,11 @@ func DelegationGuard(service *application.Service, next http.Handler) http.Handl
 }
 
 func allowed(r *http.Request, permissions []string) bool {
+	for _, area := range privateAreas {
+		if area.MatchString(r.URL.Path) {
+			return false
+		}
+	}
 	for _, section := range sectionRules {
 		if section.matches(r) {
 			return slices.Contains(permissions, section.permission)

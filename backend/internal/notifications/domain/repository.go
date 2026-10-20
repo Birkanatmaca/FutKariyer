@@ -44,6 +44,15 @@ type Notification struct {
 	FollowingBack *bool  `json:"followingBack,omitempty"`
 }
 
+// Actor stands for the name of the account that caused a notification
+// (20 Oct 2026). The name itself is never stored: it is read from ActorID when
+// the notification is listed or pushed, and a deleted account reads
+// DeletedActor.
+const (
+	Actor        = "{actor}"
+	DeletedActor = "Silinmiş hesap"
+)
+
 type NewNotification struct {
 	RecipientID string
 	Kind        string
@@ -51,6 +60,8 @@ type NewNotification struct {
 	Body        string
 	ResourceID  string
 	SourceKey   string
+	// ActorID is required when Title or Body contains Actor.
+	ActorID string
 }
 
 type Page struct {

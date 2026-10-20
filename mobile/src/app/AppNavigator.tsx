@@ -1475,7 +1475,7 @@ function SocialFeedRoute({
   onVisitors(): void;
   onUpgrade(): void;
 }) {
-  const { user } = useAuth();
+  const { user, delegate } = useAuth();
   const requests = useIncomingCount(connectionsService, token);
   const [menuOpen, setMenuOpen] = useState(false);
   return (
@@ -1488,7 +1488,7 @@ function SocialFeedRoute({
         onCompose={onCompose}
         requestCount={requests.count}
         requestsLoadedAt={requests.loadedAt}
-        onRequests={onRequests}
+        onRequests={delegate ? undefined : onRequests}
         onMenu={() => setMenuOpen(true)}
       />
       <SocialSidebar

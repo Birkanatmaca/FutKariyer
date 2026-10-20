@@ -27,7 +27,8 @@ func CreateInTx(ctx context.Context, tx Executor, item domain.NewNotification) e
 		!domain.ValidKind(item.Kind) ||
 		utf8.RuneCountInString(item.Title) < 1 || utf8.RuneCountInString(item.Title) > 120 ||
 		utf8.RuneCountInString(item.Body) < 1 || utf8.RuneCountInString(item.Body) > 500 ||
-		len(item.ResourceID) != 32 || len(item.SourceKey) < 1 || len(item.SourceKey) > 320 {
+		len(item.ResourceID) != 32 || len(item.SourceKey) < 1 || len(item.SourceKey) > 320 ||
+		(item.ActorID == "" && (strings.Contains(item.Title, domain.Actor) || strings.Contains(item.Body, domain.Actor))) {
 		return errors.New("invalid notification")
 	}
 	idBytes := make([]byte, 16)
@@ -35,8 +36,14 @@ func CreateInTx(ctx context.Context, tx Executor, item domain.NewNotification) e
 		return err
 	}
 	id := hex.EncodeToString(idBytes)
-	_, err := tx.ExecContext(ctx, `INSERT INTO notifications(id,recipient_id,kind,title,body,resource_id,source_key) VALUES($1,$2,$3,$4,$5,$6,$7) ON CONFLICT(recipient_id,source_key) DO NOTHING`, id, item.RecipientID, item.Kind, strings.TrimSpace(item.Title), strings.TrimSpace(item.Body), item.ResourceID, item.SourceKey)
+	_, err := tx.ExecContext(ctx, `INSERT INTO notifications(id,recipient_id,kind,title,body,resource_id,source_key,actor_id) VALUES($1,$2,$3,$4,$5,$6,$7,NULLIF($8,'')) ON CONFLICT(recipient_id,source_key) DO NOTHING`, id, item.RecipientID, item.Kind, strings.TrimSpace(item.Title), strings.TrimSpace(item.Body), item.ResourceID, item.SourceKey, item.ActorID)
 	return err
+}
+
+// rendered is a notification text column with the actor's current name in
+// place of domain.Actor; n is the notifications row alias.
+func rendered(n, column string) string {
+	return `replace(` + n + `.` + column + `,'` + domain.Actor + `',COALESCE((SELECT full_name FROM users WHERE id=` + n + `.actor_id),'` + domain.DeletedActor + `'))`
 }
 
 func (r *Postgres) List(ctx context.Context, userID string, page, pageSize int) (domain.Page, error) {
@@ -47,7 +54,7 @@ func (r *Postgres) List(ctx context.Context, userID string, page, pageSize int) 
 	if err := r.db.QueryRowContext(ctx, `SELECT count(*) FROM notifications WHERE recipient_id=$1 AND read_at IS NULL`, userID).Scan(&out.UnreadCount); err != nil {
 		return out, err
 	}
-	rows, err := r.db.QueryContext(ctx, `SELECT n.id,n.kind,n.title,n.body,n.resource_id,n.created_at,n.read_at,
+	rows, err := r.db.QueryContext(ctx, `SELECT n.id,n.kind,`+rendered("n", "title")+`,`+rendered("n", "body")+`,n.resource_id,n.created_at,n.read_at,
 		COALESCE(a.role,''),
 		CASE WHEN a.id IS NULL THEN NULL ELSE EXISTS(SELECT 1 FROM profile_follows f WHERE f.profile_id=a.id AND f.follower_id=n.recipient_id) END
 		FROM notifications n
