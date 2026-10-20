@@ -6,6 +6,7 @@ import {
   SignUpScreen,
   AccountTypeScreen,
   ApplicationScreen,
+  ForgotPasswordScreen,
   type ApplicationRole,
   type SignUpRole,
 } from '../features/auth';
@@ -22,6 +23,7 @@ type AuthRoutes = {
   Onboarding: undefined;
   OnboardingInfo: undefined;
   SignIn: undefined;
+  ForgotPassword: undefined;
   AccountType: undefined;
   SignUp: { role: SignUpRole } | undefined;
   Application: { role: ApplicationRole };
@@ -73,7 +75,15 @@ export function AuthNavigator({
       </Stack.Screen>
       <Stack.Screen name="SignIn">
         {({ navigation }) => (
-          <SignInScreen onSignUp={() => navigation.navigate('AccountType')} />
+          <SignInScreen
+            onSignUp={() => navigation.navigate('AccountType')}
+            onForgot={() => navigation.navigate('ForgotPassword')}
+          />
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="ForgotPassword">
+        {({ navigation }) => (
+          <ForgotPasswordScreen onBack={() => navigation.goBack()} />
         )}
       </Stack.Screen>
       <Stack.Screen name="AccountType">

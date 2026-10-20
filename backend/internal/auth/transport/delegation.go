@@ -47,6 +47,7 @@ var privateAreas = []*regexp.Regexp{
 	regexp.MustCompile(`^/v1/me/pro(/|$)`),
 	regexp.MustCompile(`^/v1/me/(pro-payments|team-request-payments|store-orders|store-purchases)(/|$)`),
 	regexp.MustCompile(`^/v1/me/push-devices(/|$)`),
+	regexp.MustCompile(`^/v1/me/(password|sessions)(/|$)`),
 }
 
 // Writes a switched session may always make: leaving the club session and

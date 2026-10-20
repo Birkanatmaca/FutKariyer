@@ -121,6 +121,7 @@ func (s *Service) GetPost(ctx context.Context, userID, id string) (domain.Post, 
 	}
 	return s.repo.GetPost(ctx, userID, id)
 }
+
 // CreatePost stores a post; showOnProfile only applies to a post with media.
 func (s *Service) CreatePost(ctx context.Context, userID, body string, data []byte, showOnProfile bool) (domain.Post, error) {
 	var media *domain.Attachment
@@ -173,6 +174,7 @@ func (s *Service) SetLike(ctx context.Context, userID, id string, liked bool) (d
 	}
 	return s.repo.SetLike(ctx, userID, id, liked)
 }
+
 // UserPosts pages an author's posts for a profile; filter "media" keeps the
 // photo and video posts the author chose to show on their profile.
 func (s *Service) UserPosts(ctx context.Context, viewerID, authorID, rawCursor, filter string) (domain.Page[domain.Post], error) {

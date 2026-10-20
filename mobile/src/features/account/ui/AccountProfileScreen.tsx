@@ -11,12 +11,15 @@ import {
   Calendar,
   Camera,
   ChevronRight,
+  KeyRound,
   Mail,
   MapPin,
+  MonitorSmartphone,
   Ruler,
   Trash2,
   UserRound,
   Weight,
+  type LucideIcon,
 } from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { TopBar } from '../../../shared/ui/TopBar';
@@ -71,6 +74,8 @@ export function AccountProfileScreen({
   onFootball,
   footballLink,
   onChange,
+  onChangePassword,
+  onSessions,
 }: {
   token: string;
   repository: AccountRepository;
@@ -78,6 +83,9 @@ export function AccountProfileScreen({
   // Players: opens the football profile (position, foot, availability…);
   // coaches: their coach details, with footballLink naming the page.
   onFootball?(): void;
+  // Güvenlik (20 Oct 2026); absent in a switched club session.
+  onChangePassword?: () => void;
+  onSessions?: () => void;
   footballLink?: { title: string; hint: string };
   // Lets the screens behind this one show the new name and photo at once.
   onChange?(profile: AccountProfile): void;
@@ -414,9 +422,58 @@ export function AccountProfileScreen({
         </Pressable>
       ) : null}
 
+      {onChangePassword || onSessions ? (
+        <Section title={text.security}>
+          {onChangePassword ? (
+            <LinkRow
+              icon={KeyRound}
+              title={text.changePassword}
+              hint={text.changePasswordHint}
+              onPress={onChangePassword}
+            />
+          ) : null}
+          {onSessions ? (
+            <LinkRow
+              icon={MonitorSmartphone}
+              title={text.sessions}
+              hint={text.sessionsHint}
+              onPress={onSessions}
+            />
+          ) : null}
+        </Section>
+      ) : null}
+
       <Button label={text.save} loading={saving} onPress={save} />
       <View style={styles.tabBarSpace} />
     </Screen>
+  );
+}
+
+function LinkRow({
+  icon: Icon,
+  title,
+  hint,
+  onPress,
+}: {
+  icon: LucideIcon;
+  title: string;
+  hint: string;
+  onPress(): void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityHint={hint}
+      onPress={onPress}
+      style={({ pressed }) => [styles.securityRow, pressed && styles.pressed]}
+    >
+      <Icon size={18} color={colors.brand} />
+      <View style={styles.linkBody}>
+        <Text style={styles.linkTitle}>{title}</Text>
+        <Text style={styles.linkHint}>{hint}</Text>
+      </View>
+      <ChevronRight size={18} color={colors.muted} />
+    </Pressable>
   );
 }
 
@@ -512,6 +569,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { color: colors.text, fontSize: 17, fontWeight: '800' },
   row: { flexDirection: 'row', gap: space.md },
+  securityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    paddingVertical: space.xs,
+  },
   half: { flex: 1 },
   link: {
     flexDirection: 'row',

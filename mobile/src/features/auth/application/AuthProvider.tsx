@@ -18,7 +18,9 @@ import type {
   Delegate,
   LoginInput,
   RegisterInput,
+  ResetPasswordInput,
   SavedSession,
+  SessionInfo,
   SessionKind,
   SessionStorage,
   User,
@@ -52,6 +54,17 @@ type AuthContextValue = {
   coach: User | null;
   switchToClub(clubId: string): Promise<void>;
   switchBack(): Promise<void>;
+  // Account security (20 Oct 2026).
+  forgotPassword(email: string): Promise<void>;
+  // Sets the new password and signs this device in.
+  resetPassword(input: ResetPasswordInput): Promise<void>;
+  verifyEmail(code: string): Promise<void>;
+  resendVerification(): Promise<void>;
+  // Other devices are signed out; this one stays.
+  changePassword(currentPassword: string, newPassword: string): Promise<void>;
+  sessions(): Promise<SessionInfo[]>;
+  endSession(id: string): Promise<void>;
+  endOtherSessions(): Promise<void>;
 };
 type Home = { saved: SavedSession; user: User };
 type Current =
@@ -225,6 +238,43 @@ export function AuthProvider({
   async function apply(input: AccountApplicationInput) {
     await repository.apply(input);
   }
+  async function forgotPassword(email: string) {
+    await repository.forgotPassword(email.trim());
+  }
+  async function resetPassword(input: ResetPasswordInput) {
+    await acceptUser(await repository.resetPassword(input));
+  }
+  // Security actions belong to the account's own session, never a club one.
+  function ownToken() {
+    const signedIn = currentRef.current;
+    if (signedIn?.kind !== 'user' || home) {
+      throw new ApiError(copy.form.unexpected);
+    }
+    return signedIn.saved.token;
+  }
+  async function verifyEmail(code: string) {
+    const token = ownToken();
+    const user = await repository.verifyEmail(token, code.trim());
+    const signedIn = currentRef.current;
+    if (signedIn?.kind === 'user' && signedIn.saved.token === token) {
+      setCurrent({ ...signedIn, user });
+    }
+  }
+  async function resendVerification() {
+    await repository.resendVerification(ownToken());
+  }
+  async function changePassword(currentPassword: string, newPassword: string) {
+    await repository.changePassword(ownToken(), currentPassword, newPassword);
+  }
+  async function sessions() {
+    return repository.sessions(ownToken());
+  }
+  async function endSession(id: string) {
+    await repository.endSession(ownToken(), id);
+  }
+  async function endOtherSessions() {
+    await repository.endOtherSessions(ownToken());
+  }
   async function signOut() {
     if (home) {
       await switchBack();
@@ -330,6 +380,14 @@ export function AuthProvider({
         coach: home?.user ?? null,
         switchToClub,
         switchBack,
+        forgotPassword,
+        resetPassword,
+        verifyEmail,
+        resendVerification,
+        changePassword,
+        sessions,
+        endSession,
+        endOtherSessions,
       }}
     >
       <AvatarTokenProvider

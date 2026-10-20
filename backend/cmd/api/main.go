@@ -65,6 +65,7 @@ import (
 	paymentdomain "futcareer/backend/internal/payments/domain"
 	paymenttransport "futcareer/backend/internal/payments/transport"
 	"futcareer/backend/internal/platform/adminweb"
+	platformmail "futcareer/backend/internal/platform/mail"
 	"futcareer/backend/internal/platform/postgres"
 	playerapplication "futcareer/backend/internal/players/application"
 	playerdata "futcareer/backend/internal/players/data"
@@ -143,7 +144,16 @@ func run() error {
 	}
 	playerRepo := playerdata.New(db)
 	cancelStartup()
+	sender, err := platformmail.FromEnv(os.Getenv("MAIL_PROVIDER"), os.Getenv("MAIL_API_KEY"), os.Getenv("MAIL_FROM"))
+	if err != nil {
+		return err
+	}
 	authService := application.New(repo, ttl)
+	if sender != nil {
+		authService.WithMailer(sender)
+	} else {
+		slog.Warn("email sending is off (MAIL_PROVIDER unset): no email verification or password reset")
+	}
 	gameBank, err := gamecatalog.Load()
 	if err != nil {
 		return err
@@ -266,9 +276,13 @@ func run() error {
 	discoveryHandler := discoverytransport.New(authService, discoveryapplication.New(discoverydata.New(db)))
 	routes.Handle("/v1/discovery/", discoveryHandler)
 	routes.Handle("/v1/me/", discoveryHandler)
-	routes.Handle("/", transport.New(authService))
+	authHandler := transport.New(authService)
+	for _, path := range []string{"/v1/me/password", "/v1/me/sessions", "/v1/me/sessions/"} {
+		routes.Handle(path, authHandler)
+	}
+	routes.Handle("/", authHandler)
 	// Switched (coach-as-club) sessions only reach what the club allowed.
-	guarded := transport.DelegationGuard(authService, routes)
+	guarded := transport.DelegationGuard(authService, transport.VerifiedGuard(authService, routes))
 	var handler http.Handler = guarded
 	if directory := os.Getenv("ADMIN_FRONTEND_DIR"); directory != "" {
 		web, err := adminweb.New(directory)

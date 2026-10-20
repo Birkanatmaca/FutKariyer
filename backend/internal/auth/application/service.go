@@ -16,6 +16,7 @@ import (
 
 	"futcareer/backend/internal/auth/domain"
 	coachdomain "futcareer/backend/internal/coaches/domain"
+	platformmail "futcareer/backend/internal/platform/mail"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,11 +34,14 @@ type RegisterInput struct {
 	FootballType  string `json:"footballType"`
 	LicenseStatus string `json:"licenseStatus"`
 	LicenseLevel  string `json:"licenseLevel"`
+	// Device is a short label of the phone, shown under Active sessions.
+	Device string `json:"device"`
 }
 type LoginInput struct {
 	Identifier string `json:"identifier"`
 	Email      string `json:"email"`
 	Password   string `json:"password"`
+	Device     string `json:"device"`
 }
 type PublicUser struct {
 	ID        string    `json:"id"`
@@ -49,6 +53,9 @@ type PublicUser struct {
 	Role      string    `json:"role"`
 	City      string    `json:"city"`
 	CreatedAt time.Time `json:"createdAt"`
+	// EmailVerified is false only for a self sign-up that still has to enter
+	// its code while email sending is configured.
+	EmailVerified bool `json:"emailVerified"`
 	// Delegate is set while a coach runs this club account after switching.
 	Delegate *Delegate `json:"delegate,omitempty"`
 }
@@ -77,14 +84,28 @@ type Service struct {
 	ttl       time.Duration
 	dummyHash []byte
 	now       func() time.Time
+	// mailer is nil while email sending is not configured.
+	mailer platformmail.Sender
 }
 
 func New(repo domain.Repository, ttl time.Duration) *Service {
-	dummy, _ := bcrypt.GenerateFromPassword([]byte("unusable-placeholder-password"), bcrypt.DefaultCost)
+	dummy, _ := bcrypt.GenerateFromPassword([]byte("unusable-placeholder-password"), PasswordCost)
 	return &Service{repo: repo, ttl: ttl, dummyHash: dummy, now: time.Now}
 }
+
+// WithMailer turns on email verification and password reset.
+func (s *Service) WithMailer(m platformmail.Sender) *Service {
+	s.mailer = m
+	return s
+}
+
+func (s *Service) public(u domain.User) PublicUser {
+	p := Public(u)
+	p.EmailVerified = u.EmailVerified || s.mailer == nil
+	return p
+}
 func Public(u domain.User) PublicUser {
-	return PublicUser{ID: u.ID, FullName: u.FullName, Email: u.Email, Username: u.Username, Active: u.Active, Verified: u.Verified, Role: u.Role, City: u.City, CreatedAt: u.CreatedAt}
+	return PublicUser{ID: u.ID, FullName: u.FullName, Email: u.Email, Username: u.Username, Active: u.Active, Verified: u.Verified, Role: u.Role, City: u.City, CreatedAt: u.CreatedAt, EmailVerified: u.EmailVerified}
 }
 func canonicalEmail(email string) string { return strings.ToLower(strings.TrimSpace(email)) }
 func validEmail(email string) bool {
@@ -125,7 +146,7 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	if len(fields) > 0 {
 		return AuthResult{}, fields
 	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), PasswordCost)
 	if err != nil {
 		return AuthResult{}, err
 	}
@@ -138,10 +159,16 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	if err != nil {
 		return AuthResult{}, err
 	}
+	session.Device = deviceLabel(in.Device)
 	if err = s.repo.Register(ctx, user, session); err != nil {
 		return AuthResult{}, err
 	}
-	return AuthResult{Token: token, ExpiresAt: session.ExpiresAt, User: Public(user)}, nil
+	// The first code goes out right away; a mail failure does not undo the
+	// sign-up, the app offers to send it again.
+	if s.mailer != nil {
+		_ = s.sendCode(ctx, user, domain.PurposeVerifyEmail)
+	}
+	return AuthResult{Token: token, ExpiresAt: session.ExpiresAt, User: s.public(user)}, nil
 }
 func (s *Service) Login(ctx context.Context, in LoginInput) (AuthResult, error) {
 	return s.login(ctx, in, "mobile")
@@ -162,8 +189,27 @@ func (s *Service) login(ctx context.Context, in LoginInput, audience string) (Au
 	if err != nil {
 		return AuthResult{}, err
 	}
+	if user.LockedUntil.After(s.now()) {
+		return AuthResult{}, domain.LoginLockedError{Until: user.LockedUntil}
+	}
 	if bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(in.Password)) != nil {
+		until, err := s.repo.LoginFailed(ctx, user.ID, s.now())
+		if err != nil {
+			return AuthResult{}, err
+		}
+		if !until.IsZero() {
+			return AuthResult{}, domain.LoginLockedError{Until: until}
+		}
 		return AuthResult{}, domain.ErrUnauthorized
+	}
+	if err = s.repo.LoginSucceeded(ctx, user.ID); err != nil {
+		return AuthResult{}, err
+	}
+	// Hashes from before the cost was raised are upgraded on the next sign-in.
+	if cost, err := bcrypt.Cost([]byte(user.PasswordHash)); err == nil && cost < PasswordCost {
+		if hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), PasswordCost); err == nil {
+			_ = s.repo.RehashPassword(ctx, user.ID, string(hash))
+		}
 	}
 	// The application state is only revealed after the password matched.
 	if !user.Active {
@@ -184,13 +230,14 @@ func (s *Service) login(ctx context.Context, in LoginInput, audience string) (Au
 	}
 	session.AuthVersion = user.AuthVersion
 	session.Audience = audience
+	session.Device = deviceLabel(in.Device)
 	if audience == "admin" && session.ExpiresAt.After(s.now().Add(8*time.Hour)) {
 		session.ExpiresAt = s.now().UTC().Add(8 * time.Hour)
 	}
 	if err = s.repo.CreateSession(ctx, session); err != nil {
 		return AuthResult{}, err
 	}
-	return AuthResult{Token: token, ExpiresAt: session.ExpiresAt, User: Public(user)}, nil
+	return AuthResult{Token: token, ExpiresAt: session.ExpiresAt, User: s.public(user)}, nil
 }
 func (s *Service) Me(ctx context.Context, token string) (PublicUser, error) {
 	return s.me(ctx, token, "mobile")
@@ -222,7 +269,11 @@ func (s *Service) me(ctx context.Context, token, audience string) (PublicUser, e
 	if !user.Active || session.AuthVersion != user.AuthVersion || (user.Role == "admin") != (audience == "admin") {
 		return PublicUser{}, domain.ErrUnauthorized
 	}
-	public := Public(user)
+	// Last use for the Active sessions screen; written at most every 5 minutes.
+	if audience == "mobile" {
+		_ = s.repo.TouchSession(ctx, session.TokenHash, s.now().UTC())
+	}
+	public := s.public(user)
 	if session.ActingUserID != "" {
 		delegate, err := s.delegate(ctx, user.ID, session.ActingUserID, session.ActingAuthVersion)
 		if err != nil {
@@ -316,6 +367,10 @@ func (s *Service) SwitchToClub(ctx context.Context, token, clubID string) (AuthR
 	session.AuthVersion = club.AuthVersion
 	session.ActingUserID = coachUser.ID
 	session.ActingAuthVersion = coachUser.AuthVersion
+	// A club session lasts a working day; the app then returns to the coach.
+	if limit := s.now().UTC().Add(SwitchedSessionTTL); session.ExpiresAt.After(limit) {
+		session.ExpiresAt = limit
+	}
 	if err := s.repo.CreateSession(ctx, session); errors.Is(err, domain.ErrUnauthorized) {
 		return AuthResult{}, domain.ErrForbidden
 	} else if err != nil {
@@ -432,7 +487,7 @@ func (s *Service) Apply(ctx context.Context, in ApplyInput) error {
 	if len(fields) > 0 {
 		return fields
 	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(in.Password), PasswordCost)
 	if err != nil {
 		return err
 	}

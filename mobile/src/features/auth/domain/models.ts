@@ -39,6 +39,9 @@ export type User = {
   role: AccountRole;
   city: string;
   createdAt: string;
+  // False only for a self sign-up that still has to enter its emailed code
+  // (20 Oct 2026); older servers leave it out.
+  emailVerified?: boolean;
   delegate?: Delegate;
 };
 export type AuthSession = { token: string; expiresAt: string; user: User };
@@ -96,6 +99,21 @@ export type AccountApplicationInput = {
   note?: string;
 };
 export type AccountApplicationResult = { status: 'pending' };
+export type ResetPasswordInput = {
+  email: string;
+  code: string;
+  password: string;
+};
+// One signed-in device on the Active sessions screen.
+export type SessionInfo = {
+  id: string;
+  device: string;
+  createdAt: string;
+  lastSeenAt: string;
+  current: boolean;
+  // A club session a coach opened on that device.
+  club: boolean;
+};
 export interface AuthRepository {
   login(input: LoginInput): Promise<AuthSession>;
   register(input: RegisterInput): Promise<AuthSession>;
@@ -109,4 +127,17 @@ export interface AuthRepository {
   adminLogout(token: string): Promise<void>;
   // A staff coach opens a session for a club that authorized them.
   switchToClub(token: string, clubId: string): Promise<AuthSession>;
+  // Account security (20 Oct 2026).
+  forgotPassword(email: string): Promise<void>;
+  resetPassword(input: ResetPasswordInput): Promise<AuthSession>;
+  verifyEmail(token: string, code: string): Promise<User>;
+  resendVerification(token: string): Promise<void>;
+  changePassword(
+    token: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void>;
+  sessions(token: string): Promise<SessionInfo[]>;
+  endSession(token: string, id: string): Promise<void>;
+  endOtherSessions(token: string): Promise<void>;
 }

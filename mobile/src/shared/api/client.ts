@@ -1,5 +1,9 @@
 import { config } from '../lib/config';
 import { copy } from '../lib/copy';
+import { deviceName } from '../lib/device';
+
+// Sent with every request; the server shows it on Active sessions.
+const device = deviceName();
 
 export class ApiError extends Error {
   constructor(
@@ -46,6 +50,7 @@ async function perform<T>(
       method: options.method || 'GET',
       headers: {
         ...(!options.formData ? { 'Content-Type': 'application/json' } : {}),
+        'X-Device': device,
         ...(options.token ? { Authorization: 'Bearer ' + options.token } : {}),
       },
       body:

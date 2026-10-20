@@ -8,6 +8,7 @@ import {
   type AuthRepository,
   type AuthSession,
   type Delegate,
+  type SessionInfo,
   type User,
 } from '../domain/models';
 
@@ -34,6 +35,8 @@ function isUser(value: User): boolean {
     typeof value.city === 'string' &&
     typeof value.createdAt === 'string' &&
     Number.isFinite(Date.parse(value.createdAt)) &&
+    (value.emailVerified === undefined ||
+      typeof value.emailVerified === 'boolean') &&
     ['player', 'coach', 'club', 'organizer'].includes(value.role) &&
     isDelegate(value.delegate) &&
     (value.delegate === undefined || value.role === 'club')
@@ -133,6 +136,68 @@ export const authRepository: AuthRepository = {
         body: { clubId },
       }),
     );
+  },
+  async forgotPassword(email) {
+    await request<unknown>('/v1/auth/password/forgot', {
+      method: 'POST',
+      body: { email },
+    });
+  },
+  async resetPassword(input) {
+    return session(
+      await request<AuthSession>('/v1/auth/password/reset', {
+        method: 'POST',
+        body: input,
+      }),
+    );
+  },
+  async verifyEmail(token, code) {
+    const data = await request<{ user: User }>('/v1/auth/email/verify', {
+      method: 'POST',
+      token,
+      body: { code },
+    });
+    if (!isUser(data.user)) {
+      throw new ApiError(copy.form.unexpected);
+    }
+    return data.user;
+  },
+  async resendVerification(token) {
+    await request<unknown>('/v1/auth/email/resend', { method: 'POST', token });
+  },
+  async changePassword(token, currentPassword, newPassword) {
+    await request<void>('/v1/me/password', {
+      method: 'PUT',
+      token,
+      body: { currentPassword, newPassword },
+    });
+  },
+  async sessions(token) {
+    const data = await request<{ sessions: SessionInfo[] }>(
+      '/v1/me/sessions',
+      { token },
+    );
+    if (!data || !Array.isArray(data.sessions)) {
+      throw new ApiError(copy.form.unexpected);
+    }
+    return data.sessions.filter(
+      item =>
+        !!item &&
+        typeof item.id === 'string' &&
+        typeof item.device === 'string' &&
+        typeof item.lastSeenAt === 'string' &&
+        typeof item.createdAt === 'string' &&
+        typeof item.current === 'boolean',
+    );
+  },
+  async endSession(token, id) {
+    await request<void>('/v1/me/sessions/' + encodeURIComponent(id), {
+      method: 'DELETE',
+      token,
+    });
+  },
+  async endOtherSessions(token) {
+    await request<void>('/v1/me/sessions', { method: 'DELETE', token });
   },
   // Admin accounts get a bearer token for the /v1/admin API only.
   async adminLogin(input) {

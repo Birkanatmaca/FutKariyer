@@ -30,6 +30,27 @@ function utf8Length(value: string) {
     0,
   );
 }
+export function validEmail(value: string) {
+  return emailPattern.test(value) && value.length <= 254;
+}
+// A new password (reset or change) and its repetition; key names the field
+// the server uses for the password.
+export function validateNewPassword(
+  password: string,
+  repeat: string,
+  key = 'password',
+): FieldErrors {
+  if (Array.from(password).length < 10) {
+    return { [key]: copy.form.passwordError };
+  }
+  if (utf8Length(password) > 72) {
+    return { [key]: copy.form.passwordMax };
+  }
+  if (password !== repeat) {
+    return { repeat: copy.security.repeatError };
+  }
+  return {};
+}
 export function validateLogin(input: LoginInput): FieldErrors {
   const fields: FieldErrors = {};
   if (!input.identifier.trim() || input.identifier.trim().length > 254) {
@@ -67,7 +88,9 @@ export function validateRegistration(input: RegistrationDraft): FieldErrors {
     }
   } else if (input.role === 'coach') {
     if (
-      !declaredCoachLicenses.includes(input.licenseLevel as DeclaredCoachLicense)
+      !declaredCoachLicenses.includes(
+        input.licenseLevel as DeclaredCoachLicense,
+      )
     ) {
       fields.licenseLevel = copy.signUp.coachLicenseError;
     }

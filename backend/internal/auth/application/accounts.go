@@ -50,7 +50,7 @@ func PasswordHash(password string) (string, error) {
 	if utf8.RuneCountInString(password) < 10 || len(password) > 72 {
 		return "", ValidationError{"password": "Şifre en az 10 karakter olmalı ve 72 bayttan uzun olmamalı."}
 	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), PasswordCost)
 	return string(hash), err
 }
 

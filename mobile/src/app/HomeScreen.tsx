@@ -7,7 +7,7 @@ import {
   teamsRepository,
   useRightsBalance,
 } from '../features/teams';
-import { useAuth } from '../features/auth';
+import { VerifyEmailCard, useAuth } from '../features/auth';
 import {
   GiftIcon,
   GiftSheet,
@@ -152,6 +152,7 @@ export function HomeScreen({
             />
           </View>
         </View>
+        <VerifyEmailCard />
         <HomeProfileCard
           name={displayName}
           initial={user?.fullName.charAt(0).toLocaleUpperCase('tr-TR') ?? ''}

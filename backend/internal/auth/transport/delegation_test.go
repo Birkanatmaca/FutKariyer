@@ -28,6 +28,8 @@ func TestDelegationPolicy(t *testing.T) {
 		{"GET", "/v1/me/store-orders", all, false},
 		{"POST", "/v1/me/store-purchases", all, false},
 		{"PUT", "/v1/me/push-devices", all, false},
+		{"GET", "/v1/me/sessions", all, false},
+		{"PUT", "/v1/me/password", all, false},
 		// Section reads and writes follow the club's grant.
 		{"GET", "/v1/me/squad", []string{"squad"}, true},
 		{"GET", "/v1/me/squad", []string{"news"}, false},

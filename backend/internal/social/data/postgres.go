@@ -131,6 +131,7 @@ func lockActor(ctx context.Context, tx *sql.Tx, userID string) (domain.Author, e
 	}
 	return a, err
 }
+
 // lockPost locks a post the viewer may see; a block either way hides it, so
 // blocked users cannot like or reply to each other's posts.
 func lockPost(ctx context.Context, tx *sql.Tx, viewerID, id string) error {
@@ -294,6 +295,7 @@ func (r *Postgres) Media(ctx context.Context, viewerID, id string) (domain.Attac
 	}
 	return out, err
 }
+
 // notifyFollow tells the followed account once per follower; unfollowing
 // and following again does not repeat it.
 func notifyFollow(ctx context.Context, tx *sql.Tx, followerID, profileID string) error {

@@ -81,6 +81,9 @@ jest.mock('../src/features/auth', () => ({
   AccountScreen: () => null,
   SignInScreen: () => null,
   SignUpScreen: () => null,
+  ChangePasswordScreen: () => null,
+  SessionsScreen: () => null,
+  VerifyEmailCard: () => null,
 }));
 jest.mock(
   'lucide-react-native',

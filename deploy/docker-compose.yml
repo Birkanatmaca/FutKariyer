@@ -27,6 +27,9 @@ services:
       ADMIN_ORIGIN: ${ADMIN_ORIGIN:?set ADMIN_ORIGIN in .env}
       ADMIN_FRONTEND_DIR: /app/admin-web
       ADMIN_ALLOW_INSECURE_HTTP: ${ADMIN_ALLOW_INSECURE_HTTP:-false}
+      MAIL_PROVIDER: ${MAIL_PROVIDER:-}
+      MAIL_API_KEY: ${MAIL_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
       TZ: Europe/Istanbul
     ports:
       - "80:8080"

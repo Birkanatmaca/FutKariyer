@@ -184,7 +184,11 @@ describe('application repository', () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toMatch(/\/v1\/auth\/applications$/);
     expect(init.method).toBe('POST');
-    expect(init.headers).toEqual({ 'Content-Type': 'application/json' });
+    expect(init.headers).toEqual({
+      'Content-Type': 'application/json',
+      'X-Device': expect.any(String),
+    });
+    expect(init.headers.Authorization).toBeUndefined();
     expect(JSON.parse(init.body)).toEqual(body);
   });
   test('maps 409 and 422 responses to field errors', async () => {

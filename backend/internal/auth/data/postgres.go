@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"futcareer/backend/internal/auth/domain"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -48,7 +49,7 @@ func (r *Postgres) Register(ctx context.Context, user domain.User, session domai
 			return err
 		}
 	}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,expires_at) VALUES($1,$2,$3)", session.TokenHash, session.UserID, session.ExpiresAt); err != nil {
+	if _, err = tx.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,expires_at,device) VALUES($1,$2,$3,$4)", session.TokenHash, session.UserID, session.ExpiresAt, session.Device); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -56,15 +57,19 @@ func (r *Postgres) Register(ctx context.Context, user domain.User, session domai
 
 func scanUser(row *sql.Row) (domain.User, error) {
 	var user domain.User
-	err := row.Scan(&user.ID, &user.FullName, &user.Email, &user.PasswordHash, &user.Role, &user.City, &user.CreatedAt, &user.Username, &user.Active, &user.AuthVersion, &user.Verified, &user.ApprovalStatus)
+	var locked sql.NullTime
+	err := row.Scan(&user.ID, &user.FullName, &user.Email, &user.PasswordHash, &user.Role, &user.City, &user.CreatedAt, &user.Username, &user.Active, &user.AuthVersion, &user.Verified, &user.ApprovalStatus, &user.EmailVerified, &locked)
 	if errors.Is(err, sql.ErrNoRows) {
 		return user, domain.ErrNotFound
 	}
 	user.CreatedAt = user.CreatedAt.UTC()
+	if locked.Valid {
+		user.LockedUntil = locked.Time.UTC()
+	}
 	return user, err
 }
 
-const columns = "id,full_name,COALESCE(email,''),password_hash,role,city,created_at,COALESCE(username,''),active,auth_version,verified,approval_status"
+const columns = "id,full_name,COALESCE(email,''),password_hash,role,city,created_at,COALESCE(username,''),active,auth_version,verified,approval_status,email_verified_at IS NOT NULL,login_locked_until"
 
 func (r *Postgres) UserByLogin(ctx context.Context, login string) (domain.User, error) {
 	return scanUser(r.db.QueryRowContext(ctx, "SELECT "+columns+" FROM users WHERE email=$1 OR username=$1", login))
@@ -84,17 +89,17 @@ func (r *Postgres) CreateSession(ctx context.Context, session domain.Session) er
 		err    error
 	)
 	if session.ActingUserID == "" {
-		result, err = r.db.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,expires_at,auth_version,audience) SELECT $1,id,$3,$4,$5 FROM users WHERE id=$2 AND active AND auth_version=$4", session.TokenHash, session.UserID, session.ExpiresAt, session.AuthVersion, session.Audience)
+		result, err = r.db.ExecContext(ctx, "INSERT INTO sessions(token_hash,user_id,expires_at,auth_version,audience,device) SELECT $1,id,$3,$4,$5,$6 FROM users WHERE id=$2 AND active AND auth_version=$4", session.TokenHash, session.UserID, session.ExpiresAt, session.AuthVersion, session.Audience, session.Device)
 	} else {
 		// A club session for a coach: both accounts must be active with the
 		// expected credentials and the coach must be active staff right now.
-		result, err = r.db.ExecContext(ctx, `INSERT INTO sessions(token_hash,user_id,expires_at,auth_version,audience,acting_user_id,acting_auth_version)
-			SELECT $1,club.id,$3,$4,$5,coach.id,$7
+		result, err = r.db.ExecContext(ctx, `INSERT INTO sessions(token_hash,user_id,expires_at,auth_version,audience,acting_user_id,acting_auth_version,device)
+			SELECT $1,club.id,$3,$4,$5,coach.id,$7,$8
 			FROM users club JOIN users coach ON coach.id=$6
 			JOIN club_staff s ON s.club_user_id=club.id AND s.coach_user_id=coach.id AND s.status='active'
 			WHERE club.id=$2 AND club.role='club' AND club.active AND club.auth_version=$4
 				AND coach.role='coach' AND coach.active AND coach.auth_version=$7`,
-			session.TokenHash, session.UserID, session.ExpiresAt, session.AuthVersion, session.Audience, session.ActingUserID, session.ActingAuthVersion)
+			session.TokenHash, session.UserID, session.ExpiresAt, session.AuthVersion, session.Audience, session.ActingUserID, session.ActingAuthVersion, session.Device)
 	}
 	if err != nil {
 		return err
@@ -188,4 +193,168 @@ func (r *Postgres) Apply(ctx context.Context, user domain.User, app domain.Appli
 		return err
 	}
 	return tx.Commit()
+}
+
+// Wrong-password slowdown: from the fifth miss in a row the account waits
+// 1, 2, 4, 8 and at most 15 minutes before the next try.
+const (
+	freeLoginFailures = 4
+	maxLoginLock      = 15 * time.Minute
+)
+
+func (r *Postgres) LoginFailed(ctx context.Context, userID string, now time.Time) (time.Time, error) {
+	var failures int
+	if err := r.db.QueryRowContext(ctx, `UPDATE users SET failed_logins=failed_logins+1 WHERE id=$1 RETURNING failed_logins`, userID).Scan(&failures); err != nil {
+		return time.Time{}, err
+	}
+	if failures <= freeLoginFailures {
+		return time.Time{}, nil
+	}
+	wait := maxLoginLock
+	if shift := failures - freeLoginFailures - 1; shift < 4 {
+		wait = time.Minute << shift
+	}
+	until := now.UTC().Add(wait)
+	_, err := r.db.ExecContext(ctx, `UPDATE users SET login_locked_until=$2 WHERE id=$1`, userID, until)
+	return until, err
+}
+
+func (r *Postgres) LoginSucceeded(ctx context.Context, userID string) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE users SET failed_logins=0,login_locked_until=NULL WHERE id=$1 AND (failed_logins<>0 OR login_locked_until IS NOT NULL)`, userID)
+	return err
+}
+
+func (r *Postgres) RehashPassword(ctx context.Context, userID, hash string) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE users SET password_hash=$2 WHERE id=$1`, userID, hash)
+	return err
+}
+
+func (r *Postgres) ChangePassword(ctx context.Context, userID, hash, keepTokenHash string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	var version int
+	err = tx.QueryRowContext(ctx, `UPDATE users SET password_hash=$2,auth_version=auth_version+1,failed_logins=0,login_locked_until=NULL WHERE id=$1 RETURNING auth_version`, userID, hash).Scan(&version)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.ErrNotFound
+	}
+	if err != nil {
+		return err
+	}
+	// Club sessions a coach opened are pinned to the coach's version, so they
+	// end with the coach's other sessions.
+	if _, err = tx.ExecContext(ctx, `DELETE FROM sessions WHERE (user_id=$1 OR acting_user_id=$1) AND token_hash<>$2`, userID, keepTokenHash); err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, `UPDATE sessions SET auth_version=$3 WHERE user_id=$1 AND token_hash=$2`, userID, keepTokenHash, version); err != nil {
+		return err
+	}
+	if _, err = tx.ExecContext(ctx, `DELETE FROM auth_codes WHERE user_id=$1 AND purpose=$2`, userID, domain.PurposeResetPassword); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *Postgres) SaveCode(ctx context.Context, userID, purpose, codeHash string, expires, now time.Time, cooldown time.Duration) error {
+	result, err := r.db.ExecContext(ctx, `INSERT INTO auth_codes(user_id,purpose,code_hash,expires_at,sent_at) VALUES($1,$2,$3,$4,$5)
+		ON CONFLICT(user_id,purpose) DO UPDATE SET code_hash=EXCLUDED.code_hash,expires_at=EXCLUDED.expires_at,attempts=0,sent_at=EXCLUDED.sent_at
+		WHERE auth_codes.sent_at<=$6`, userID, purpose, codeHash, expires, now, now.Add(-cooldown))
+	if err != nil {
+		return err
+	}
+	if n, err := result.RowsAffected(); err != nil {
+		return err
+	} else if n == 0 {
+		return domain.ErrCodeTooSoon
+	}
+	return nil
+}
+
+func (r *Postgres) UseCode(ctx context.Context, userID, purpose, codeHash string, now time.Time, maxAttempts int) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	var stored string
+	var expires time.Time
+	var attempts int
+	err = tx.QueryRowContext(ctx, `SELECT code_hash,expires_at,attempts FROM auth_codes WHERE user_id=$1 AND purpose=$2 FOR UPDATE`, userID, purpose).Scan(&stored, &expires, &attempts)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.ErrCodeInvalid
+	}
+	if err != nil {
+		return err
+	}
+	if !expires.After(now) || attempts >= maxAttempts {
+		if _, err = tx.ExecContext(ctx, `DELETE FROM auth_codes WHERE user_id=$1 AND purpose=$2`, userID, purpose); err != nil {
+			return err
+		}
+		if err = tx.Commit(); err != nil {
+			return err
+		}
+		return domain.ErrCodeInvalid
+	}
+	if stored != codeHash {
+		if _, err = tx.ExecContext(ctx, `UPDATE auth_codes SET attempts=attempts+1 WHERE user_id=$1 AND purpose=$2`, userID, purpose); err != nil {
+			return err
+		}
+		if err = tx.Commit(); err != nil {
+			return err
+		}
+		return domain.ErrCodeInvalid
+	}
+	if _, err = tx.ExecContext(ctx, `DELETE FROM auth_codes WHERE user_id=$1 AND purpose=$2`, userID, purpose); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (r *Postgres) MarkEmailVerified(ctx context.Context, userID string) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE users SET email_verified_at=COALESCE(email_verified_at,now()) WHERE id=$1`, userID)
+	return err
+}
+
+func (r *Postgres) Sessions(ctx context.Context, userID string, now time.Time) ([]domain.Session, error) {
+	rows, err := r.db.QueryContext(ctx, `SELECT token_hash,device,created_at,last_seen_at,expires_at,COALESCE(acting_user_id,'') FROM sessions
+		WHERE user_id=$1 AND audience='mobile' AND expires_at>$2 ORDER BY last_seen_at DESC,created_at DESC LIMIT 50`, userID, now)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []domain.Session{}
+	for rows.Next() {
+		s := domain.Session{UserID: userID, Audience: "mobile"}
+		if err := rows.Scan(&s.TokenHash, &s.Device, &s.CreatedAt, &s.LastSeen, &s.ExpiresAt, &s.ActingUserID); err != nil {
+			return nil, err
+		}
+		s.CreatedAt, s.LastSeen, s.ExpiresAt = s.CreatedAt.UTC(), s.LastSeen.UTC(), s.ExpiresAt.UTC()
+		out = append(out, s)
+	}
+	return out, rows.Err()
+}
+
+func (r *Postgres) DeleteUserSession(ctx context.Context, userID, tokenHash string) error {
+	result, err := r.db.ExecContext(ctx, `DELETE FROM sessions WHERE user_id=$1 AND token_hash=$2 AND audience='mobile'`, userID, tokenHash)
+	if err != nil {
+		return err
+	}
+	if n, err := result.RowsAffected(); err != nil {
+		return err
+	} else if n == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}
+
+func (r *Postgres) DeleteOtherSessions(ctx context.Context, userID, keepTokenHash string) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM sessions WHERE user_id=$1 AND audience='mobile' AND token_hash<>$2`, userID, keepTokenHash)
+	return err
+}
+
+func (r *Postgres) TouchSession(ctx context.Context, tokenHash string, now time.Time) error {
+	_, err := r.db.ExecContext(ctx, `UPDATE sessions SET last_seen_at=$2 WHERE token_hash=$1 AND last_seen_at<$3`, tokenHash, now, now.Add(-5*time.Minute))
+	return err
 }

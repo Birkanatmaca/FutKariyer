@@ -132,6 +132,9 @@ func TestClubStaffInviteSwitchAndRevoke(t *testing.T) {
 	// Switching gives a club session that only reaches the allowed sections.
 	switched := call("POST", "/v1/auth/switch", coachToken, map[string]string{"clubId": club.ID}, 200)
 	delegated := switched["token"].(string)
+	if expires, err := time.Parse(time.RFC3339Nano, switched["expiresAt"].(string)); err != nil || time.Until(expires) > 8*time.Hour+time.Minute {
+		t.Fatalf("a club session lasts at most 8 hours: %v %v", switched["expiresAt"], err)
+	}
 	me := call("GET", "/v1/auth/me", delegated, nil, 200)["user"].(map[string]any)
 	if me["role"] != "club" || me["delegate"].(map[string]any)["coachName"] != "Ayşe Hoca" {
 		t.Fatalf("switched session must be the club with the coach as delegate: %v", me)

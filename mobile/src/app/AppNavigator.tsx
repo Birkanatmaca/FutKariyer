@@ -17,7 +17,12 @@ import type {
   BottomTabBarProps,
   BottomTabNavigationProp,
 } from '@react-navigation/bottom-tabs';
-import { AccountScreen, useAuth } from '../features/auth';
+import {
+  AccountScreen,
+  ChangePasswordScreen,
+  SessionsScreen,
+  useAuth,
+} from '../features/auth';
 import {
   CoachClubsScreen,
   CoachOverviewScreen,
@@ -180,6 +185,8 @@ type MainRoutes = {
 type ProfileRoutes = {
   ProfileHome: undefined;
   AccountProfile: undefined;
+  ChangePassword: undefined;
+  Sessions: undefined;
   PlayerProfile: undefined;
   CoachProfile: undefined;
   PostThread: { id: string };
@@ -1313,6 +1320,16 @@ function ProfileNavigator() {
               repository={accountRepository}
               onChange={account.setProfile}
               onBack={() => navigation.goBack()}
+              onChangePassword={
+                user.delegate
+                  ? undefined
+                  : () => navigation.navigate('ChangePassword')
+              }
+              onSessions={
+                user.delegate
+                  ? undefined
+                  : () => navigation.navigate('Sessions')
+              }
               onFootball={
                 user.role === 'player'
                   ? () => navigation.navigate('PlayerProfile')
@@ -1331,6 +1348,16 @@ function ProfileNavigator() {
             />
           ) : null
         }
+      </ProfileStack.Screen>
+      <ProfileStack.Screen name="ChangePassword">
+        {({ navigation }) => (
+          <ChangePasswordScreen onBack={() => navigation.goBack()} />
+        )}
+      </ProfileStack.Screen>
+      <ProfileStack.Screen name="Sessions">
+        {({ navigation }) => (
+          <SessionsScreen onBack={() => navigation.goBack()} />
+        )}
       </ProfileStack.Screen>
       <ProfileStack.Screen name="CoachProfile">
         {({ navigation }) =>

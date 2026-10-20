@@ -16,7 +16,13 @@ import { validateLogin, type FieldErrors } from '../application/validation';
 // declined; the server message is informational rather than an error.
 const applicationCodes = ['pending_approval', 'application_rejected'];
 
-export function SignInScreen({ onSignUp }: { onSignUp(): void }) {
+export function SignInScreen({
+  onSignUp,
+  onForgot,
+}: {
+  onSignUp(): void;
+  onForgot?: () => void;
+}) {
   const { signIn, sessionNotice } = useAuth();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -90,6 +96,17 @@ export function SignInScreen({ onSignUp }: { onSignUp(): void }) {
           returnKeyType="go"
           onSubmitEditing={submit}
         />
+        {onForgot ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={onForgot}
+            disabled={busy}
+            hitSlop={10}
+            style={styles.forgot}
+          >
+            <Text style={styles.forgotText}>{copy.security.forgotLink}</Text>
+          </Pressable>
+        ) : null}
         <AuthNotice message={notice ?? sessionNotice} live />
         <ErrorBanner message={error} />
         <Button
@@ -116,6 +133,8 @@ export function SignInScreen({ onSignUp }: { onSignUp(): void }) {
 }
 const styles = StyleSheet.create({
   form: { gap: space.lg },
+  forgot: { alignSelf: 'flex-end', marginTop: -space.sm },
+  forgotText: { color: colors.brand, fontSize: 13, fontWeight: '700' },
   switch: {
     flexDirection: 'row',
     flexWrap: 'wrap',

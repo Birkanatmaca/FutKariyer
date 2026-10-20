@@ -1,5 +1,7 @@
 # Hesap güvenliği
 
+**Durum (20 Ekim 2026):** 1–6 ve 8 yapıldı; 7 (yönetici 2FA ve denetim kaydı) sırada. E-posta kuyruğu yerine gönderim istek içinde, eşzamanlı yapılır (hata olursa kullanıcı "Kodu tekrar gönder" ile yeniden ister); kuyruk, loglama işiyle birlikte değerlendirilecek. Cihaz adı gövde yerine `X-Device` başlığıyla gelir.
+
 Bugünkü durum: şifreler bcrypt (cost 10) ile saklanıyor; oturum anahtarları 32 rastgele bayt ve veritabanında SHA-256 olarak duruyor; girişte zamanlama eşitleniyor; `auth_version` ile tüm oturumlar geçersiz kılınabiliyor. Eksik olan: e-postanın gerçekten kişiye ait olduğu hiç doğrulanmıyor, şifre unutulursa hesap kurtarılamıyor, yönetici paneli tek şifreyle korunuyor.
 
 ## 1. E-posta servisi (P0, senden)
