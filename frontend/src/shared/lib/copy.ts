@@ -222,6 +222,15 @@ export const copy = {
     clubsHint:
       'Kulüp bilgilerini ve kulüplere verilen giriş hesaplarını yönet.',
     logout: 'Çıkış yap',
+    openMenu: 'Menüyü aç',
+    closeMenu: 'Menüyü kapat',
+    groups: {
+      accounts: 'Hesaplar',
+      content: 'İçerik',
+      football: 'Futbol',
+      revenue: 'Gelir',
+      security: 'Güvenlik ve izleme',
+    },
     newUser: 'Kullanıcı ekle',
     newClub: 'Kulüp ekle',
     search: 'Ad, e-posta veya kullanıcı adıyla ara',
