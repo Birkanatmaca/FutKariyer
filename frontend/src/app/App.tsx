@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import {
   createAuthService,
   authRepository,
@@ -49,6 +49,17 @@ import {
 } from '../features/audit';
 import { LogsPanel, createLogsService, logsRepository } from '../features/logs';
 import {
+  createDashboardService,
+  dashboardRepository,
+} from '../features/dashboard';
+
+// The charts library loads only when Ana sayfa opens.
+const DashboardPanel = lazy(() =>
+  import('../features/dashboard/ui/DashboardPanel').then(module => ({
+    default: module.DashboardPanel,
+  })),
+);
+import {
   AnnouncementsPanel,
   createAnnouncementService,
   announcementsRepository,
@@ -79,6 +90,7 @@ const giftService = createGiftService(giftsRepository);
 const ratingService = createRatingService(ratingRepository);
 const auditService = createAuditService(auditRepository);
 const logsService = createLogsService(logsRepository);
+const dashboardService = createDashboardService(dashboardRepository);
 const announcementService = createAnnouncementService(announcementsRepository);
 const applicationService = createApplicationService(applicationsRepository);
 const reportsService = createReportsService(reportsRepository);
@@ -120,7 +132,7 @@ export function App() {
   );
   useEffect(() => {
     if (auth.user && route === 'login') {
-      navigate('users', true);
+      navigate('home', true);
     }
     if (
       !auth.loading &&
@@ -199,7 +211,8 @@ export function App() {
     route === 'rating' ||
     route === 'announcements' ||
     route === 'audit' ||
-    route === 'logs'
+    route === 'logs' ||
+    route === 'home'
       ? route === 'club-overview'
         ? 'clubs'
         : route
@@ -250,6 +263,23 @@ export function App() {
         <AuditPanel service={auditService} />
       ) : section === 'announcements' ? (
         <AnnouncementsPanel service={announcementService} />
+      ) : section === 'home' ? (
+        <Suspense
+          fallback={
+            <main className="panel-content">
+              <div className="empty" role="status">
+                <span className="spinner" />
+                <p>{copy.form.loading}</p>
+              </div>
+            </main>
+          }
+        >
+          <DashboardPanel
+            service={dashboardService}
+            userName={auth.user.fullName}
+            onSection={navigate}
+          />
+        </Suspense>
       ) : (
         <AdminPanel
           key={auth.user.id}

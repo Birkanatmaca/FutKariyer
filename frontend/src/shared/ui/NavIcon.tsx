@@ -3,6 +3,12 @@ import type { ReactNode } from 'react';
 // Line icons for the admin menu (24×24, 2px stroke, after Lucide, ISC
 // licence), drawn inline so the panel needs no icon package.
 const icons: Record<string, ReactNode> = {
+  home: (
+    <>
+      <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
+      <path d="M3 10a2 2 0 0 1 .71-1.53l7-6a2 2 0 0 1 2.58 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    </>
+  ),
   users: (
     <>
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />

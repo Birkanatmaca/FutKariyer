@@ -16,6 +16,52 @@ const groups: { key: keyof typeof copy.panel.groups; items: PanelSection[] }[] =
     { key: 'security', items: ['reports', 'audit', 'logs'] },
   ];
 
+function NavLink({
+  section,
+  current,
+  onSection,
+  badge,
+}: {
+  section: PanelSection;
+  current: PanelSection;
+  onSection(section: PanelSection): void;
+  badge?: number;
+}) {
+  return (
+    <a
+      href={'/securityadmin/' + section}
+      aria-current={current === section ? 'page' : undefined}
+      onClick={event => {
+        if (
+          event.button === 0 &&
+          !event.ctrlKey &&
+          !event.metaKey &&
+          !event.shiftKey &&
+          !event.altKey
+        ) {
+          event.preventDefault();
+          onSection(section);
+        }
+      }}
+    >
+      <NavIcon name={section} />
+      <span className="nav-text">{copy.panel[section]}</span>
+      {!!badge && (
+        <span
+          className="nav-badge"
+          aria-label={
+            section === 'reports'
+              ? copy.panel.openReportsBadge(badge)
+              : copy.panel.pendingBadge(badge)
+          }
+        >
+          {badge}
+        </span>
+      )}
+    </a>
+  );
+}
+
 export function AdminLayout({
   section,
   onSection,
@@ -69,42 +115,20 @@ export function AdminLayout({
           <Brand />
         </div>
         <nav aria-label={copy.panel.eyebrow} className="sidebar-nav">
+          <div className="nav-group">
+            <NavLink section="home" current={section} onSection={onSection} />
+          </div>
           {groups.map(group => (
             <div key={group.key} className="nav-group">
               <p className="nav-group-label">{copy.panel.groups[group.key]}</p>
               {group.items.map(value => (
-                <a
+                <NavLink
                   key={value}
-                  href={'/securityadmin/' + value}
-                  aria-current={section === value ? 'page' : undefined}
-                  onClick={event => {
-                    if (
-                      event.button === 0 &&
-                      !event.ctrlKey &&
-                      !event.metaKey &&
-                      !event.shiftKey &&
-                      !event.altKey
-                    ) {
-                      event.preventDefault();
-                      onSection(value);
-                    }
-                  }}
-                >
-                  <NavIcon name={value} />
-                  <span className="nav-text">{copy.panel[value]}</span>
-                  {!!badges[value] && (
-                    <span
-                      className="nav-badge"
-                      aria-label={
-                        value === 'reports'
-                          ? copy.panel.openReportsBadge(badges[value] ?? 0)
-                          : copy.panel.pendingBadge(badges[value] ?? 0)
-                      }
-                    >
-                      {badges[value]}
-                    </span>
-                  )}
-                </a>
+                  section={value}
+                  current={section}
+                  onSection={onSection}
+                  badge={badges[value]}
+                />
               ))}
             </div>
           ))}

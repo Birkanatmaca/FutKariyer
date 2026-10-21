@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 export type PanelSection =
+  | 'home'
   | 'users'
   | 'clubs'
   | 'applications'
@@ -22,6 +23,7 @@ function currentRoute(): Route {
   if (path === '' || path === '/securityadmin') {
     return 'login';
   }
+  if (path === '/securityadmin/home') return 'home';
   if (path === '/securityadmin/users') {
     return 'users';
   }

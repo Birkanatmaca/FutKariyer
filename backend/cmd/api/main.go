@@ -36,6 +36,9 @@ import (
 	contentapplication "futcareer/backend/internal/content/application"
 	contentdata "futcareer/backend/internal/content/data"
 	contenttransport "futcareer/backend/internal/content/transport"
+	dashboardapplication "futcareer/backend/internal/dashboard/application"
+	dashboarddata "futcareer/backend/internal/dashboard/data"
+	dashboardtransport "futcareer/backend/internal/dashboard/transport"
 	discoveryapplication "futcareer/backend/internal/discovery/application"
 	discoverydata "futcareer/backend/internal/discovery/data"
 	discoverytransport "futcareer/backend/internal/discovery/transport"
@@ -255,6 +258,7 @@ func run() error {
 	adminReports := moderationtransport.NewAdmin(moderationService)
 	adminFeatures.Handle("/v1/admin/reports", adminReports)
 	adminFeatures.Handle("/v1/admin/reports/", adminReports)
+	adminFeatures.Handle("/v1/admin/dashboard", dashboardtransport.NewAdmin(dashboardapplication.New(dashboarddata.New(db))))
 	adminFeatures.Handle("/v1/admin/logs", systemlogstransport.NewAdmin(systemLogs))
 	adminFeatures.Handle("/v1/admin/logs/", systemlogstransport.NewAdmin(systemLogs))
 	adminPaymentHandler := paymenttransport.NewAdmin(paymentService)

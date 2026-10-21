@@ -11,7 +11,12 @@
     "lint": "eslint src --ext .ts,.tsx --max-warnings 0",
     "format": "prettier --write src index.html vite.config.ts"
   },
-  "dependencies": { "react": "19.2.3", "react-dom": "19.2.3" },
+  "dependencies": {
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-is": "19.2.3",
+    "recharts": "3.9.2"
+  },
   "devDependencies": {
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
@@ -23,5 +28,7 @@
     "typescript": "^5.8.3",
     "vite": "^8.3.2"
   },
-  "engines": { "node": ">=22.12.0" }
+  "engines": {
+    "node": ">=22.12.0"
+  }
 }
