@@ -59,7 +59,9 @@ export function AdminPanel({
       <main className="panel-content">
         <header className="panel-header">
           <div>
-            <p className="eyebrow">{copy.pilot}</p>
+            <p className="eyebrow">
+              {copy.panel.groups.accounts.toLocaleUpperCase('tr-TR')}
+            </p>
             <div className="title-row">
               <h1>{copy.panel[section]}</h1>
               {!loading && data && (

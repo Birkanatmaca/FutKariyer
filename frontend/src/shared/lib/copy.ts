@@ -1,6 +1,5 @@
 export const copy = {
   brand: 'FUT CAREER',
-  pilot: 'ANKARA PİLOTU',
   admin: 'Yönetici',
   roles: {
     player: 'Oyuncu',
