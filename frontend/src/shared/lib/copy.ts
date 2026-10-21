@@ -17,20 +17,10 @@ export const copy = {
     },
   },
   login: {
-    eyebrow: 'YÖNETİCİ ALANI',
-    title: 'Ankara ağını\nbirlikte büyüt.',
-    description:
-      'Sporcuların yeni fırsatlarla buluştuğu ağı yönet. Kullanıcıları takip et, kulüp hesaplarını oluştur.',
     formTitle: 'Yönetici girişi',
-    formDescription: 'Yönetici hesabınla giriş yap.',
-    username: 'Kullanıcı adı',
+    username: 'Kullanıcı adı veya e-posta',
     password: 'Şifre',
     button: 'Giriş yap',
-    mobileHint:
-      'Sporcu, kulüp ve antrenör hesapları mobil uygulamadan giriş yapar.',
-    access: 'Yetkili erişim',
-    users: 'Kullanıcı yönetimi',
-    clubs: 'Kulüp hesapları',
     twoFactorTitle: 'İki aşamalı doğrulama',
     twoFactorHint:
       'Kimlik doğrulayıcı uygulamandaki 6 haneli kodu gir. Telefonun yanında değilse kurtarma kodlarından birini kullanabilirsin.',

@@ -16,7 +16,7 @@ export function RecoveryCodesScreen({
   const [copied, setCopied] = useState(false);
   return (
     <main className="startup">
-      <div className="login-form-card recovery-card">
+      <div className="login-card recovery-card">
         <Brand />
         <h2>{text.recoveryTitle}</h2>
         <p className="muted">{text.recoveryHint}</p>
