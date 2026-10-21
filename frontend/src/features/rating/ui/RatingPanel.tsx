@@ -3,6 +3,7 @@ import { ApiError } from '../../../shared/api/client';
 import { Button } from '../../../shared/ui/Button';
 import { Feedback } from '../../../shared/ui/Feedback';
 import { Field } from '../../../shared/ui/Field';
+import { ConfirmDialog, Modal } from '../../../shared/ui/Modal';
 import { copy } from '../../../shared/lib/copy';
 import type {
   Prize,
@@ -41,11 +42,39 @@ function fromInput(value: string) {
   const time = Date.parse(value);
   return Number.isFinite(time) ? new Date(time).toISOString() : '';
 }
-function date(value: string) {
+function day(value: string) {
+  return new Date(value).toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+function dateTime(value: string) {
   return new Date(value).toLocaleString('tr-TR', {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
+}
+
+// How far a season is: elapsed percent and a human line.
+function timing(season: Season, now = Date.now()) {
+  const start = Date.parse(season.startsAt);
+  const end = Date.parse(season.endsAt);
+  const percent = Math.min(
+    100,
+    Math.max(0, Math.round(((now - start) / Math.max(1, end - start)) * 100)),
+  );
+  let line: string;
+  if (now < start) line = text.startsIn(Math.floor((start - now) / 86400000));
+  else if (now >= end) line = text.endedOn(day(season.endsAt));
+  else {
+    const left = end - now;
+    line = text.timeLeft(
+      Math.floor(left / 86400000),
+      Math.floor((left % 86400000) / 3600000),
+    );
+  }
+  return { percent, line };
 }
 
 type FormState = {
@@ -98,6 +127,9 @@ function draftFrom(form: FormState): SeasonDraft {
   };
 }
 
+// Global Rating (21 Oct 2026 design): the season in focus with countdown and
+// prize podium, every season as a card, tasks as switchable cards; creating,
+// editing, the leaderboard and deleting open in modals.
 export function RatingPanel({ service }: { service: RatingService }) {
   const [seasons, setSeasons] = useState<Season[] | null>(null);
   const [tasks, setTasks] = useState<RatingTask[] | null>(null);
@@ -105,12 +137,9 @@ export function RatingPanel({ service }: { service: RatingService }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
-  const [editing, setEditing] = useState<Season | null>(null);
-  const [board, setBoard] = useState<{
-    season: Season;
-    rows: Standing[] | null;
-    error: string | null;
-  } | null>(null);
+  const [form, setForm] = useState<{ season: Season | null } | null>(null);
+  const [board, setBoard] = useState<Season | null>(null);
+  const [removing, setRemoving] = useState<Season | null>(null);
 
   useEffect(() => {
     let current = true;
@@ -136,257 +165,137 @@ export function RatingPanel({ service }: { service: RatingService }) {
     };
   }, [service, revision]);
 
-  function openBoard(season: Season) {
-    setBoard({ season, rows: null, error: null });
-    service
-      .leaderboard(season.id)
-      .then(rows => setBoard({ season, rows, error: null }))
-      .catch(failure =>
-        setBoard({
-          season,
-          rows: [],
-          error:
-            failure instanceof Error ? failure.message : copy.form.unexpected,
-        }),
-      );
-  }
-
-  async function remove(season: Season) {
-    if (!window.confirm(text.deleteConfirm(season.title))) return;
-    try {
-      await service.remove(season.id);
-      setNotice(text.deleted);
-      if (editing?.id === season.id) setEditing(null);
-      setRevision(value => value + 1);
-    } catch (failure) {
-      setError(
-        failure instanceof Error ? failure.message : copy.form.unexpected,
-      );
-    }
-  }
+  const spotlight =
+    seasons?.find(s => s.status === 'active') ??
+    seasons?.find(s => s.status === 'upcoming') ??
+    null;
+  const openTasks = tasks?.filter(t => t.active).length ?? 0;
 
   return (
-    <main className="panel-content">
+    <main className="panel-content rt">
       <header className="panel-header">
         <div>
           <p className="eyebrow">{text.eyebrow}</p>
           <h1>{text.title}</h1>
           <p className="muted">{text.hint}</p>
         </div>
-        <Button
-          variant="secondary"
-          busy={loading && seasons !== null}
-          onClick={() => setRevision(value => value + 1)}
-        >
-          {text.refresh}
-        </Button>
+        <div className="action-row">
+          <Button
+            variant="secondary"
+            busy={loading && seasons !== null}
+            onClick={() => setRevision(value => value + 1)}
+          >
+            {text.refresh}
+          </Button>
+          <Button
+            onClick={() => {
+              setNotice(null);
+              setForm({ season: null });
+            }}
+          >
+            + {text.newSeasonButton}
+          </Button>
+        </div>
       </header>
 
-      <section className="gift-section" aria-labelledby="season-form-title">
-        <div className="league-section-header">
-          <div>
-            <h2 id="season-form-title">
-              {editing ? text.editTitle(editing.title) : text.formTitle}
-            </h2>
-            <p className="muted">{text.formHint}</p>
-          </div>
-          {editing && (
-            <Button variant="secondary" onClick={() => setEditing(null)}>
-              {text.newSeason}
-            </Button>
-          )}
+      <Feedback message={notice} success />
+      <Feedback message={error} />
+
+      <section className="rt-overview">
+        <div className="rt-stat">
+          <span>{text.overview.seasons}</span>
+          <strong>{seasons?.length ?? '—'}</strong>
         </div>
-        <Feedback message={notice} success />
-        <SeasonForm
-          key={editing?.id ?? 'new'}
-          service={service}
-          season={editing}
-          onSaved={saved => {
-            setNotice(editing ? text.updated : text.created);
-            setEditing(null);
-            setRevision(value => value + 1);
-            if (board?.season.id === saved.id) openBoard(saved);
-          }}
-        />
+        <div className="rt-stat">
+          <span>{text.overview.active}</span>
+          <strong className="rt-ellipsis">
+            {seasons?.find(s => s.status === 'active')?.title ?? '—'}
+          </strong>
+        </div>
+        <div className="rt-stat">
+          <span>{text.overview.participants}</span>
+          <strong>
+            {spotlight ? spotlight.players.toLocaleString('tr-TR') : '—'}
+          </strong>
+        </div>
+        <div className="rt-stat">
+          <span>{text.overview.tasks}</span>
+          <strong>{tasks ? openTasks + ' / ' + tasks.length : '—'}</strong>
+        </div>
       </section>
 
-      <section className="list-panel gift-history" aria-labelledby="seasons">
-        <div className="league-section-header">
-          <div>
-            <h2 id="seasons">{text.seasons}</h2>
-            <p className="muted">
-              {seasons ? copy.panel.total(seasons.length) : copy.form.loading}
-            </p>
-          </div>
+      {seasons === null ? (
+        <div className="empty" role="status">
+          {loading ? <span className="spinner" /> : null}
+          <p>{loading ? copy.form.loading : text.loadError}</p>
         </div>
-        <Feedback message={error} />
-        {seasons === null ? (
-          <div className="empty" role="status">
-            {loading ? <span className="spinner" /> : null}
-            <p>{loading ? copy.form.loading : text.loadError}</p>
-          </div>
-        ) : seasons.length ? (
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>{text.columns.title}</th>
-                  <th>{text.columns.window}</th>
-                  <th>{text.columns.status}</th>
-                  <th>{text.columns.players}</th>
-                  <th>{text.columns.prizes}</th>
-                  <th>{text.columns.actions}</th>
-                </tr>
-              </thead>
-              <tbody>
+      ) : (
+        <>
+          <Spotlight
+            season={spotlight}
+            onBoard={setBoard}
+            onEdit={season => {
+              setNotice(null);
+              setForm({ season });
+            }}
+          />
+
+          <section className="rt-block" aria-labelledby="rt-seasons">
+            <div className="rt-block-head">
+              <h2 id="rt-seasons">{text.seasons}</h2>
+              <span className="count-badge">{seasons.length}</span>
+            </div>
+            {seasons.length ? (
+              <div className="rt-season-grid">
                 {seasons.map(season => (
-                  <tr key={season.id}>
-                    <td>
-                      <strong>{season.title}</strong>
-                    </td>
-                    <td>
-                      {date(season.startsAt)} – {date(season.endsAt)}
-                    </td>
-                    <td>
-                      <span className={'rating-status ' + season.status}>
-                        {text.statuses[season.status]}
-                      </span>
-                    </td>
-                    <td>{season.players.toLocaleString('tr-TR')}</td>
-                    <td className="rating-prizes">
-                      {season.prizes.length
-                        ? season.prizes
-                            .map(p => text.place(p.place) + ': ' + p.title)
-                            .join(' · ')
-                        : text.noPrizes}
-                    </td>
-                    <td className="rating-actions">
-                      <Button
-                        variant="secondary"
-                        onClick={() => {
-                          setNotice(null);
-                          setEditing(season);
-                        }}
-                      >
-                        {text.edit}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        onClick={() => openBoard(season)}
-                      >
-                        {text.leaderboard}
-                      </Button>
-                      {!season.published && (
-                        <Button
-                          variant="secondary"
-                          onClick={() => remove(season)}
-                        >
-                          {text.delete}
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
+                  <SeasonCard
+                    key={season.id}
+                    season={season}
+                    onEdit={() => {
+                      setNotice(null);
+                      setForm({ season });
+                    }}
+                    onBoard={() => setBoard(season)}
+                    onDelete={() => setRemoving(season)}
+                  />
                 ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="empty">
-            <h2>{text.empty}</h2>
-            <p className="muted">{text.emptyHint}</p>
-          </div>
-        )}
-      </section>
-
-      {board && (
-        <section
-          className="list-panel gift-history"
-          aria-labelledby="rating-board"
-        >
-          <div className="league-section-header">
-            <div>
-              <h2 id="rating-board">{text.boardTitle(board.season.title)}</h2>
-              <p className="muted">{text.boardHint}</p>
-            </div>
-            <Button variant="secondary" onClick={() => setBoard(null)}>
-              {text.close}
-            </Button>
-          </div>
-          <Feedback message={board.error} />
-          {board.rows === null ? (
-            <div className="empty" role="status">
-              <span className="spinner" />
-            </div>
-          ) : board.rows.length ? (
-            <div className="table-scroll">
-              <table>
-                <thead>
-                  <tr>
-                    <th>{text.columns.rank}</th>
-                    <th>{text.columns.name}</th>
-                    <th>{text.columns.role}</th>
-                    <th>{text.columns.points}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {board.rows.map(row => (
-                    <tr key={row.userId}>
-                      <td>
-                        <strong>{row.rank}</strong>
-                        {row.rank <= 3 ? ' ' + text.medal[row.rank - 1] : ''}
-                      </td>
-                      <td>{row.fullName}</td>
-                      <td>{text.roles[row.role]}</td>
-                      <td>{row.points.toLocaleString('tr-TR')}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="empty">
-              <p className="muted">{text.boardEmpty}</p>
-            </div>
-          )}
-        </section>
+              </div>
+            ) : (
+              <div className="rt-empty">
+                <h3>{text.empty}</h3>
+                <p className="muted">{text.emptyHint}</p>
+                <Button onClick={() => setForm({ season: null })}>
+                  + {text.newSeasonButton}
+                </Button>
+              </div>
+            )}
+          </section>
+        </>
       )}
 
-      <section className="list-panel gift-history" aria-labelledby="tasks">
-        <div className="league-section-header">
+      <section className="rt-block" aria-labelledby="rt-tasks">
+        <div className="rt-block-head">
           <div>
-            <h2 id="tasks">{text.tasks}</h2>
+            <h2 id="rt-tasks">{text.tasks}</h2>
             <p className="muted">{text.tasksHint}</p>
           </div>
         </div>
         {tasks ? (
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>{text.columns.task}</th>
-                  <th>{text.columns.active}</th>
-                  <th>{text.columns.target}</th>
-                  <th>{text.columns.reward}</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map(task => (
-                  <TaskRow
-                    key={task.kind}
-                    task={task}
-                    service={service}
-                    onSaved={saved =>
-                      setTasks(list =>
-                        (list ?? []).map(item =>
-                          item.kind === saved.kind ? saved : item,
-                        ),
-                      )
-                    }
-                  />
-                ))}
-              </tbody>
-            </table>
+          <div className="rt-task-grid">
+            {tasks.map(task => (
+              <TaskCard
+                key={task.kind}
+                task={task}
+                service={service}
+                onSaved={saved =>
+                  setTasks(list =>
+                    (list ?? []).map(item =>
+                      item.kind === saved.kind ? saved : item,
+                    ),
+                  )
+                }
+              />
+            ))}
           </div>
         ) : (
           <div className="empty" role="status">
@@ -394,18 +303,198 @@ export function RatingPanel({ service }: { service: RatingService }) {
           </div>
         )}
       </section>
+
+      {form && (
+        <SeasonFormModal
+          service={service}
+          season={form.season}
+          onClose={() => setForm(null)}
+          onSaved={() => {
+            setNotice(form.season ? text.updated : text.created);
+            setForm(null);
+            setRevision(value => value + 1);
+          }}
+        />
+      )}
+      {board && (
+        <LeaderboardModal
+          service={service}
+          season={board}
+          onClose={() => setBoard(null)}
+        />
+      )}
+      {removing && (
+        <ConfirmDialog
+          title={text.deleteTitle}
+          message={text.deleteConfirm(removing.title)}
+          confirm={text.delete}
+          onClose={() => setRemoving(null)}
+          onConfirm={async () => {
+            await service.remove(removing.id);
+            setRemoving(null);
+            setNotice(text.deleted);
+            setRevision(value => value + 1);
+          }}
+        />
+      )}
     </main>
   );
 }
 
-function SeasonForm({
+function StatusPill({ season }: { season: Season }) {
+  return (
+    <span className={'rating-status ' + season.status}>
+      {text.statuses[season.status]}
+    </span>
+  );
+}
+
+function Podium({ prizes }: { prizes: Prize[] }) {
+  const order: (1 | 2 | 3)[] = [2, 1, 3];
+  return (
+    <div className="rt-podium">
+      {order.map(place => {
+        const prize = prizes.find(p => p.place === place);
+        return (
+          <div key={place} className={'rt-step rt-step-' + place}>
+            <span className="rt-medal">{text.medal[place - 1]}</span>
+            <strong>{prize?.title || text.noPrizes}</strong>
+            <span className="rt-step-base">{place}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function Spotlight({
+  season,
+  onBoard,
+  onEdit,
+}: {
+  season: Season | null;
+  onBoard(season: Season): void;
+  onEdit(season: Season): void;
+}) {
+  if (!season) {
+    return (
+      <section className="rt-spotlight rt-spotlight-empty">
+        <p className="eyebrow">{text.spotlight}</p>
+        <h2>{text.noSpotlight}</h2>
+        <p className="muted">{text.noSpotlightHint}</p>
+      </section>
+    );
+  }
+  const { percent, line } = timing(season);
+  return (
+    <section className="rt-spotlight" aria-label={text.spotlight}>
+      <div className="rt-spotlight-main">
+        <p className="eyebrow">{text.spotlight}</p>
+        <div className="title-row">
+          <h2>{season.title}</h2>
+          <StatusPill season={season} />
+        </div>
+        {season.description && (
+          <p className="muted rt-description">{season.description}</p>
+        )}
+        <p className="rt-dates">
+          {dateTime(season.startsAt)} – {dateTime(season.endsAt)}
+        </p>
+        <div className="rt-progress" aria-label={text.progress(percent)}>
+          <span style={{ width: percent + '%' }} />
+        </div>
+        <div className="rt-progress-meta">
+          <strong>{line}</strong>
+          <span>
+            {text.participantsCount(season.players.toLocaleString('tr-TR'))}
+          </span>
+        </div>
+        <div className="action-row">
+          <Button onClick={() => onBoard(season)}>{text.leaderboard}</Button>
+          <Button variant="secondary" onClick={() => onEdit(season)}>
+            {text.edit}
+          </Button>
+        </div>
+      </div>
+      <div className="rt-spotlight-prizes">
+        <h3>{text.prizesTitle}</h3>
+        <Podium prizes={season.prizes} />
+      </div>
+    </section>
+  );
+}
+
+function SeasonCard({
+  season,
+  onEdit,
+  onBoard,
+  onDelete,
+}: {
+  season: Season;
+  onEdit(): void;
+  onBoard(): void;
+  onDelete(): void;
+}) {
+  const { percent, line } = timing(season);
+  return (
+    <article className={'rt-season rt-season-' + season.status}>
+      <div className="rt-season-head">
+        <StatusPill season={season} />
+        <span className="rt-players">
+          {text.participantsCount(season.players.toLocaleString('tr-TR'))}
+        </span>
+      </div>
+      <h3>{season.title}</h3>
+      <p className="rt-dates">
+        {day(season.startsAt)} – {day(season.endsAt)}
+      </p>
+      {season.published && (
+        <>
+          <div className="rt-progress rt-progress-thin">
+            <span style={{ width: percent + '%' }} />
+          </div>
+          <p className="hint">{line}</p>
+        </>
+      )}
+      <ul className="rt-prize-list">
+        {season.prizes.length ? (
+          season.prizes.map(prize => (
+            <li key={prize.place}>
+              <span>{text.medal[prize.place - 1]}</span>
+              {prize.title}
+            </li>
+          ))
+        ) : (
+          <li className="muted">{text.noPrizes}</li>
+        )}
+      </ul>
+      <div className="rt-season-actions">
+        <Button variant="secondary" className="button-small" onClick={onBoard}>
+          {text.leaderboard}
+        </Button>
+        <Button variant="secondary" className="button-small" onClick={onEdit}>
+          {text.edit}
+        </Button>
+        {!season.published && (
+          <Button variant="danger" className="button-small" onClick={onDelete}>
+            {text.delete}
+          </Button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function SeasonFormModal({
   service,
   season,
+  onClose,
   onSaved,
 }: {
   service: RatingService;
   season: Season | null;
-  onSaved(season: Season): void;
+  onClose(): void;
+  onSaved(): void;
 }) {
   const [form, setForm] = useState<FormState>(() =>
     season ? formFrom(season) : blankForm(),
@@ -418,8 +507,8 @@ function SeasonForm({
     setForm(current => ({ ...current, [key]: value }));
   }
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
+  async function submit(event?: FormEvent) {
+    event?.preventDefault();
     if (busy) return;
     const draft = draftFrom(form);
     const problems = validateSeasonDraft({
@@ -432,111 +521,223 @@ function SeasonForm({
     if (Object.keys(problems).length) return;
     setBusy(true);
     try {
-      const saved = season
-        ? await service.update(season.id, draft)
-        : await service.create(draft);
-      if (!season) setForm(blankForm());
-      onSaved(saved);
+      if (season) await service.update(season.id, draft);
+      else await service.create(draft);
+      onSaved();
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : text.saveError);
       if (failure instanceof ApiError) setFields(failure.fields);
-    } finally {
       setBusy(false);
     }
   }
 
   return (
-    <form className="gift-form" onSubmit={submit} noValidate>
-      <Field
-        label={text.seasonTitle}
-        value={form.title}
-        required
-        minLength={ratingLimits.titleMin}
-        maxLength={ratingLimits.titleMax}
-        disabled={busy}
-        error={fields.title}
-        placeholder={text.titlePlaceholder}
-        onChange={event => change('title', event.target.value)}
-      />
-      <label className="field rating-publish">
-        <span>{text.visibility}</span>
-        <span className="rating-toggle">
-          <input
-            type="checkbox"
-            checked={form.published}
-            disabled={busy}
-            onChange={event => change('published', event.target.checked)}
-          />
-          {form.published ? text.published : text.draft}
-        </span>
-        <span className="hint">{text.publishHint}</span>
-      </label>
-      <Field
-        label={text.startsAt}
-        type="datetime-local"
-        value={form.startsAt}
-        required
-        disabled={busy}
-        error={fields.startsAt}
-        onChange={event => change('startsAt', event.target.value)}
-      />
-      <Field
-        label={text.endsAt}
-        type="datetime-local"
-        value={form.endsAt}
-        required
-        disabled={busy}
-        error={fields.endsAt}
-        onChange={event => change('endsAt', event.target.value)}
-      />
-      <label className="field gift-wide">
-        <span>{text.description}</span>
-        <textarea
-          value={form.description}
-          maxLength={ratingLimits.descriptionMax}
-          rows={3}
+    <Modal
+      title={season ? text.editTitle(season.title) : text.formTitle}
+      eyebrow={text.eyebrow}
+      size="lg"
+      busy={busy}
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="secondary" disabled={busy} onClick={onClose}>
+            {copy.form.cancel}
+          </Button>
+          <Button busy={busy} onClick={() => submit()}>
+            {season ? text.save : text.create}
+          </Button>
+        </>
+      }
+    >
+      <p className="hint">{text.formHint}</p>
+      <form className="rt-form" onSubmit={submit} noValidate>
+        <Field
+          label={text.seasonTitle}
+          value={form.title}
+          required
+          autoFocus
+          minLength={ratingLimits.titleMin}
+          maxLength={ratingLimits.titleMax}
           disabled={busy}
-          aria-invalid={!!fields.description}
-          onChange={event => change('description', event.target.value)}
+          error={fields.title}
+          placeholder={text.titlePlaceholder}
+          onChange={event => change('title', event.target.value)}
         />
-        <span
-          className={fields.description ? 'field-error' : 'hint'}
-          role={fields.description ? 'alert' : undefined}
-        >
-          {fields.description || text.descriptionHint}
-        </span>
-      </label>
-      <div className="rating-prize-grid gift-wide">
-        {places.map(place => (
-          <Field
-            key={place}
-            label={text.prizeLabel(place)}
-            value={form.prizes[place]}
-            maxLength={ratingLimits.prizeMax}
+        <div className="field">
+          <span>{text.visibility}</span>
+          <div
+            className="rt-segment"
+            role="radiogroup"
+            aria-label={text.visibility}
+          >
+            {[false, true].map(value => (
+              <button
+                key={String(value)}
+                type="button"
+                role="radio"
+                aria-checked={form.published === value}
+                disabled={busy}
+                onClick={() => change('published', value)}
+              >
+                {value ? text.published : text.draft}
+              </button>
+            ))}
+          </div>
+          <span className="hint">{text.publishHint}</span>
+        </div>
+        <Field
+          label={text.startsAt}
+          type="datetime-local"
+          value={form.startsAt}
+          required
+          disabled={busy}
+          error={fields.startsAt}
+          onChange={event => change('startsAt', event.target.value)}
+        />
+        <Field
+          label={text.endsAt}
+          type="datetime-local"
+          value={form.endsAt}
+          required
+          disabled={busy}
+          error={fields.endsAt}
+          onChange={event => change('endsAt', event.target.value)}
+        />
+        <label className="field rt-wide">
+          <span>{text.description}</span>
+          <textarea
+            value={form.description}
+            maxLength={ratingLimits.descriptionMax}
+            rows={3}
             disabled={busy}
-            placeholder={text.prizePlaceholder[place - 1]}
-            onChange={event =>
-              change('prizes', { ...form.prizes, [place]: event.target.value })
-            }
+            aria-invalid={!!fields.description}
+            onChange={event => change('description', event.target.value)}
           />
-        ))}
-        {fields.prizes && (
-          <span className="field-error" role="alert">
-            {fields.prizes}
+          <span
+            className={fields.description ? 'field-error' : 'hint'}
+            role={fields.description ? 'alert' : undefined}
+          >
+            {fields.description || text.descriptionHint}
           </span>
-        )}
-      </div>
-      <div className="gift-actions gift-wide">
-        <Feedback message={error} />
-        <Button type="submit" busy={busy}>
-          {season ? text.save : text.create}
-        </Button>
-      </div>
-    </form>
+        </label>
+        <div className="rt-wide rt-prize-inputs">
+          <span className="rt-label">{text.prizesTitle}</span>
+          {places.map(place => (
+            <div key={place} className="rt-prize-input">
+              <span className="rt-medal">{text.medal[place - 1]}</span>
+              <Field
+                label={text.prizeLabel(place)}
+                value={form.prizes[place]}
+                maxLength={ratingLimits.prizeMax}
+                disabled={busy}
+                placeholder={text.prizePlaceholder[place - 1]}
+                onChange={event =>
+                  change('prizes', {
+                    ...form.prizes,
+                    [place]: event.target.value,
+                  })
+                }
+              />
+            </div>
+          ))}
+          {fields.prizes && (
+            <span className="field-error" role="alert">
+              {fields.prizes}
+            </span>
+          )}
+        </div>
+        <button type="submit" hidden />
+      </form>
+      <Feedback message={error} />
+    </Modal>
   );
 }
 
-function TaskRow({
+function LeaderboardModal({
+  service,
+  season,
+  onClose,
+}: {
+  service: RatingService;
+  season: Season;
+  onClose(): void;
+}) {
+  const [rows, setRows] = useState<Standing[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let current = true;
+    service
+      .leaderboard(season.id)
+      .then(value => current && setRows(value))
+      .catch(failure => {
+        if (!current) return;
+        setRows([]);
+        setError(
+          failure instanceof Error ? failure.message : copy.form.unexpected,
+        );
+      });
+    return () => {
+      current = false;
+    };
+  }, [service, season.id]);
+  const top = rows?.slice(0, 3) ?? [];
+  return (
+    <Modal
+      title={season.title}
+      eyebrow={text.leaderboardEyebrow}
+      size="lg"
+      onClose={onClose}
+    >
+      <p className="hint">{text.boardHint}</p>
+      <Feedback message={error} />
+      {rows === null ? (
+        <div className="empty" role="status">
+          <span className="spinner" />
+        </div>
+      ) : rows.length ? (
+        <>
+          <div className="rt-top3">
+            {[1, 0, 2].map(index =>
+              top[index] ? (
+                <div
+                  key={top[index].userId}
+                  className={'rt-top rt-top-' + (index + 1)}
+                >
+                  <span className="rt-medal">{text.medal[index]}</span>
+                  <strong>{top[index].fullName}</strong>
+                  <span>{text.roles[top[index].role]}</span>
+                  <em>{top[index].points.toLocaleString('tr-TR')}</em>
+                </div>
+              ) : (
+                <div key={index} className="rt-top rt-top-empty" />
+              ),
+            )}
+          </div>
+          <ol className="rt-board">
+            {rows.map(row => (
+              <li key={row.userId}>
+                <span className="rt-rank">{row.rank}</span>
+                <span className="rt-board-name">
+                  <strong>{row.fullName}</strong>
+                  <span>{text.roles[row.role]}</span>
+                </span>
+                <strong className="rt-board-points">
+                  {row.points.toLocaleString('tr-TR')}
+                </strong>
+              </li>
+            ))}
+          </ol>
+        </>
+      ) : (
+        <div className="rt-empty">
+          <p className="muted">{text.boardEmpty}</p>
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+function TaskCard({
   task,
   service,
   onSaved,
@@ -551,6 +752,7 @@ function TaskRow({
     points: String(task.points),
   });
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const changed =
     draft.active !== task.active ||
@@ -566,10 +768,12 @@ function TaskRow({
     };
     const problems = validateTask(next);
     setError(Object.values(problems)[0] ?? null);
+    setSaved(false);
     if (Object.keys(problems).length) return;
     setBusy(true);
     try {
       onSaved(await service.updateTask(next));
+      setSaved(true);
     } catch (failure) {
       setError(
         failure instanceof Error ? failure.message : copy.form.unexpected,
@@ -580,65 +784,67 @@ function TaskRow({
   }
 
   return (
-    <tr>
-      <td>
-        <strong>{text.taskKinds[task.kind]}</strong>
-        <div className="muted">{text.taskHints[task.kind]}</div>
-        {error && (
-          <div className="field-error" role="alert">
-            {error}
-          </div>
-        )}
-      </td>
-      <td>
-        <input
-          type="checkbox"
-          aria-label={text.columns.active}
-          checked={draft.active}
-          disabled={busy}
-          onChange={event =>
-            setDraft(d => ({ ...d, active: event.target.checked }))
-          }
-        />
-      </td>
-      <td>
-        <input
-          className="rating-number"
-          type="number"
-          min={1}
-          max={ratingLimits.targetMax}
-          aria-label={text.columns.target}
-          value={draft.target}
-          disabled={busy}
-          onChange={event =>
-            setDraft(d => ({ ...d, target: event.target.value }))
-          }
-        />
-      </td>
-      <td>
-        <input
-          className="rating-number"
-          type="number"
-          min={1}
-          max={ratingLimits.pointsMax}
-          aria-label={text.columns.reward}
-          value={draft.points}
-          disabled={busy}
-          onChange={event =>
-            setDraft(d => ({ ...d, points: event.target.value }))
-          }
-        />
-      </td>
-      <td>
+    <article className={'rt-task' + (draft.active ? ' rt-task-on' : '')}>
+      <div className="rt-task-head">
+        <div>
+          <h3>{text.taskKinds[task.kind]}</h3>
+          <p className="muted">{text.taskHints[task.kind]}</p>
+        </div>
+        <label className="rt-switch">
+          <input
+            type="checkbox"
+            checked={draft.active}
+            disabled={busy}
+            onChange={event =>
+              setDraft(d => ({ ...d, active: event.target.checked }))
+            }
+          />
+          <span aria-hidden="true" />
+          <em>{draft.active ? text.taskOn : text.taskOff}</em>
+        </label>
+      </div>
+      <div className="rt-task-fields">
+        <label>
+          <span>{text.taskTarget}</span>
+          <input
+            type="number"
+            min={1}
+            max={ratingLimits.targetMax}
+            value={draft.target}
+            disabled={busy}
+            onChange={event =>
+              setDraft(d => ({ ...d, target: event.target.value }))
+            }
+          />
+        </label>
+        <label>
+          <span>{text.taskPoints}</span>
+          <input
+            type="number"
+            min={1}
+            max={ratingLimits.pointsMax}
+            value={draft.points}
+            disabled={busy}
+            onChange={event =>
+              setDraft(d => ({ ...d, points: event.target.value }))
+            }
+          />
+        </label>
         <Button
-          variant="secondary"
+          className="button-small"
           busy={busy}
           disabled={!changed}
           onClick={save}
         >
           {text.saveTask}
         </Button>
-      </td>
-    </tr>
+      </div>
+      {error && (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      )}
+      {saved && !changed && <p className="rt-saved">{text.taskSaved}</p>}
+    </article>
   );
 }
