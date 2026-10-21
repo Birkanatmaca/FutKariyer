@@ -39,6 +39,7 @@ func (s *Service) SavePopup(ctx context.Context, in domain.Popup, create bool) (
 	if in.MaxViews < domain.MinPopupViews || in.MaxViews > domain.MaxPopupViews {
 		fields["maxViews"] = "Gösterim sayısı 1–100 arasında olmalı."
 	}
+	windowErrors(in.StartsAt, in.EndsAt, fields)
 	if len(fields) > 0 {
 		return in, fields
 	}

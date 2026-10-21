@@ -4,7 +4,25 @@ import {
 } from '../../../shared/domain/popup-ads';
 // Home advertisements are image-only: the server supplies just the picture,
 // shown in one fixed-size rectangle. Titles stay an admin-side label.
-export type Advertisement = { id: string; imageId: string };
+// displaySeconds is how long the admin wants each item on screen in the
+// rotating slot (3–30); older servers omit it and the slot's default applies.
+export type Advertisement = {
+  id: string;
+  imageId: string;
+  displaySeconds?: number;
+};
+export function displayMs(
+  item: { displaySeconds?: number } | undefined,
+  fallback: number,
+) {
+  const seconds = item?.displaySeconds;
+  return typeof seconds === 'number' &&
+    Number.isInteger(seconds) &&
+    seconds >= 3 &&
+    seconds <= 30
+    ? seconds * 1000
+    : fallback;
+}
 // Single source for the ad slot size; admins upload images at this ratio.
 export const advertisementImage = { width: 1200, height: 600 } as const;
 export const advertisementAspectRatio =
@@ -17,6 +35,7 @@ export type Article = {
   imageId: string;
   published: boolean;
   showOnHome: boolean;
+  displaySeconds?: number;
   createdAt: string;
   updatedAt: string;
 };

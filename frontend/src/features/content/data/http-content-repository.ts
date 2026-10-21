@@ -21,7 +21,10 @@ function valid(value: unknown, section: ContentSection): value is ContentItem {
     typeof item.createdAt !== 'string' ||
     !Number.isFinite(Date.parse(item.createdAt)) ||
     typeof item.updatedAt !== 'string' ||
-    !Number.isFinite(Date.parse(item.updatedAt))
+    !Number.isFinite(Date.parse(item.updatedAt)) ||
+    !Number.isInteger(item.displaySeconds) ||
+    !optionalTime(item.startsAt) ||
+    !optionalTime(item.endsAt)
   )
     return false;
   return section === 'ads'
@@ -36,9 +39,17 @@ function valid(value: unknown, section: ContentSection): value is ContentItem {
         typeof item.summary === 'string' &&
         typeof item.published === 'boolean' &&
         typeof item.showOnHome === 'boolean' &&
+        Number.isInteger(item.sortOrder) &&
         (item.reviewStatus === undefined ||
           reviewStatuses.includes(item.reviewStatus)) &&
         (item.authorName === undefined || typeof item.authorName === 'string');
+}
+
+function optionalTime(value: unknown) {
+  return (
+    value === null ||
+    (typeof value === 'string' && Number.isFinite(Date.parse(value)))
+  );
 }
 
 const reviewStatuses: ReviewStatus[] = ['pending', 'approved', 'rejected'];
@@ -64,7 +75,23 @@ export const contentRepository: ContentRepository = {
       throw new ApiError(copy.form.unexpected);
     return result;
   },
+  async listAll(section) {
+    // Admin lists are small; the panel loads every page to sort, count and
+    // preview the app's carousel.
+    const items: ContentItem[] = [];
+    for (let page = 1; page <= 50; page++) {
+      const result = await contentRepository.list(section, page);
+      items.push(...result.items);
+      if (page >= result.totalPages) break;
+    }
+    return items;
+  },
   async save(section, form, id) {
+    const schedule = {
+      displaySeconds: form.displaySeconds,
+      startsAt: form.startsAt,
+      endsAt: form.endsAt,
+    };
     const body =
       section === 'ads'
         ? {
@@ -72,6 +99,7 @@ export const contentRepository: ContentRepository = {
             imageId: form.imageId,
             active: form.active,
             sortOrder: form.sortOrder,
+            ...schedule,
           }
         : {
             title: form.title,
@@ -80,6 +108,8 @@ export const contentRepository: ContentRepository = {
             imageId: form.imageId,
             published: form.published,
             showOnHome: form.showOnHome,
+            sortOrder: form.sortOrder,
+            ...schedule,
           };
     const out = await request<{ advertisement?: unknown; article?: unknown }>(
       path(section, id),
@@ -104,7 +134,11 @@ export const contentRepository: ContentRepository = {
   },
   async pendingReviews() {
     const out = await request<{ items?: unknown }>('/v1/admin/content/reviews');
-    if (!out || !Array.isArray(out.items) || !out.items.every(item => valid(item, 'news')))
+    if (
+      !out ||
+      !Array.isArray(out.items) ||
+      !out.items.every(item => valid(item, 'news'))
+    )
       throw new ApiError(copy.form.unexpected);
     return out.items as Article[];
   },

@@ -1,111 +1,143 @@
 import { copy } from '../../../shared/lib/copy';
-import { Button } from '../../../shared/ui/Button';
+import { Initials, Pill, ago, shortDate } from '../../../shared/ui/kit';
 import type { ManagedAccount } from '../domain/models';
+import { roleTone } from './AccountEditor';
+
+const text = copy.panel;
+
+function status(account: ManagedAccount) {
+  if (account.approvalStatus === 'pending')
+    return <Pill tone="warning">{text.pending}</Pill>;
+  if (account.approvalStatus === 'rejected')
+    return <Pill tone="danger">{text.rejected}</Pill>;
+  return account.active ? (
+    <Pill tone="accent">{text.active}</Pill>
+  ) : (
+    <Pill tone="danger">{text.inactive}</Pill>
+  );
+}
+
 export function AccountTable({
   accounts,
+  clubs,
+  busy,
   onEdit,
   onOverview,
 }: {
   accounts: ManagedAccount[];
+  clubs: boolean;
+  busy?: boolean;
   onEdit(account: ManagedAccount): void;
   onOverview(account: ManagedAccount): void;
 }) {
   return (
-    <div className="table-scroll">
-      <table>
+    <div className="table-scroll" aria-busy={busy}>
+      <table className="kit-table">
         <thead>
           <tr>
-            <th>{copy.panel.name}</th>
-            <th>{copy.panel.role}</th>
-            <th>{copy.panel.identity}</th>
-            <th>{copy.panel.status}</th>
-            <th>{copy.panel.verification}</th>
-            <th>{copy.panel.date}</th>
-            <th className="align-right">{copy.panel.actions}</th>
+            <th>{text.name}</th>
+            <th>{clubs ? text.footballType : text.role}</th>
+            <th>{text.identity}</th>
+            <th>{text.status}</th>
+            <th>{text.badges}</th>
+            <th>{text.date}</th>
+            <th className="align-right">{text.actions}</th>
           </tr>
         </thead>
         <tbody>
-          {accounts.map(account => (
-            <tr key={account.id}>
-              <td>
-                <div className="table-identity">
-                  <span className="avatar" aria-hidden="true">
-                    {account.fullName.slice(0, 1).toLocaleUpperCase('tr-TR')}
-                  </span>
-                  <div>
-                    <strong>{account.fullName}</strong>
-                    <span>
-                      {account.city}
-                      {account.district ? ' / ' + account.district : ''}
+          {accounts.map(account => {
+            const locked = account.role === 'admin';
+            const place = [account.city, account.district]
+              .filter(Boolean)
+              .join(' / ');
+            return (
+              <tr
+                key={account.id}
+                className={locked ? undefined : 'kit-row-link'}
+                onClick={locked ? undefined : () => onEdit(account)}
+              >
+                <td>
+                  <div className="kit-identity">
+                    <Initials name={account.fullName} />
+                    <div>
+                      <strong>{account.fullName}</strong>
+                      <span>{place || text.noPlace}</span>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {clubs ? (
+                    <span className="kit-soft">
+                      {account.footballType &&
+                      account.footballType !== 'unknown'
+                        ? copy.football.types[account.footballType]
+                        : '—'}
                     </span>
-                  </div>
-                </div>
-              </td>
-              <td>{copy.roles[account.role]}</td>
-              <td className="login-identity">
-                {account.username || account.email}
-              </td>
-              <td>
-                <span
-                  className={
-                    'status-badge ' + (account.active ? 'active' : 'inactive')
-                  }
-                >
-                  <span className="status-dot" />
-                  {account.active ? copy.panel.active : copy.panel.inactive}
-                </span>
-              </td>
-              <td>
-                {account.role === 'club' ||
-                account.role === 'coach' ||
-                account.role === 'organizer' ? (
-                  <span
-                    className={
-                      'status-badge ' +
-                      (account.verified ? 'active' : 'inactive')
-                    }
-                  >
-                    {account.verified
-                      ? copy.panel.verified
-                      : copy.panel.unverified}
-                  </span>
-                ) : (
-                  <span className="muted">—</span>
-                )}
-              </td>
-              <td>
-                <time dateTime={account.createdAt}>
-                  {new Date(account.createdAt).toLocaleDateString('tr-TR')}
-                </time>
-              </td>
-              <td className="align-right">
-                {account.role === 'admin' ? (
-                  <span className="muted">{copy.panel.protected}</span>
-                ) : (
-                  <div className="action-row action-end">
-                    {account.role === 'club' && (
-                      <Button
-                        variant="secondary"
-                        className="button-small"
-                        aria-label={copy.panel.overviewLabel(account.fullName)}
-                        onClick={() => onOverview(account)}
-                      >
-                        {copy.panel.overview}
-                      </Button>
+                  ) : (
+                    <Pill tone={roleTone(account.role)}>
+                      {copy.roles[account.role]}
+                    </Pill>
+                  )}
+                </td>
+                <td className="login-identity kit-soft">
+                  {account.username || account.email}
+                </td>
+                <td>{status(account)}</td>
+                <td>
+                  <div className="kit-badges">
+                    {account.verified && (
+                      <Pill tone="info">{text.verified}</Pill>
                     )}
-                    <Button
-                      variant="secondary"
-                      className="button-small"
-                      aria-label={copy.panel.editLabel(account.fullName)}
-                      onClick={() => onEdit(account)}
-                    >
-                      {copy.panel.edit}
-                    </Button>
+                    {account.pro && <Pill tone="warning">PRO</Pill>}
+                    {!account.verified && !account.pro && (
+                      <span className="muted">—</span>
+                    )}
                   </div>
-                )}
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td>
+                  <time
+                    dateTime={account.createdAt}
+                    title={shortDate(account.createdAt)}
+                    className="kit-soft"
+                  >
+                    {ago(account.createdAt)}
+                  </time>
+                </td>
+                <td className="align-right">
+                  {locked ? (
+                    <span className="muted">{text.protected}</span>
+                  ) : (
+                    <div className="kit-row-actions">
+                      {account.role === 'club' && (
+                        <button
+                          type="button"
+                          className="kit-action"
+                          aria-label={text.overviewLabel(account.fullName)}
+                          onClick={event => {
+                            event.stopPropagation();
+                            onOverview(account);
+                          }}
+                        >
+                          {text.overview}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="kit-action kit-action-primary"
+                        aria-label={text.editLabel(account.fullName)}
+                        onClick={event => {
+                          event.stopPropagation();
+                          onEdit(account);
+                        }}
+                      >
+                        {text.edit}
+                      </button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

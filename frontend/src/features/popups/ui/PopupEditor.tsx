@@ -1,9 +1,16 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
 import { Button } from '../../../shared/ui/Button';
-import { Field } from '../../../shared/ui/Field';
 import { Feedback } from '../../../shared/ui/Feedback';
+import { Field } from '../../../shared/ui/Field';
+import { ConfirmDialog, Modal } from '../../../shared/ui/Modal';
+import { Pill, ToggleRow, windowState } from '../../../shared/ui/kit';
+import {
+  ImagePicker,
+  WindowFields,
+  useObjectUrl,
+} from '../../../shared/ui/media';
 import type { PopupService } from '../application/popup-service';
 import {
   popupFormats,
@@ -12,6 +19,7 @@ import {
   type Popup,
   type PopupFormat,
 } from '../domain/models';
+import { PopupPhone, popupState, stateTone } from './PopupParts';
 
 const text = copy.popups;
 type Unit = 'minutes' | 'hours' | 'days';
@@ -32,10 +40,8 @@ export function PopupEditor({
   item?: Popup;
   service: PopupService;
   onClose(): void;
-  onDone(): void;
+  onDone(message: string): void;
 }) {
-  const dialog = useRef<HTMLDialogElement>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
   const initial = split(item?.intervalMinutes ?? 1440);
   const [title, setTitle] = useState(item?.title ?? ''),
     [imageId, setImageId] = useState(item?.imageId ?? ''),
@@ -44,19 +50,22 @@ export function PopupEditor({
     [intervalValue, setIntervalValue] = useState(initial.value),
     [unit, setUnit] = useState<Unit>(initial.unit),
     [maxViews, setMaxViews] = useState(item?.maxViews ?? 3),
-    [active, setActive] = useState(item?.active ?? false),
+    [active, setActive] = useState(item?.active ?? true),
+    [range, setRange] = useState({
+      startsAt: item?.startsAt ?? null,
+      endsAt: item?.endsAt ?? null,
+    }),
     [busy, setBusy] = useState(false),
     [error, setError] = useState<string | null>(null),
     [fields, setFields] = useState<Record<string, string>>({}),
     [confirm, setConfirm] = useState(false);
-  useEffect(() => {
-    const element = dialog.current;
-    element?.showModal();
-    return () => element?.close();
-  }, []);
+  const fileUrl = useObjectUrl(file);
+  const imageSrc = fileUrl || (imageId ? service.imageUrl(imageId) : null);
+  const minutes = intervalValue * unitMinutes[unit];
+  const state = popupState({ active, ...range });
+
   async function choose(next: File | null) {
     setFields(current => ({ ...current, image: '' }));
-    setFile(null);
     if (!next) return;
     try {
       setFormat(await service.check(next));
@@ -66,9 +75,9 @@ export function PopupEditor({
         ...current,
         image: failure instanceof Error ? failure.message : text.sizeError,
       }));
-      if (fileInput.current) fileInput.current.value = '';
     }
   }
+
   async function save(event: FormEvent) {
     event.preventDefault();
     if (busy) return;
@@ -81,19 +90,19 @@ export function PopupEditor({
         id = await service.upload(file);
         setImageId(id);
         setFile(null);
-        if (fileInput.current) fileInput.current.value = '';
       }
       await service.save(
         {
           title,
           imageId: id,
           active,
-          intervalMinutes: intervalValue * unitMinutes[unit],
+          intervalMinutes: minutes,
           maxViews,
+          ...range,
         },
         item?.id,
       );
-      onDone();
+      onDone(item ? text.saved : text.created);
     } catch (failure) {
       setError(
         failure instanceof Error ? failure.message : copy.form.unexpected,
@@ -103,189 +112,182 @@ export function PopupEditor({
       setBusy(false);
     }
   }
-  async function remove() {
-    if (!item || busy) return;
-    setBusy(true);
-    setError(null);
-    try {
-      await service.remove(item.id);
-      onDone();
-    } catch (failure) {
-      setError(
-        failure instanceof Error ? failure.message : copy.form.unexpected,
-      );
-    } finally {
-      setBusy(false);
-    }
-  }
-  const minutes = intervalValue * unitMinutes[unit];
+
   return (
-    <dialog
-      ref={dialog}
-      className="editor"
-      aria-labelledby="popup-editor-title"
-      onCancel={event => {
-        event.preventDefault();
-        if (!busy) onClose();
-      }}
-    >
-      <header className="editor-header">
-        <h2 id="popup-editor-title">{item ? text.edit : text.create}</h2>
-        <button
-          className="icon-button"
-          disabled={busy}
-          onClick={onClose}
-          aria-label={copy.form.close}
-        >
-          ×
-        </button>
-      </header>
-      <div className="editor-body">
-        <form className="form-stack" onSubmit={save}>
-          <Field
-            label={copy.content.title}
-            value={title}
-            maxLength={120}
-            required
-            disabled={busy}
-            error={fields.title}
-            onChange={e => setTitle(e.target.value)}
-          />
-          <div className="field">
-            <label htmlFor="popup-image">{copy.content.image}</label>
-            <input
-              ref={fileInput}
-              id="popup-image"
-              type="file"
-              accept="image/jpeg,image/png"
-              disabled={busy}
-              onChange={e => choose(e.target.files?.[0] ?? null)}
-            />
-            <ul className="hint popup-sizes">
-              {popupFormats.map(value => (
-                <li key={value}>
-                  <strong>{text.formats[value]}</strong>{' '}
-                  {popupSizes[value].width}×{popupSizes[value].height} px
-                </li>
-              ))}
-            </ul>
-            <p className="hint">{copy.content.imageHint}</p>
-            {fields.image && (
-              <p className="field-error" role="alert">
-                {fields.image}
-              </p>
-            )}
-          </div>
-          {file && format && (
-            <p className="hint">
-              {text.selected(file.name, text.formats[format])}
-            </p>
-          )}
-          {imageId && !file && format && (
-            <figure className={'popup-preview ' + format}>
-              <img
-                src={service.imageUrl(imageId)}
-                alt={title || text.preview}
-              />
-              <figcaption>{text.formats[format]}</figcaption>
-            </figure>
-          )}
-          <div className="popup-interval">
-            <Field
-              label={text.interval}
-              type="number"
-              min={1}
-              required
-              value={intervalValue}
-              disabled={busy}
-              error={fields.intervalMinutes}
-              onChange={e =>
-                setIntervalValue(
-                  Math.max(0, Math.floor(Number(e.target.value))),
-                )
-              }
-            />
-            <label className="field">
-              <span>{text.unit}</span>
-              <select
-                value={unit}
-                disabled={busy}
-                onChange={e => setUnit(e.target.value as Unit)}
-              >
-                {(Object.keys(unitMinutes) as Unit[]).map(value => (
-                  <option key={value} value={value}>
-                    {text.units[value]}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <Field
-            label={text.maxViews}
-            type="number"
-            min={popupLimits.views.min}
-            max={popupLimits.views.max}
-            required
-            value={maxViews}
-            disabled={busy}
-            error={fields.maxViews}
-            onChange={e => setMaxViews(Math.floor(Number(e.target.value)))}
-          />
-          <p className="hint">
-            {minutes >= popupLimits.interval.min &&
-            minutes <= popupLimits.interval.max
-              ? text.summary(minutes, maxViews)
-              : text.intervalHint}
-          </p>
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={active}
-              disabled={busy}
-              onChange={e => setActive(e.target.checked)}
-            />
-            {text.active}
-          </label>
-          <Feedback message={error} />
-          <div className="action-row">
-            <Button type="submit" busy={busy}>
-              {copy.editor.save}
-            </Button>
-            <Button variant="secondary" disabled={busy} onClick={onClose}>
-              {copy.form.cancel}
-            </Button>
-          </div>
-        </form>
-        {item && (
-          <div className="security-actions">
-            {confirm ? (
-              <div className="delete-confirm">
-                <p>{text.deleteConfirm}</p>
-                <div className="action-row">
-                  <Button variant="danger" busy={busy} onClick={remove}>
-                    {text.remove}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    disabled={busy}
-                    onClick={() => setConfirm(false)}
-                  >
-                    {copy.form.cancel}
-                  </Button>
-                </div>
-              </div>
-            ) : (
+    <>
+      <Modal
+        title={item ? text.edit : text.create}
+        eyebrow={text.eyebrow}
+        size="xl"
+        busy={busy}
+        onClose={onClose}
+        footer={
+          <>
+            {item && (
               <Button
                 variant="danger"
+                className="modal-footer-start"
                 disabled={busy}
                 onClick={() => setConfirm(true)}
               >
-                {text.remove}
+                {copy.content.remove}
               </Button>
             )}
-          </div>
-        )}
-      </div>
-    </dialog>
+            <Button variant="secondary" disabled={busy} onClick={onClose}>
+              {copy.form.cancel}
+            </Button>
+            <Button type="submit" form="popup-editor" busy={busy}>
+              {item ? copy.content.saveChanges : text.create}
+            </Button>
+          </>
+        }
+      >
+        <div className="ct-editor">
+          <form id="popup-editor" className="kit-form" onSubmit={save}>
+            <Field
+              label={text.name}
+              hint={text.nameHint}
+              value={title}
+              maxLength={120}
+              required
+              disabled={busy}
+              error={fields.title}
+              onChange={event => setTitle(event.target.value)}
+            />
+            <ImagePicker
+              label={copy.content.image}
+              hint={text.sizeError}
+              src={imageSrc}
+              aspect={
+                format
+                  ? popupSizes[format].width + ' / ' + popupSizes[format].height
+                  : '1 / 1'
+              }
+              busy={busy}
+              error={fields.image}
+              onFile={choose}
+            />
+            <div className="pp-formats" aria-label={text.format}>
+              {popupFormats.map(value => (
+                <span
+                  key={value}
+                  className={'pp-format' + (format === value ? ' on' : '')}
+                >
+                  <i
+                    style={{
+                      aspectRatio:
+                        popupSizes[value].width +
+                        ' / ' +
+                        popupSizes[value].height,
+                    }}
+                  />
+                  <strong>{text.formats[value]}</strong>
+                  <span className="muted">
+                    {popupSizes[value].width}×{popupSizes[value].height}
+                  </span>
+                </span>
+              ))}
+            </div>
+            <p className="kit-form-title">{copy.content.publishing}</p>
+            <ToggleRow
+              label={text.active}
+              hint={text.activeHint}
+              checked={active}
+              disabled={busy}
+              onChange={setActive}
+            />
+            <p className="kit-form-title">{text.frequency}</p>
+            <div className="rt-form">
+              <div className="field">
+                <label htmlFor="popup-interval">{text.interval}</label>
+                <div className="ct-inline">
+                  <input
+                    id="popup-interval"
+                    type="number"
+                    min={1}
+                    max={Math.floor(
+                      popupLimits.interval.max / unitMinutes[unit],
+                    )}
+                    value={intervalValue}
+                    disabled={busy}
+                    onChange={event =>
+                      setIntervalValue(Number(event.target.value))
+                    }
+                  />
+                  <select
+                    aria-label={text.unit}
+                    value={unit}
+                    disabled={busy}
+                    onChange={event => setUnit(event.target.value as Unit)}
+                  >
+                    {(['minutes', 'hours', 'days'] as Unit[]).map(value => (
+                      <option key={value} value={value}>
+                        {text.units[value]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="hint">{text.intervalHint}</p>
+                {fields.intervalMinutes && (
+                  <p className="field-error" role="alert">
+                    {fields.intervalMinutes}
+                  </p>
+                )}
+              </div>
+              <Field
+                label={text.maxViews}
+                type="number"
+                min={popupLimits.views.min}
+                max={popupLimits.views.max}
+                value={String(maxViews)}
+                disabled={busy}
+                error={fields.maxViews}
+                hint={text.maxViewsHint}
+                onChange={event => setMaxViews(Number(event.target.value))}
+              />
+            </div>
+            <p className="notice">{text.summary(minutes, maxViews)}</p>
+            <p className="kit-form-title">{text.window}</p>
+            <WindowFields
+              value={range}
+              onChange={patch =>
+                setRange(current => ({ ...current, ...patch }))
+              }
+              busy={busy}
+              errors={fields}
+            />
+            <Feedback message={error} />
+          </form>
+          <aside className="ct-preview">
+            <div className="ct-preview-head">
+              <span className="kit-form-title">{copy.content.preview}</span>
+              <Pill tone={stateTone[state]}>{text.states[state]}</Pill>
+            </div>
+            <PopupPhone
+              imageSrc={imageSrc}
+              format={format}
+              caption={
+                windowState(range.startsAt, range.endsAt) === 'live'
+                  ? text.previewCaption
+                  : text.previewOutside
+              }
+            />
+          </aside>
+        </div>
+      </Modal>
+      {confirm && item && (
+        <ConfirmDialog
+          title={text.deleteTitle}
+          message={text.deleteConfirm}
+          confirm={copy.content.remove}
+          onClose={() => setConfirm(false)}
+          onConfirm={async () => {
+            await service.remove(item.id);
+            setConfirm(false);
+            onDone(text.deleted);
+          }}
+        />
+      )}
+    </>
   );
 }

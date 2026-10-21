@@ -32,6 +32,9 @@ export type Popup = {
   active: boolean;
   intervalMinutes: number;
   maxViews: number;
+  // When the popup may be shown; null leaves that side open.
+  startsAt: string | null;
+  endsAt: string | null;
   views: number;
   viewers: number;
   createdAt: string;
@@ -50,9 +53,12 @@ export type PopupForm = {
   active: boolean;
   intervalMinutes: number;
   maxViews: number;
+  startsAt: string | null;
+  endsAt: string | null;
 };
 export interface PopupRepository {
   list(page: number): Promise<PopupPage>;
+  listAll(): Promise<Popup[]>;
   save(form: PopupForm, id?: string): Promise<Popup>;
   remove(id: string): Promise<void>;
 }

@@ -28,6 +28,7 @@ function imageSize(file: File) {
 export function createPopupService(repo: PopupRepository, images: PopupImages) {
   return {
     list: (page: number) => repo.list(page),
+    listAll: () => repo.listAll(),
     save: (form: PopupForm, id?: string) =>
       repo.save({ ...form, title: form.title.trim() }, id),
     remove: (id: string) => repo.remove(id),

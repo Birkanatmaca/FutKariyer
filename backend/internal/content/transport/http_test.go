@@ -174,6 +174,34 @@ func TestContentPublicationUploadAndAdministratorBoundary(t *testing.T) {
 		t.Fatal("home flag ignored")
 	}
 	get("news/"+featuredID, 200)
+	// The publishing window hides an article outside it; priority orders the
+	// list; an end before the start and an out-of-range display time fail.
+	past, future := time.Now().Add(-48*time.Hour).UTC(), time.Now().Add(48*time.Hour).UTC()
+	write("POST", "news", map[string]any{"title": "Bad window", "summary": "Summary", "body": "Body", "startsAt": future, "endsAt": past}, 422)
+	write("POST", "news", map[string]any{"title": "Too long", "summary": "Summary", "body": "Body", "displaySeconds": 31}, 422)
+	newsInput["title"], newsInput["showOnHome"], newsInput["endsAt"] = "Expired", false, past
+	decode(write("POST", "news", newsInput, 201), &article)
+	get("news/"+article.Article.ID, 404)
+	if article.Article.DisplaySeconds != 6 || article.Article.SortOrder != 100 {
+		t.Fatalf("schedule defaults: %+v", article.Article)
+	}
+	delete(newsInput, "endsAt")
+	newsInput["title"], newsInput["sortOrder"], newsInput["displaySeconds"] = "Pinned", 0, 10
+	decode(write("POST", "news", newsInput, 201), &article)
+	decode(get("news", 200), &list)
+	if list.Items[0].ID != article.Article.ID || list.Items[0].DisplaySeconds != 10 {
+		t.Fatalf("priority ignored: %+v", list.Items)
+	}
+	write("DELETE", "news/"+article.Article.ID, nil, 204)
+	delete(newsInput, "sortOrder")
+	delete(newsInput, "displaySeconds")
+	adInput["startsAt"] = future
+	write("PUT", "ads/"+ad.Advertisement.ID, adInput, 200)
+	decode(get("home", 200), &home)
+	if len(home.Advertisements) != 0 {
+		t.Fatal("scheduled advertisement shown early")
+	}
+	delete(adInput, "startsAt")
 	adInput["active"] = false
 	write("PUT", "ads/"+ad.Advertisement.ID, adInput, 200)
 	decode(get("home", 200), &home)

@@ -13,6 +13,7 @@ import (
 	"image/jpeg"
 	"image/png"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -92,6 +93,23 @@ func (s *Service) Home(ctx context.Context) (domain.Home, error) {
 	}
 	return domain.Home{Advertisements: ads.Items, News: news.Items}, nil
 }
+
+// scheduleErrors checks the carousel time and the publishing window. A zero
+// display time takes the default, so older clients keep working.
+func scheduleErrors(in *domain.Schedule, fallback int, fields auth.ValidationError) {
+	if in.DisplaySeconds == 0 {
+		in.DisplaySeconds = fallback
+	}
+	if in.DisplaySeconds < domain.MinDisplaySeconds || in.DisplaySeconds > domain.MaxDisplaySeconds {
+		fields["displaySeconds"] = "Ekranda kalma süresi 3–30 saniye olmalı."
+	}
+	windowErrors(in.StartsAt, in.EndsAt, fields)
+}
+func windowErrors(starts, ends *time.Time, fields auth.ValidationError) {
+	if starts != nil && ends != nil && !ends.After(*starts) {
+		fields["endsAt"] = "Bitiş, başlangıçtan sonra olmalı."
+	}
+}
 func text(value string, min, max int) bool {
 	n := utf8.RuneCountInString(value)
 	return n >= min && n <= max
@@ -108,6 +126,7 @@ func (s *Service) SaveAd(ctx context.Context, in domain.Advertisement, create bo
 	if in.SortOrder < 0 || in.SortOrder > 10000 {
 		fields["sortOrder"] = "Sıra 0–10000 arasında olmalı."
 	}
+	scheduleErrors(&in.Schedule, 5, fields)
 	if len(fields) > 0 {
 		return in, fields
 	}
@@ -140,6 +159,10 @@ func (s *Service) SaveArticle(ctx context.Context, in domain.Article, create boo
 	if !text(in.Body, 2, 20000) {
 		fields["body"] = "Haber metni 2–20000 karakter olmalı."
 	}
+	if in.SortOrder < 0 || in.SortOrder > 10000 {
+		fields["sortOrder"] = "Öncelik 0–10000 arasında olmalı."
+	}
+	scheduleErrors(&in.Schedule, 6, fields)
 	if in.ImageID != "" {
 		if _, err := s.repo.Image(ctx, in.ImageID, true); err != nil {
 			if !errors.Is(err, authdomain.ErrNotFound) {

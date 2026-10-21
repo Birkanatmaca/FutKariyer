@@ -1,20 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
 import { Button } from '../../../shared/ui/Button';
 import { Feedback } from '../../../shared/ui/Feedback';
+import {
+  FilterTabs,
+  Initials,
+  Pager,
+  Pill,
+  StatCards,
+  ago,
+  slice,
+} from '../../../shared/ui/kit';
 import type { ApplicationService } from '../application/applications-service';
 import type {
   AccountApplication,
   ApplicationDecision,
+  ApplicationRole,
   ApplicationStatus,
 } from '../domain/models';
-import { ApplicationCard } from './ApplicationCard';
+import { ApplicationDetail, statusTone } from './ApplicationDetail';
 
-const tabs: ApplicationStatus[] = ['pending', 'approved', 'rejected'];
+const text = copy.applications;
+const statuses: ApplicationStatus[] = ['pending', 'approved', 'rejected'];
+const pageSize = 12;
+type Lists = Record<ApplicationStatus, AccountApplication[]>;
 
 function message(failure: unknown) {
   return failure instanceof Error ? failure.message : copy.form.unexpected;
+}
+
+function hoursWaiting(items: AccountApplication[], now = Date.now()) {
+  const oldest = items.reduce(
+    (min, item) => Math.min(min, Date.parse(item.submittedAt)),
+    now,
+  );
+  return Math.round((now - oldest) / 3600000);
 }
 
 export function ApplicationsPanel({
@@ -24,35 +45,27 @@ export function ApplicationsPanel({
   service: ApplicationService;
   onPendingCount(count: number): void;
 }) {
-  const [status, setStatus] = useState<ApplicationStatus>('pending'),
-    [items, setItems] = useState<AccountApplication[] | null>(null),
+  const [lists, setLists] = useState<Lists | null>(null),
     [loading, setLoading] = useState(true),
     [loadError, setLoadError] = useState<string | null>(null),
     [reload, setReload] = useState(0),
-    [busy, setBusy] = useState<{
-      id: string;
-      decision: ApplicationDecision;
-    } | null>(null),
-    [actionError, setActionError] = useState<string | null>(null),
-    [notice, setNotice] = useState<string | null>(null),
-    [rejecting, setRejecting] = useState<string | null>(null),
-    [reason, setReason] = useState(''),
-    [reasonError, setReasonError] = useState<string | null>(null);
+    [status, setStatus] = useState<ApplicationStatus>('pending'),
+    [role, setRole] = useState<'' | ApplicationRole>(''),
+    [search, setSearch] = useState(''),
+    [page, setPage] = useState(1),
+    [open, setOpen] = useState<AccountApplication | null>(null),
+    [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     let current = true;
     setLoading(true);
     setLoadError(null);
-    service
-      .list(status)
-      .then(value => {
-        if (current) setItems(value);
+    Promise.all(statuses.map(value => service.list(value)))
+      .then(([pending, approved, rejected]) => {
+        if (current) setLists({ pending, approved, rejected });
       })
       .catch(failure => {
-        if (current) {
-          setItems(null);
-          setLoadError(message(failure));
-        }
+        if (current) setLoadError(message(failure));
       })
       .finally(() => {
         if (current) setLoading(false);
@@ -60,170 +73,269 @@ export function ApplicationsPanel({
     return () => {
       current = false;
     };
-  }, [service, status, reload]);
+  }, [service, reload]);
 
   useEffect(() => {
-    if (status === 'pending' && items !== null && !loading) {
-      onPendingCount(items.length);
-    }
-  }, [status, items, loading, onPendingCount]);
+    if (lists) onPendingCount(lists.pending.length);
+  }, [lists, onPendingCount]);
 
-  function selectTab(next: ApplicationStatus) {
-    if (next === status || busy) return;
-    setItems(null);
-    setStatus(next);
-    setActionError(null);
-    setNotice(null);
-    setRejecting(null);
-    setReasonError(null);
-  }
-
-  function openReject(id: string) {
-    setRejecting(id);
-    setReason('');
-    setReasonError(null);
-    setActionError(null);
-  }
+  const visible = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase('tr-TR');
+    return (lists?.[status] ?? []).filter(
+      item =>
+        (!role || item.role === role) &&
+        (!term ||
+          [item.fullName, item.contactName, item.email, item.username]
+            .join(' ')
+            .toLocaleLowerCase('tr-TR')
+            .includes(term)),
+    );
+  }, [lists, status, role, search]);
+  const lastPage = Math.max(1, Math.ceil(visible.length / pageSize));
+  const current = Math.min(page, lastPage);
 
   async function decide(
     application: AccountApplication,
     decision: ApplicationDecision,
+    reason: string,
   ) {
-    if (busy) return;
-    setBusy({ id: application.userId, decision });
-    setActionError(null);
-    setReasonError(null);
-    setNotice(null);
     try {
       await service.decide(application.userId, decision, reason);
-      setItems(current =>
-        current
-          ? current.filter(item => item.userId !== application.userId)
-          : current,
-      );
-      setRejecting(null);
-      setReason('');
-      setNotice(
-        decision === 'approve'
-          ? copy.applications.approved(application.fullName)
-          : copy.applications.rejected(application.fullName),
-      );
     } catch (failure) {
-      if (failure instanceof ApiError && failure.status === 409) {
-        setActionError(copy.applications.alreadyDecided);
-        setRejecting(null);
+      if (
+        failure instanceof ApiError &&
+        (failure.status === 409 || failure.status === 404)
+      ) {
+        setOpen(null);
+        setNotice(null);
+        setLoadError(
+          failure.status === 409 ? text.alreadyDecided : text.notFound,
+        );
         setReload(v => v + 1);
-      } else if (failure instanceof ApiError && failure.status === 404) {
-        setActionError(copy.applications.notFound);
-        setRejecting(null);
-        setReload(v => v + 1);
-      } else if (failure instanceof ApiError && failure.status === 422) {
-        setReasonError(failure.fields.reason || failure.message);
-      } else {
-        setActionError(message(failure));
+        return;
       }
-    } finally {
-      setBusy(null);
+      throw failure;
     }
+    setOpen(null);
+    setNotice(
+      decision === 'approve'
+        ? text.approved(application.fullName)
+        : text.rejected(application.fullName),
+    );
+    setReload(v => v + 1);
   }
 
+  const pending = lists?.pending ?? [];
+  const decided = (lists?.approved.length ?? 0) + (lists?.rejected.length ?? 0);
   return (
-    <main className="panel-content">
+    <main className="panel-content kit-screen">
       <header className="panel-header">
         <div>
-          <p className="eyebrow">{copy.applications.eyebrow}</p>
-          <h1>{copy.applications.title}</h1>
-          <p className="muted">{copy.applications.hint}</p>
+          <p className="eyebrow">{text.eyebrow}</p>
+          <h1>{text.title}</h1>
+          <p className="muted">{text.hint}</p>
         </div>
         <Button
           variant="secondary"
-          busy={loading && items !== null}
-          disabled={!!busy}
+          busy={loading && lists !== null}
           onClick={() => setReload(v => v + 1)}
         >
-          {copy.applications.refresh}
+          {text.refresh}
         </Button>
       </header>
-
-      <div
-        className="application-tabs"
-        role="tablist"
-        aria-label={copy.applications.title}
-      >
-        {tabs.map(value => (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            id={'application-tab-' + value}
-            aria-selected={status === value}
-            aria-controls="application-tabpanel"
-            className="application-tab"
-            disabled={!!busy && status !== value}
-            onClick={() => selectTab(value)}
-          >
-            {copy.applications.tabs[value]}
-          </button>
-        ))}
-      </div>
-
-      <section
-        id="application-tabpanel"
-        role="tabpanel"
-        aria-labelledby={'application-tab-' + status}
-        className="list-panel application-panel"
-      >
-        <Feedback message={notice} success />
-        <Feedback message={actionError} />
-        {items === null && loading ? (
+      <StatCards
+        loading={!lists}
+        items={[
+          {
+            label: text.stats.pending,
+            value: pending.length,
+            sub: pending.length
+              ? text.stats.oldest(hoursWaiting(pending))
+              : text.stats.none,
+            tone: 'warning',
+          },
+          {
+            label: text.stats.pendingClubs,
+            value: pending.filter(item => item.role === 'club').length,
+            sub: text.stats.pendingOrganizers(
+              pending.filter(item => item.role === 'organizer').length,
+            ),
+            tone: 'brand',
+          },
+          {
+            label: text.stats.approved,
+            value: lists?.approved.length ?? 0,
+            share: decided ? (lists?.approved.length ?? 0) / decided : 0,
+            tone: 'accent',
+          },
+          {
+            label: text.stats.rejected,
+            value: lists?.rejected.length ?? 0,
+            share: decided ? (lists?.rejected.length ?? 0) / decided : 0,
+            tone: 'danger',
+          },
+        ]}
+      />
+      <Feedback message={notice} success />
+      <section className="kit-panel" aria-label={text.title}>
+        <div className="kit-toolbar">
+          <FilterTabs
+            label={text.title}
+            value={status}
+            options={statuses.map(value => ({
+              value,
+              label: text.tabs[value],
+              count: lists?.[value].length,
+            }))}
+            onChange={value => {
+              setStatus(value);
+              setPage(1);
+            }}
+          />
+          <div className="kit-toolbar-end">
+            <select
+              className="kit-select"
+              aria-label={text.roleFilter}
+              value={role}
+              onChange={event => {
+                setRole(event.target.value as '' | ApplicationRole);
+                setPage(1);
+              }}
+            >
+              <option value="">{text.allRoles}</option>
+              <option value="club">{text.roles.club}</option>
+              <option value="organizer">{text.roles.organizer}</option>
+            </select>
+            <input
+              className="kit-search-input"
+              type="search"
+              aria-label={text.search}
+              placeholder={text.search}
+              value={search}
+              maxLength={100}
+              onChange={event => {
+                setSearch(event.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+        </div>
+        <Feedback message={loadError} />
+        {!lists && loading ? (
           <div className="empty" role="status">
             <span className="spinner" />
             <p>{copy.form.loading}</p>
           </div>
-        ) : items === null ? (
+        ) : !lists ? (
           <div className="empty">
-            <Feedback message={loadError} />
             <Button variant="secondary" onClick={() => setReload(v => v + 1)}>
               {copy.form.retry}
             </Button>
           </div>
-        ) : items.length ? (
+        ) : visible.length ? (
           <>
-            <Feedback message={loadError} />
-            <ul className="review-list">
-              {items.map(application => (
-                <ApplicationCard
-                  key={application.userId}
-                  application={application}
-                  busy={busy}
-                  rejecting={rejecting === application.userId}
-                  reason={reason}
-                  reasonError={
-                    rejecting === application.userId ? reasonError : null
-                  }
-                  onReason={value => {
-                    setReason(value);
-                    setReasonError(null);
-                  }}
-                  onApprove={() => decide(application, 'approve')}
-                  onOpenReject={() => openReject(application.userId)}
-                  onCancelReject={() => {
-                    setRejecting(null);
-                    setReasonError(null);
-                  }}
-                  onConfirmReject={() => decide(application, 'reject')}
-                />
-              ))}
-            </ul>
+            <div className="table-scroll">
+              <table className="kit-table">
+                <thead>
+                  <tr>
+                    <th>{text.columns.applicant}</th>
+                    <th>{text.columns.type}</th>
+                    <th>{text.columns.contact}</th>
+                    <th>{text.district}</th>
+                    <th>{text.columns.submitted}</th>
+                    <th>{text.columns.status}</th>
+                    <th className="align-right">{copy.panel.actions}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {slice(visible, current, pageSize).map(item => (
+                    <tr
+                      key={item.userId}
+                      className="kit-row-link"
+                      onClick={() => setOpen(item)}
+                    >
+                      <td>
+                        <div className="kit-identity">
+                          <Initials name={item.fullName} />
+                          <div>
+                            <strong>{item.fullName}</strong>
+                            <span>{item.contactName || text.missing}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="kit-badges">
+                          <Pill
+                            tone={item.role === 'club' ? 'brand' : 'warning'}
+                          >
+                            {text.roles[item.role]}
+                          </Pill>
+                          {item.footballType && (
+                            <Pill tone="muted">
+                              {copy.football.types[item.footballType]}
+                            </Pill>
+                          )}
+                        </div>
+                      </td>
+                      <td className="kit-soft">
+                        <div className="kit-stack">
+                          <span>{item.email || text.missing}</span>
+                          <span className="muted">{item.phone}</span>
+                        </div>
+                      </td>
+                      <td className="kit-soft">
+                        {item.district || text.missing}
+                      </td>
+                      <td className="kit-soft">{ago(item.submittedAt)}</td>
+                      <td>
+                        <Pill tone={statusTone(item.status)}>
+                          {text.tabs[item.status]}
+                        </Pill>
+                      </td>
+                      <td className="align-right">
+                        <button
+                          type="button"
+                          className="kit-action kit-action-primary"
+                          onClick={event => {
+                            event.stopPropagation();
+                            setOpen(item);
+                          }}
+                        >
+                          {item.status === 'pending' ? text.review : text.view}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pager
+              page={current}
+              pageSize={pageSize}
+              total={visible.length}
+              onPage={setPage}
+            />
           </>
         ) : (
           <div className="empty">
-            <Feedback message={loadError} />
-            <h2>{copy.applications.empty[status]}</h2>
-            <p className="muted">{copy.applications.emptyHint[status]}</p>
+            <h2>
+              {search || role ? copy.panel.emptySearch : text.empty[status]}
+            </h2>
+            <p className="muted">
+              {search || role
+                ? copy.panel.emptyFilterBody
+                : text.emptyHint[status]}
+            </p>
           </div>
         )}
       </section>
+      {open && (
+        <ApplicationDetail
+          application={open}
+          onClose={() => setOpen(null)}
+          onDecide={(decision, reason) => decide(open, decision, reason)}
+        />
+      )}
     </main>
   );
 }

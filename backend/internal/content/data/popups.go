@@ -9,14 +9,14 @@ import (
 )
 
 // Admin rows carry how often a popup was shown and to how many accounts.
-const popupColumns = `id,title,image_id,format,active,interval_minutes,max_views,
+const popupColumns = `id,title,image_id,format,active,interval_minutes,max_views,starts_at,ends_at,
 	COALESCE((SELECT sum(views) FROM popup_ad_views WHERE popup_id=popup_ads.id),0),
 	(SELECT count(*) FROM popup_ad_views WHERE popup_id=popup_ads.id),
 	created_at,updated_at`
 
 func popup(row scanner) (domain.Popup, error) {
 	var out domain.Popup
-	err := row.Scan(&out.ID, &out.Title, &out.ImageID, &out.Format, &out.Active, &out.IntervalMinutes, &out.MaxViews, &out.Views, &out.Viewers, &out.CreatedAt, &out.UpdatedAt)
+	err := row.Scan(&out.ID, &out.Title, &out.ImageID, &out.Format, &out.Active, &out.IntervalMinutes, &out.MaxViews, &out.StartsAt, &out.EndsAt, &out.Views, &out.Viewers, &out.CreatedAt, &out.UpdatedAt)
 	return out, found(err)
 }
 
@@ -54,13 +54,13 @@ func (r *Postgres) Popups(ctx context.Context, page int) (domain.Page[domain.Pop
 
 func (r *Postgres) SavePopup(ctx context.Context, in domain.Popup, create bool) (domain.Popup, error) {
 	if create {
-		return popup(r.db.QueryRowContext(ctx, `INSERT INTO popup_ads(id,title,image_id,format,active,interval_minutes,max_views)
-			VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING `+popupColumns,
-			in.ID, in.Title, in.ImageID, in.Format, in.Active, in.IntervalMinutes, in.MaxViews))
+		return popup(r.db.QueryRowContext(ctx, `INSERT INTO popup_ads(id,title,image_id,format,active,interval_minutes,max_views,starts_at,ends_at)
+			VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING `+popupColumns,
+			in.ID, in.Title, in.ImageID, in.Format, in.Active, in.IntervalMinutes, in.MaxViews, in.StartsAt, in.EndsAt))
 	}
-	return popup(r.db.QueryRowContext(ctx, `UPDATE popup_ads SET title=$2,image_id=$3,format=$4,active=$5,interval_minutes=$6,max_views=$7,updated_at=now()
+	return popup(r.db.QueryRowContext(ctx, `UPDATE popup_ads SET title=$2,image_id=$3,format=$4,active=$5,interval_minutes=$6,max_views=$7,starts_at=$8,ends_at=$9,updated_at=now()
 		WHERE id=$1 RETURNING `+popupColumns,
-		in.ID, in.Title, in.ImageID, in.Format, in.Active, in.IntervalMinutes, in.MaxViews))
+		in.ID, in.Title, in.ImageID, in.Format, in.Active, in.IntervalMinutes, in.MaxViews, in.StartsAt, in.EndsAt))
 }
 
 func (r *Postgres) DeletePopup(ctx context.Context, id string) error {
@@ -69,7 +69,7 @@ func (r *Postgres) DeletePopup(ctx context.Context, id string) error {
 
 // A popup is due for an account that has not seen it yet, or saw it fewer
 // times than the cap and longer ago than the interval.
-const popupDue = `p.active AND (v.popup_id IS NULL OR (v.views < p.max_views AND v.last_seen_at <= now() - make_interval(mins => p.interval_minutes)))`
+const popupDue = `p.active AND (p.starts_at IS NULL OR p.starts_at<=now()) AND (p.ends_at IS NULL OR p.ends_at>now()) AND (v.popup_id IS NULL OR (v.views < p.max_views AND v.last_seen_at <= now() - make_interval(mins => p.interval_minutes)))`
 
 func (r *Postgres) NextPopup(ctx context.Context, userID string) (domain.ShownPopup, bool, error) {
 	var out domain.ShownPopup

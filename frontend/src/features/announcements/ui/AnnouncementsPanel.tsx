@@ -1,24 +1,40 @@
 import { useEffect, useState } from 'react';
 import { Button } from '../../../shared/ui/Button';
 import { Feedback } from '../../../shared/ui/Feedback';
+import { Modal } from '../../../shared/ui/Modal';
 import { copy } from '../../../shared/lib/copy';
-import type { Announcement } from '../domain/models';
+import {
+  FilterTabs,
+  Pager,
+  Pill,
+  StatCards,
+  ago,
+  dateTime,
+  slice,
+  type Tone,
+} from '../../../shared/ui/kit';
+import type { Announcement, AnnouncementAudience } from '../domain/models';
 import type { AnnouncementService } from '../application/announcements-service';
-import { AnnouncementForm } from './AnnouncementForm';
+import {
+  AnnouncementComposer,
+  NotificationPhone,
+  audiences,
+} from './AnnouncementComposer';
 
-const excerptLength = 120;
+const text = copy.announcements;
+const pageSize = 12;
+const audienceTone: Record<AnnouncementAudience, Tone> = {
+  all: 'brand',
+  player: 'accent',
+  club: 'warning',
+  coach: 'info',
+  account: 'muted',
+};
 
-function date(value: string) {
-  return new Date(value).toLocaleString('tr-TR', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
-}
-
-function excerpt(value: string) {
-  return value.length > excerptLength
-    ? value.slice(0, excerptLength - 1) + '…'
-    : value;
+function target(item: Announcement) {
+  return item.audience === 'account'
+    ? item.targetEmail || text.audiences.account
+    : text.audiences[item.audience];
 }
 
 export function AnnouncementsPanel({
@@ -26,13 +42,15 @@ export function AnnouncementsPanel({
 }: {
   service: AnnouncementService;
 }) {
-  const [announcements, setAnnouncements] = useState<Announcement[] | null>(
-    null,
-  );
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [revision, setRevision] = useState(0);
+  const [items, setItems] = useState<Announcement[] | null>(null),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState<string | null>(null),
+    [notice, setNotice] = useState<string | null>(null),
+    [revision, setRevision] = useState(0),
+    [filter, setFilter] = useState<'' | AnnouncementAudience>(''),
+    [page, setPage] = useState(1),
+    [composing, setComposing] = useState(false),
+    [open, setOpen] = useState<Announcement | null>(null);
 
   useEffect(() => {
     let current = true;
@@ -41,7 +59,7 @@ export function AnnouncementsPanel({
     service
       .list()
       .then(value => {
-        if (current) setAnnouncements(value);
+        if (current) setItems(value);
       })
       .catch(failure => {
         if (current)
@@ -57,119 +75,219 @@ export function AnnouncementsPanel({
     };
   }, [service, revision]);
 
-  function handleSent(recipients: number) {
-    setNotice(copy.announcements.sent(recipients));
-    setRevision(value => value + 1);
-  }
+  const all = items ?? [];
+  const now = Date.now();
+  const recent = all.filter(
+    item => now - Date.parse(item.createdAt) < 30 * 86400000,
+  );
+  const reached = all.reduce((sum, item) => sum + item.recipients, 0);
+  const visible = all.filter(item => !filter || item.audience === filter);
+  const lastPage = Math.max(1, Math.ceil(visible.length / pageSize));
+  const current = Math.min(page, lastPage);
 
   return (
-    <main className="panel-content">
+    <main className="panel-content kit-screen">
       <header className="panel-header">
         <div>
-          <p className="eyebrow">{copy.announcements.eyebrow}</p>
-          <h1>{copy.announcements.title}</h1>
-          <p className="muted">{copy.announcements.hint}</p>
+          <p className="eyebrow">{text.eyebrow}</p>
+          <h1>{text.title}</h1>
+          <p className="muted">{text.hint}</p>
         </div>
-        <Button
-          variant="secondary"
-          busy={loading && announcements !== null}
-          onClick={() => setRevision(value => value + 1)}
-        >
-          {copy.announcements.refresh}
-        </Button>
+        <div className="action-row">
+          <Button
+            variant="secondary"
+            busy={loading && items !== null}
+            onClick={() => setRevision(v => v + 1)}
+          >
+            {text.refresh}
+          </Button>
+          <Button onClick={() => setComposing(true)}>+ {text.newButton}</Button>
+        </div>
       </header>
-
-      <section
-        className="gift-section"
-        aria-labelledby="announcement-form-title"
-      >
-        <div className="league-section-header">
-          <div>
-            <h2 id="announcement-form-title">{copy.announcements.formTitle}</h2>
-            <p className="muted">{copy.announcements.formHint}</p>
-          </div>
+      <StatCards
+        loading={!items}
+        items={[
+          {
+            label: text.stats.total,
+            value: all.length,
+            sub: text.stats.last(all[0] ? ago(all[0].createdAt) : '—'),
+            tone: 'brand',
+          },
+          {
+            label: text.stats.reached,
+            value: reached,
+            sub: text.stats.average(
+              all.length ? Math.round(reached / all.length) : 0,
+            ),
+            tone: 'accent',
+          },
+          {
+            label: text.stats.month,
+            value: recent.length,
+            sub: text.stats.monthReach(
+              recent.reduce((sum, item) => sum + item.recipients, 0),
+            ),
+            tone: 'info',
+          },
+          {
+            label: text.stats.direct,
+            value: all.filter(item => item.audience === 'account').length,
+            sub: text.stats.directSub,
+            tone: 'warning',
+          },
+        ]}
+      />
+      <Feedback message={notice} success />
+      <section className="kit-panel" aria-label={text.history}>
+        <div className="kit-toolbar">
+          <FilterTabs
+            label={text.audience}
+            value={filter}
+            options={[
+              {
+                value: '' as const,
+                label: copy.kit.all,
+                count: items ? all.length : undefined,
+              },
+              ...audiences.map(value => ({
+                value,
+                label: text.audienceShort[value],
+                count: items
+                  ? all.filter(item => item.audience === value).length
+                  : undefined,
+              })),
+            ]}
+            onChange={value => {
+              setFilter(value);
+              setPage(1);
+            }}
+          />
         </div>
-        <Feedback message={notice} success />
-        <AnnouncementForm service={service} onSent={handleSent} />
-      </section>
-
-      <section
-        className="list-panel announcement-history"
-        aria-labelledby="announcement-history"
-      >
-        <div className="league-section-header">
-          <div>
-            <h2 id="announcement-history">{copy.announcements.history}</h2>
-            <p className="muted">
-              {announcements
-                ? copy.panel.total(announcements.length)
-                : copy.form.loading}
-            </p>
-          </div>
-        </div>
-        {announcements === null && loading ? (
+        <Feedback message={error} />
+        {!items && loading ? (
           <div className="empty" role="status">
             <span className="spinner" />
             <p>{copy.form.loading}</p>
           </div>
-        ) : announcements === null ? (
-          <div className="empty">
-            <Feedback message={error} />
-            <Button
-              variant="secondary"
-              onClick={() => setRevision(value => value + 1)}
-            >
-              {copy.form.retry}
-            </Button>
-          </div>
-        ) : announcements.length ? (
+        ) : visible.length ? (
           <>
-            <Feedback message={error} />
-            <AnnouncementTable items={announcements} />
+            <div className="table-scroll">
+              <table className="kit-table">
+                <thead>
+                  <tr>
+                    <th>{text.columns.title}</th>
+                    <th>{text.columns.target}</th>
+                    <th>{text.columns.recipients}</th>
+                    <th>{text.columns.date}</th>
+                    <th className="align-right">{copy.panel.actions}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {slice(visible, current, pageSize).map(item => (
+                    <tr
+                      key={item.id}
+                      className="kit-row-link"
+                      onClick={() => setOpen(item)}
+                    >
+                      <td className="kit-wrap">
+                        <div className="ct-loop-text an-row">
+                          <strong>{item.title}</strong>
+                          <span className="muted">{item.body}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <Pill tone={audienceTone[item.audience]}>
+                          {target(item)}
+                        </Pill>
+                      </td>
+                      <td className="kit-soft">
+                        <strong className="an-count">
+                          {item.recipients.toLocaleString('tr-TR')}
+                        </strong>{' '}
+                        {text.accounts}
+                      </td>
+                      <td className="kit-soft" title={dateTime(item.createdAt)}>
+                        {ago(item.createdAt)}
+                      </td>
+                      <td className="align-right">
+                        <button
+                          type="button"
+                          className="kit-action kit-action-primary"
+                          onClick={event => {
+                            event.stopPropagation();
+                            setOpen(item);
+                          }}
+                        >
+                          {text.view}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Pager
+              page={current}
+              pageSize={pageSize}
+              total={visible.length}
+              onPage={setPage}
+            />
           </>
         ) : (
           <div className="empty">
-            <Feedback message={error} />
-            <h2>{copy.announcements.empty}</h2>
-            <p className="muted">{copy.announcements.emptyHint}</p>
+            <h2>{text.empty}</h2>
+            <p className="muted">{text.emptyHint}</p>
           </div>
         )}
       </section>
+      {composing && (
+        <AnnouncementComposer
+          service={service}
+          onClose={() => setComposing(false)}
+          onSent={recipients => {
+            setComposing(false);
+            setNotice(text.sent(recipients));
+            setRevision(v => v + 1);
+          }}
+        />
+      )}
+      {open && (
+        <Modal
+          title={open.title}
+          eyebrow={text.detailEyebrow}
+          size="lg"
+          onClose={() => setOpen(null)}
+        >
+          <div className="ct-editor">
+            <div className="kit-form">
+              <dl className="kit-details">
+                <div>
+                  <dt>{text.audience}</dt>
+                  <dd>{target(open)}</dd>
+                </div>
+                <div>
+                  <dt>{text.columns.recipients}</dt>
+                  <dd>
+                    {open.recipients.toLocaleString('tr-TR')} {text.accounts}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{text.columns.date}</dt>
+                  <dd>{dateTime(open.createdAt)}</dd>
+                </div>
+              </dl>
+              <div className="kit-note">
+                <span className="kit-form-title">{text.body}</span>
+                <p>{open.body}</p>
+              </div>
+              <p className="hint">{text.locked}</p>
+            </div>
+            <aside className="ct-preview">
+              <NotificationPhone title={open.title} body={open.body} />
+            </aside>
+          </div>
+        </Modal>
+      )}
     </main>
-  );
-}
-
-function AnnouncementTable({ items }: { items: Announcement[] }) {
-  return (
-    <div className="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>{copy.announcements.columns.title}</th>
-            <th>{copy.announcements.columns.body}</th>
-            <th>{copy.announcements.columns.target}</th>
-            <th>{copy.announcements.columns.recipients}</th>
-            <th>{copy.announcements.columns.date}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {items.map(item => (
-            <tr key={item.id}>
-              <td>
-                <strong>{item.title}</strong>
-              </td>
-              <td className="announcement-body">{excerpt(item.body)}</td>
-              <td>
-                {item.audience === 'account'
-                  ? item.targetEmail || copy.announcements.audiences.account
-                  : copy.announcements.audiences[item.audience]}
-              </td>
-              <td>{item.recipients.toLocaleString('tr-TR')}</td>
-              <td>{date(item.createdAt)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
   );
 }

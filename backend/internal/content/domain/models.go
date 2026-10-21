@@ -10,14 +10,29 @@ type Image struct {
 	Data     []byte
 }
 type Advertisement struct {
-	ID        string    `json:"id"`
-	Title     string    `json:"title"`
-	ImageID   string    `json:"imageId"`
-	Active    bool      `json:"active"`
-	SortOrder int       `json:"sortOrder"`
+	ID        string `json:"id"`
+	Title     string `json:"title"`
+	ImageID   string `json:"imageId"`
+	Active    bool   `json:"active"`
+	SortOrder int    `json:"sortOrder"`
+	Schedule
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
+
+// Schedule is when an item is live and how long it stays on screen in the
+// app's carousel. A nil start or end leaves that side open.
+type Schedule struct {
+	DisplaySeconds int        `json:"displaySeconds"`
+	StartsAt       *time.Time `json:"startsAt"`
+	EndsAt         *time.Time `json:"endsAt"`
+}
+
+const (
+	MinDisplaySeconds = 3
+	MaxDisplaySeconds = 30
+)
+
 type Article struct {
 	ID         string `json:"id"`
 	Title      string `json:"title"`
@@ -26,6 +41,9 @@ type Article struct {
 	ImageID    string `json:"imageId"`
 	Published  bool   `json:"published"`
 	ShowOnHome bool   `json:"showOnHome"`
+	// SortOrder is the priority in lists and the home carousel, lower first.
+	SortOrder int `json:"sortOrder"`
+	Schedule
 	// ReviewStatus is pending|approved|rejected; admin articles are always approved.
 	ReviewStatus string    `json:"reviewStatus"`
 	AuthorName   string    `json:"authorName"`

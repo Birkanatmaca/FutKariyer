@@ -13,7 +13,11 @@ import { useIsFocused } from '@react-navigation/native';
 import { useReducedMotion } from '../../../shared/lib/useReducedMotion';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space, type } from '../../../styles/tokens';
-import { advertisementAspectRatio, type Advertisement } from '../domain/models';
+import {
+  advertisementAspectRatio,
+  displayMs,
+  type Advertisement,
+} from '../domain/models';
 
 // One fixed-size rectangle that shows only the advertisement picture.
 // Several ads rotate inside the same slot; nothing else comes from the server.
@@ -41,22 +45,13 @@ export function AdvertisementBanner({
   useEffect(() => {
     if (!focused || !active || reduced || dragging || !rotating || width <= 0)
       return;
-    const timer = setInterval(() => {
+    const timer = setTimeout(() => {
       const next = (selected + 1) % items.length;
       scroll.current?.scrollTo({ x: next * width, animated: true });
       setSelected(next);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [
-    focused,
-    active,
-    reduced,
-    dragging,
-    rotating,
-    items.length,
-    width,
-    selected,
-  ]);
+    }, displayMs(items[selected], 5000));
+    return () => clearTimeout(timer);
+  }, [focused, active, reduced, dragging, rotating, items, width, selected]);
   useEffect(() => {
     scroll.current?.scrollTo({ x: 0, animated: false });
     setSelected(0);

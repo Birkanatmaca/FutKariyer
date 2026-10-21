@@ -227,11 +227,12 @@ func (h *Handler) saveAd(w http.ResponseWriter, r *http.Request) {
 		ImageID   string `json:"imageId"`
 		Active    bool   `json:"active"`
 		SortOrder int    `json:"sortOrder"`
+		domain.Schedule
 	}
 	if !decode(w, r, &in) {
 		return
 	}
-	out, err := h.service.SaveAd(r.Context(), domain.Advertisement{ID: r.PathValue("id"), Title: in.Title, ImageID: in.ImageID, Active: in.Active, SortOrder: in.SortOrder}, r.Method == "POST")
+	out, err := h.service.SaveAd(r.Context(), domain.Advertisement{ID: r.PathValue("id"), Title: in.Title, ImageID: in.ImageID, Active: in.Active, SortOrder: in.SortOrder, Schedule: in.Schedule}, r.Method == "POST")
 	if err != nil {
 		failure(w, err)
 		return
@@ -250,11 +251,18 @@ func (h *Handler) saveNews(w http.ResponseWriter, r *http.Request) {
 		ImageID    string `json:"imageId"`
 		Published  bool   `json:"published"`
 		ShowOnHome bool   `json:"showOnHome"`
+		// SortOrder is optional for older clients; it defaults to 100.
+		SortOrder *int `json:"sortOrder"`
+		domain.Schedule
 	}
 	if !decode(w, r, &in) {
 		return
 	}
-	out, err := h.service.SaveArticle(r.Context(), domain.Article{ID: r.PathValue("id"), Title: in.Title, Summary: in.Summary, Body: in.Body, ImageID: in.ImageID, Published: in.Published, ShowOnHome: in.ShowOnHome}, r.Method == "POST")
+	order := 100
+	if in.SortOrder != nil {
+		order = *in.SortOrder
+	}
+	out, err := h.service.SaveArticle(r.Context(), domain.Article{ID: r.PathValue("id"), Title: in.Title, Summary: in.Summary, Body: in.Body, ImageID: in.ImageID, Published: in.Published, ShowOnHome: in.ShowOnHome, SortOrder: order, Schedule: in.Schedule}, r.Method == "POST")
 	if err != nil {
 		failure(w, err)
 		return

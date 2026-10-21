@@ -28,6 +28,9 @@ type Account struct {
 	TrainingGroundName    string `json:"trainingGroundName"`
 	TrainingGroundAddress string `json:"trainingGroundAddress"`
 	TrainingSchedule      string `json:"trainingSchedule"`
+	// ApprovalStatus is approved, pending (application under review) or rejected.
+	ApprovalStatus string `json:"approvalStatus"`
+	Pro            bool   `json:"pro"`
 }
 type Page struct {
 	Items      []Account `json:"items"`
@@ -64,7 +67,10 @@ type UpdateInput struct {
 }
 
 func dto(record domain.Record) Account {
-	result := Account{PublicUser: auth.Public(record.User)}
+	result := Account{PublicUser: auth.Public(record.User), ApprovalStatus: record.ApprovalStatus, Pro: record.Pro}
+	if result.ApprovalStatus == "" {
+		result.ApprovalStatus = "approved"
+	}
 	if record.Club != nil {
 		result.FootballType = record.Club.FootballType
 		result.District = record.Club.District
@@ -81,6 +87,16 @@ func (s *Service) List(ctx context.Context, q domain.Query) (Page, error) {
 	if q.Page < 1 || q.Page > 1000000 || q.PageSize < 1 || q.PageSize > 100 || utf8.RuneCountInString(q.Search) > 100 {
 		return Page{}, auth.ValidationError{"pagination": "Sayfa 1–1000000, sayfa boyutu 1–100 ve arama en fazla 100 karakter olmalı."}
 	}
+	switch q.Role {
+	case "", "player", "coach", "club", "organizer", "admin":
+	default:
+		return Page{}, auth.ValidationError{"role": "Geçerli bir hesap türü seç."}
+	}
+	switch q.Status {
+	case "", "active", "inactive", "pending":
+	default:
+		return Page{}, auth.ValidationError{"status": "Geçerli bir durum seç."}
+	}
 	q.Search = strings.TrimSpace(q.Search)
 	page, err := s.repo.List(ctx, q)
 	if err != nil {
@@ -91,6 +107,11 @@ func (s *Service) List(ctx context.Context, q domain.Query) (Page, error) {
 		result.Items = append(result.Items, dto(record))
 	}
 	return result, nil
+}
+
+// Stats counts all accounts, or only clubs, for the cards above the tables.
+func (s *Service) Stats(ctx context.Context, clubOnly bool) (domain.Stats, error) {
+	return s.repo.Stats(ctx, clubOnly)
 }
 func (s *Service) record(ctx context.Context, id string, clubOnly bool) (domain.Record, error) {
 	record, err := s.repo.Get(ctx, id)
@@ -103,6 +124,9 @@ func (s *Service) Get(ctx context.Context, id string, clubOnly bool) (Account, e
 	record, err := s.record(ctx, id, clubOnly)
 	return dto(record), err
 }
+
+// Create is not exposed over HTTP; accounts sign up themselves. Tests and
+// server-side setup still use it.
 func (s *Service) Create(ctx context.Context, in CreateInput, clubOnly bool) (Account, error) {
 	if clubOnly {
 		in.Role = "club"

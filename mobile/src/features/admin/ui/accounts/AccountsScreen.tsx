@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { Text, View } from 'react-native';
-import { Plus, Search, Users } from 'lucide-react-native';
+import { Search, Users } from 'lucide-react-native';
 import { Field } from '../../../../shared/ui/Field';
 import { PageHeader } from '../../../../shared/ui/PageHeader';
 import { copy } from '../../../../shared/lib/copy';
@@ -29,7 +29,6 @@ export function AccountsScreen({
   onSection,
   changedAt,
   notice,
-  onCreate,
   onEdit,
   onOverview,
 }: {
@@ -38,7 +37,6 @@ export function AccountsScreen({
   onSection(section: AccountSection): void;
   changedAt?: number;
   notice?: string;
-  onCreate(section: AccountSection): void;
   onEdit(account: ManagedAccount): void;
   onOverview(account: ManagedAccount): void;
 }) {
@@ -110,12 +108,6 @@ export function AccountsScreen({
                 ? ''
                 : copy.admin.common.shown(list.items.length, list.total)}
             </Text>
-            <SmallButton
-              label={section === 'clubs' ? text.newClub : text.newUser}
-              tone="brand"
-              icon={Plus}
-              onPress={() => onCreate(section)}
-            />
           </View>
           {section === 'clubs' ? (
             <Text style={adminStyles.rowMeta}>{text.clubNote}</Text>

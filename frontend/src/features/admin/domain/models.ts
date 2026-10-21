@@ -9,6 +9,37 @@ export type ManagedAccount = Account & {
   trainingGroundName: string;
   trainingGroundAddress: string;
   trainingSchedule: string;
+  /** Older servers omit these two. */
+  approvalStatus?: 'approved' | 'pending' | 'rejected';
+  pro?: boolean;
+};
+export type AccountRoleFilter =
+  | ''
+  | 'player'
+  | 'coach'
+  | 'club'
+  | 'organizer'
+  | 'admin';
+export type AccountStatusFilter = '' | 'active' | 'inactive' | 'pending';
+export type AccountQuery = {
+  page: number;
+  search: string;
+  role: AccountRoleFilter;
+  status: AccountStatusFilter;
+};
+export const accountPageSize = 12;
+export type AccountStats = {
+  total: number;
+  active: number;
+  inactive: number;
+  pending: number;
+  verified: number;
+  pro: number;
+  newLast7Days: number;
+  newLast30Days: number;
+  byRole: Record<string, number>;
+  byFootballType: Record<string, number>;
+  inLeagues: number;
 };
 export type AccountPage = {
   items: ManagedAccount[];
@@ -29,7 +60,6 @@ export type AccountForm = {
   trainingGroundName: string;
   trainingGroundAddress: string;
   trainingSchedule: string;
-  password: string;
   role: 'player' | 'coach' | 'club' | 'organizer';
   active: boolean;
   verified: boolean;
@@ -103,14 +133,10 @@ export type ProStatus = {
 export type ProAction = 'grant' | 'revoke';
 export const proEligibleRoles: readonly string[] = ['player', 'club', 'coach'];
 export interface AdminRepository {
-  list(
-    section: AdminSection,
-    page: number,
-    search: string,
-  ): Promise<AccountPage>;
+  list(section: AdminSection, query: AccountQuery): Promise<AccountPage>;
+  stats(section: AdminSection): Promise<AccountStats>;
   get(section: AdminSection, id: string): Promise<ManagedAccount>;
   clubOverview(id: string): Promise<ClubOverview>;
-  create(section: AdminSection, form: AccountForm): Promise<ManagedAccount>;
   update(
     section: AdminSection,
     id: string,

@@ -1,16 +1,19 @@
 import type {
   AccountForm,
+  AccountQuery,
   AdminRepository,
   AdminSection,
   ProAction,
 } from '../domain/models';
 export function createAdminService(repository: AdminRepository) {
   return {
-    list: (section: AdminSection, page: number, search: string) =>
-      repository.list(section, page, search.trim()),
+    list: (section: AdminSection, query: AccountQuery) =>
+      repository.list(section, { ...query, search: query.search.trim() }),
+    stats: (section: AdminSection) => repository.stats(section),
     get: (section: AdminSection, id: string) => repository.get(section, id),
     clubOverview: (id: string) => repository.clubOverview(id),
-    save(section: AdminSection, form: AccountForm, id?: string) {
+    // Accounts sign up themselves (21 Oct 2026); the panel only edits them.
+    save(section: AdminSection, form: AccountForm, id: string) {
       const normalized = {
         ...form,
         fullName: form.fullName.trim(),
@@ -24,9 +27,7 @@ export function createAdminService(repository: AdminRepository) {
         trainingGroundAddress: form.trainingGroundAddress.trim(),
         trainingSchedule: form.trainingSchedule.trim(),
       };
-      return id
-        ? repository.update(section, id, normalized)
-        : repository.create(section, normalized);
+      return repository.update(section, id, normalized);
     },
     remove: (section: AdminSection, id: string) =>
       repository.remove(section, id),

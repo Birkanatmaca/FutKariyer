@@ -1,18 +1,20 @@
 import { ApiError, request } from '../../../shared/api/client';
 import { isAccount } from '../../../shared/domain/account';
 import { copy } from '../../../shared/lib/copy';
-import type {
-  AccountPage,
-  AdminRepository,
-  AdminSection,
-  ClubOverview,
-  ClubOverviewApplication,
-  ClubOverviewFixture,
-  ClubOverviewLeague,
-  ClubOverviewNews,
-  ClubOverviewProfile,
-  ManagedAccount,
-  ProStatus,
+import {
+  accountPageSize,
+  type AccountPage,
+  type AccountStats,
+  type AdminRepository,
+  type AdminSection,
+  type ClubOverview,
+  type ClubOverviewApplication,
+  type ClubOverviewFixture,
+  type ClubOverviewLeague,
+  type ClubOverviewNews,
+  type ClubOverviewProfile,
+  type ManagedAccount,
+  type ProStatus,
 } from '../domain/models';
 function isManaged(value: unknown): value is ManagedAccount {
   return (
@@ -171,14 +173,38 @@ function proPath(id: string) {
 function path(section: AdminSection, id?: string) {
   return '/v1/admin/' + section + (id ? '/' + encodeURIComponent(id) : '');
 }
+function isCountMap(value: unknown): value is Record<string, number> {
+  return isRecord(value) && Object.values(value).every(isCount);
+}
+function isStats(value: unknown): value is AccountStats {
+  return (
+    isRecord(value) &&
+    [
+      'total',
+      'active',
+      'inactive',
+      'pending',
+      'verified',
+      'pro',
+      'newLast7Days',
+      'newLast30Days',
+      'inLeagues',
+    ].every(key => isCount(value[key])) &&
+    isCountMap(value.byRole) &&
+    isCountMap(value.byFootballType)
+  );
+}
 export const adminRepository: AdminRepository = {
-  async list(section, page, search) {
+  async list(section, query) {
+    const params = new URLSearchParams({
+      page: String(query.page),
+      pageSize: String(accountPageSize),
+      search: query.search,
+    });
+    if (query.role) params.set('role', query.role);
+    if (query.status) params.set('status', query.status);
     const result = await request<AccountPage>(
-      path(section) +
-        '?page=' +
-        page +
-        '&pageSize=20&search=' +
-        encodeURIComponent(search),
+      path(section) + '?' + params.toString(),
     );
     if (
       !result ||
@@ -202,6 +228,13 @@ export const adminRepository: AdminRepository = {
       (await request<{ account: unknown }>(path(section, id))).account,
     );
   },
+  async stats(section) {
+    const result = await request<{ stats?: unknown }>(path(section) + '/stats');
+    if (!result || !isStats(result.stats)) {
+      throw new ApiError(copy.form.unexpected);
+    }
+    return result.stats;
+  },
   async clubOverview(id) {
     const result = await request<unknown>(
       '/v1/admin/club-overviews/' + encodeURIComponent(id),
@@ -210,45 +243,6 @@ export const adminRepository: AdminRepository = {
       throw new ApiError(copy.form.unexpected);
     }
     return result;
-  },
-  async create(section, form) {
-    const {
-      fullName,
-      email,
-      username,
-      footballType,
-      district,
-      description,
-      venueName,
-      venueAddress,
-      trainingGroundName,
-      trainingGroundAddress,
-      trainingSchedule,
-      password,
-      role,
-    } = form;
-    return checked(
-      (
-        await request<{ account: unknown }>(path(section), {
-          method: 'POST',
-          body: {
-            fullName,
-            email,
-            username,
-            footballType,
-            district,
-            description,
-            venueName,
-            venueAddress,
-            trainingGroundName,
-            trainingGroundAddress,
-            trainingSchedule,
-            password,
-            role,
-          },
-        })
-      ).account,
-    );
   },
   async update(section, id, form) {
     const {

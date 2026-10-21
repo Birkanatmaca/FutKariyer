@@ -31,6 +31,8 @@ function valid(value: unknown): value is Popup {
     typeof item.active === 'boolean' &&
     between(item.intervalMinutes, popupLimits.interval) &&
     between(item.maxViews, popupLimits.views) &&
+    (item.startsAt === null || Number.isFinite(Date.parse(item.startsAt))) &&
+    (item.endsAt === null || Number.isFinite(Date.parse(item.endsAt))) &&
     count(item.views) &&
     count(item.viewers) &&
     typeof item.createdAt === 'string' &&
@@ -58,6 +60,15 @@ export const popupRepository: PopupRepository = {
       throw new ApiError(copy.form.unexpected);
     return result;
   },
+  async listAll() {
+    const items: Popup[] = [];
+    for (let page = 1; page <= 50; page++) {
+      const result = await popupRepository.list(page);
+      items.push(...result.items);
+      if (page >= result.totalPages) break;
+    }
+    return items;
+  },
   async save(form, id) {
     const out = await request<{ popup?: unknown }>(path(id), {
       method: id ? 'PUT' : 'POST',
@@ -67,6 +78,8 @@ export const popupRepository: PopupRepository = {
         active: form.active,
         intervalMinutes: form.intervalMinutes,
         maxViews: form.maxViews,
+        startsAt: form.startsAt,
+        endsAt: form.endsAt,
       },
     });
     if (!out || !valid(out.popup)) throw new ApiError(copy.form.unexpected);

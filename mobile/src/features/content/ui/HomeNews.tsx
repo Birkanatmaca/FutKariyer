@@ -15,10 +15,11 @@ import { useIsFocused } from '@react-navigation/native';
 import { useReducedMotion } from '../../../shared/lib/useReducedMotion';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
-import type { Article } from '../domain/models';
+import { displayMs, type Article } from '../domain/models';
 import { NewsArt } from './NewsArt';
 
-// How long one story stays before the bar under it fills and the next slides in.
+// How long one story stays before the bar under it fills and the next slides
+// in, unless the admin set the story's own time.
 const DURATION = 6000;
 
 // Home news as an auto-advancing story strip: one card at a time, and a row of
@@ -125,9 +126,10 @@ function NewsCarousel({
       progress.stopAnimation();
       return;
     }
-    let left = DURATION;
+    const duration = displayMs(items[selected], DURATION);
+    let left = duration;
     progress.stopAnimation(value => {
-      left = DURATION * (1 - value);
+      left = duration * (1 - value);
     });
     const animation = Animated.timing(progress, {
       toValue: 1,
@@ -141,7 +143,7 @@ function NewsCarousel({
       }
     });
     return () => animation.stop();
-  }, [playing, selected, progress, go]);
+  }, [playing, selected, progress, go, items]);
 
   const strip = rotating ? [...items, items[0]] : items;
   const fill = progress.interpolate({

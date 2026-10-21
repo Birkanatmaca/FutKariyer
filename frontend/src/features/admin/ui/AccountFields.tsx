@@ -1,94 +1,73 @@
 import { copy } from '../../../shared/lib/copy';
 import { Field } from '../../../shared/ui/Field';
+import { ToggleRow } from '../../../shared/ui/kit';
 import type { AccountForm, AdminSection } from '../domain/models';
+
+// Edits an existing account; accounts are created by signing up in the app.
 export function AccountFields({
   form,
   onChange,
   section,
-  editing,
   busy,
   errors,
 }: {
   form: AccountForm;
   onChange(value: AccountForm): void;
   section: AdminSection;
-  editing: boolean;
   busy: boolean;
   errors: Record<string, string>;
 }) {
-  const club = section === 'clubs';
-  const organizer = !club && form.role === 'organizer';
+  const club = section === 'clubs' || form.role === 'club';
+  const organizer = form.role === 'organizer';
   const usesUsername = club || organizer;
+  const verifiable =
+    form.role === 'club' || form.role === 'coach' || form.role === 'organizer';
   function update<K extends keyof AccountForm>(key: K, value: AccountForm[K]) {
     onChange({ ...form, [key]: value });
   }
   return (
-    <>
-      {!club && !editing && (
-        <div className="field">
-          <label htmlFor="new-account-role">{copy.editor.accountType}</label>
-          <select
-            id="new-account-role"
-            value={form.role}
-            disabled={busy}
-            onChange={event =>
-              update(
-                'role',
-                event.target.value as 'player' | 'coach' | 'organizer',
-              )
-            }
-          >
-            <option value="player">{copy.roles.player}</option>
-            <option value="coach">{copy.roles.coach}</option>
-            <option value="organizer">{copy.roles.organizer}</option>
-          </select>
-          {errors.role && (
-            <p className="field-error" role="alert">
-              {errors.role}
-            </p>
-          )}
-        </div>
-      )}
-      <Field
-        label={club ? copy.editor.clubName : copy.form.fullName}
-        value={form.fullName}
-        onChange={event => update('fullName', event.target.value)}
-        required
-        minLength={2}
-        maxLength={80}
-        disabled={busy}
-        error={errors.fullName}
-      />
-      {usesUsername && (
+    <div className="kit-form">
+      <p className="kit-form-title">{copy.editor.identityTitle}</p>
+      <div className="rt-form">
         <Field
-          label={copy.editor.username}
-          value={form.username}
-          onChange={event => update('username', event.target.value)}
-          autoCapitalize="none"
-          autoComplete="off"
-          spellCheck={false}
+          label={club ? copy.editor.clubName : copy.form.fullName}
+          value={form.fullName}
+          onChange={event => update('fullName', event.target.value)}
           required
-          minLength={3}
-          maxLength={32}
+          minLength={2}
+          maxLength={80}
           disabled={busy}
-          error={errors.username}
-          hint={copy.editor.usernameHelp}
+          error={errors.fullName}
         />
-      )}
-      <Field
-        label={usesUsername ? copy.editor.optionalEmail : copy.form.email}
-        type="email"
-        value={form.email}
-        onChange={event => update('email', event.target.value)}
-        required={!usesUsername}
-        autoCapitalize="none"
-        spellCheck={false}
-        maxLength={254}
-        disabled={busy}
-        error={errors.email}
-      />
-      {club && (
-        <>
+        {usesUsername && (
+          <Field
+            label={copy.editor.username}
+            value={form.username}
+            onChange={event => update('username', event.target.value)}
+            autoCapitalize="none"
+            autoComplete="off"
+            spellCheck={false}
+            required
+            minLength={3}
+            maxLength={32}
+            disabled={busy}
+            error={errors.username}
+            hint={copy.editor.usernameHelp}
+          />
+        )}
+        <Field
+          label={usesUsername ? copy.editor.optionalEmail : copy.form.email}
+          type="email"
+          value={form.email}
+          onChange={event => update('email', event.target.value)}
+          required={!usesUsername}
+          autoCapitalize="none"
+          spellCheck={false}
+          maxLength={254}
+          disabled={busy}
+          error={errors.email}
+        />
+        {club && (
           <div className="field">
             <label htmlFor="club-football-type">
               {copy.editor.footballType}
@@ -118,142 +97,117 @@ export function AccountFields({
               </p>
             )}
           </div>
-          <p className="notice">{copy.editor.clubPublicInfo}</p>
-          <Field
-            label={copy.editor.district}
-            value={form.district}
-            onChange={event => update('district', event.target.value)}
-            maxLength={80}
-            disabled={busy}
-            error={errors.district}
-          />
-          <div className="field">
-            <label htmlFor="club-description">
-              {copy.editor.clubDescription}
-            </label>
-            <textarea
-              id="club-description"
-              value={form.description}
-              maxLength={1000}
-              rows={4}
-              disabled={busy}
-              onChange={event => update('description', event.target.value)}
-            />
-            {errors.description && (
-              <p className="field-error" role="alert">
-                {errors.description}
-              </p>
-            )}
-          </div>
-          <Field
-            label={copy.editor.venueName}
-            value={form.venueName}
-            onChange={event => update('venueName', event.target.value)}
-            maxLength={120}
-            disabled={busy}
-            error={errors.venueName}
-          />
-          <Field
-            label={copy.editor.venueAddress}
-            value={form.venueAddress}
-            onChange={event => update('venueAddress', event.target.value)}
-            maxLength={240}
-            disabled={busy}
-            error={errors.venueAddress}
-          />
-          <Field
-            label={copy.editor.trainingGroundName}
-            value={form.trainingGroundName}
-            onChange={event => update('trainingGroundName', event.target.value)}
-            maxLength={120}
-            disabled={busy}
-            error={errors.trainingGroundName}
-          />
-          <Field
-            label={copy.editor.trainingGroundAddress}
-            value={form.trainingGroundAddress}
-            onChange={event =>
-              update('trainingGroundAddress', event.target.value)
-            }
-            maxLength={240}
-            disabled={busy}
-            error={errors.trainingGroundAddress}
-          />
-          <Field
-            label={copy.editor.trainingSchedule}
-            value={form.trainingSchedule}
-            onChange={event => update('trainingSchedule', event.target.value)}
-            maxLength={240}
-            disabled={busy}
-            error={errors.trainingSchedule}
-          />
-        </>
-      )}
-      {!editing && (
-        <>
-          <Field
-            label={copy.form.password}
-            type="password"
-            value={form.password}
-            onChange={event => update('password', event.target.value)}
-            required
-            minLength={10}
-            autoComplete="new-password"
-            disabled={busy}
-            error={errors.password}
-            hint={copy.form.passwordHelp}
-          />
-          {club && <p className="notice">{copy.editor.credentialsHelp}</p>}
-          {organizer && (
-            <p className="notice">{copy.editor.organizerVerificationHelp}</p>
-          )}
-        </>
-      )}
-      {editing && (
-        <div>
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={form.active}
-              onChange={event => update('active', event.target.checked)}
-              disabled={busy}
-            />
-            <span>{copy.editor.access}</span>
-          </label>
-          <p className="hint">{copy.editor.accessHelp}</p>
-          {errors.active && (
-            <p className="field-error" role="alert">
-              {errors.active}
-            </p>
-          )}
-        </div>
-      )}
-      {editing &&
-        (form.role === 'club' ||
-          form.role === 'coach' ||
-          form.role === 'organizer') && (
-          <div>
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={form.verified}
-                onChange={event => update('verified', event.target.checked)}
-                disabled={busy}
-              />
-              <span>{copy.editor.verified}</span>
-            </label>
-            <p className="hint">
-              {organizer
-                ? copy.editor.organizerVerificationHelp
-                : copy.editor.verificationHelp}
-            </p>
-            {errors.verified && (
-              <p className="field-error" role="alert">
-                {errors.verified}
-              </p>
-            )}
-          </div>
         )}
-    </>
+      </div>
+      {club && (
+        <>
+          <p className="kit-form-title">{copy.editor.clubPublicTitle}</p>
+          <p className="hint">{copy.editor.clubPublicInfo}</p>
+          <div className="rt-form">
+            <Field
+              label={copy.editor.district}
+              value={form.district}
+              onChange={event => update('district', event.target.value)}
+              maxLength={80}
+              disabled={busy}
+              error={errors.district}
+            />
+            <Field
+              label={copy.editor.trainingSchedule}
+              value={form.trainingSchedule}
+              onChange={event => update('trainingSchedule', event.target.value)}
+              maxLength={240}
+              disabled={busy}
+              error={errors.trainingSchedule}
+            />
+            <div className="field rt-wide">
+              <label htmlFor="club-description">
+                {copy.editor.clubDescription}
+              </label>
+              <textarea
+                id="club-description"
+                value={form.description}
+                maxLength={1000}
+                rows={3}
+                disabled={busy}
+                onChange={event => update('description', event.target.value)}
+              />
+              {errors.description && (
+                <p className="field-error" role="alert">
+                  {errors.description}
+                </p>
+              )}
+            </div>
+            <Field
+              label={copy.editor.venueName}
+              value={form.venueName}
+              onChange={event => update('venueName', event.target.value)}
+              maxLength={120}
+              disabled={busy}
+              error={errors.venueName}
+            />
+            <Field
+              label={copy.editor.venueAddress}
+              value={form.venueAddress}
+              onChange={event => update('venueAddress', event.target.value)}
+              maxLength={240}
+              disabled={busy}
+              error={errors.venueAddress}
+            />
+            <Field
+              label={copy.editor.trainingGroundName}
+              value={form.trainingGroundName}
+              onChange={event =>
+                update('trainingGroundName', event.target.value)
+              }
+              maxLength={120}
+              disabled={busy}
+              error={errors.trainingGroundName}
+            />
+            <Field
+              label={copy.editor.trainingGroundAddress}
+              value={form.trainingGroundAddress}
+              onChange={event =>
+                update('trainingGroundAddress', event.target.value)
+              }
+              maxLength={240}
+              disabled={busy}
+              error={errors.trainingGroundAddress}
+            />
+          </div>
+        </>
+      )}
+      <p className="kit-form-title">{copy.editor.accessTitle}</p>
+      <ToggleRow
+        label={copy.editor.access}
+        hint={copy.editor.accessHelp}
+        checked={form.active}
+        onChange={value => update('active', value)}
+        disabled={busy}
+      />
+      {errors.active && (
+        <p className="field-error" role="alert">
+          {errors.active}
+        </p>
+      )}
+      {verifiable && (
+        <ToggleRow
+          label={copy.editor.verified}
+          hint={
+            organizer
+              ? copy.editor.organizerVerificationHelp
+              : copy.editor.verificationHelp
+          }
+          checked={form.verified}
+          onChange={value => update('verified', value)}
+          disabled={busy}
+        />
+      )}
+      {errors.verified && (
+        <p className="field-error" role="alert">
+          {errors.verified}
+        </p>
+      )}
+    </div>
   );
 }
