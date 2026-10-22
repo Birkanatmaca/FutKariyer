@@ -112,6 +112,7 @@ import {
   SocialFeedScreen,
   SocialThreadScreen,
   SocialPublishScreen,
+  SocialProfileScreen,
   createSocialService,
   socialRepository,
 } from '../features/social';
@@ -249,6 +250,8 @@ type NewsRoutes = { NewsList: undefined; NewsDetail: { id: string } };
 type SocialRoutes = {
   SocialFeed: { publishedAt?: number } | undefined;
   SocialThread: { id: string };
+  // A post author's profile (22 Oct 2026).
+  SocialProfile: { id: string };
   SocialPublish: undefined;
   // Header shortcuts (19 Oct 2026): open inside the Social stack so back
   // returns to the feed and the Social tab stays selected.
@@ -1341,6 +1344,13 @@ function ProfileNavigator() {
               id={route.params.id}
               service={socialService}
               onBack={() => navigation.goBack()}
+              onOpenProfile={id =>
+                navigationRef.navigate('Social', {
+                  screen: 'SocialProfile',
+                  params: { id },
+                  initial: false,
+                })
+              }
             />
           ) : null
         }
@@ -1540,6 +1550,7 @@ function SocialFeedRoute({
   onCompose,
   onRequests,
   onOpenProfile,
+  onOpenAuthor,
   onVisitors,
   onUpgrade,
 }: {
@@ -1549,6 +1560,7 @@ function SocialFeedRoute({
   onCompose(): void;
   onRequests(): void;
   onOpenProfile(kind: DiscoveryKind, id: string): void;
+  onOpenAuthor(id: string): void;
   onVisitors(): void;
   onUpgrade(): void;
 }) {
@@ -1567,6 +1579,7 @@ function SocialFeedRoute({
         requestsLoadedAt={requests.loadedAt}
         onRequests={delegate ? undefined : onRequests}
         onMenu={() => setMenuOpen(true)}
+        onOpenProfile={onOpenAuthor}
       />
       <SocialSidebar
         visible={menuOpen}
@@ -1601,6 +1614,7 @@ function SocialNavigator() {
             onOpen={id => navigation.navigate('SocialThread', { id })}
             onCompose={() => navigation.navigate('SocialPublish')}
             onRequests={() => navigation.navigate('SocialConnections')}
+            onOpenAuthor={id => navigation.navigate('SocialProfile', { id })}
             onOpenProfile={(kind, id) =>
               navigation.navigate('SocialDiscover', {
                 screen: 'DiscoveryProfile',
@@ -1664,12 +1678,9 @@ function SocialNavigator() {
                   | undefined
               )?.navigate('More', { screen: 'Pro', initial: false })
             }
-            onOpenProfile={(kind, id) =>
-              navigation.navigate('SocialDiscover', {
-                screen: 'DiscoveryProfile',
-                params: { kind, id },
-                initial: false,
-              })
+            // Visitors of any role open as social profiles (22 Oct 2026).
+            onOpenProfile={(_kind, id) =>
+              navigation.navigate('SocialProfile', { id })
             }
           />
         )}
@@ -1682,6 +1693,32 @@ function SocialNavigator() {
             id={route.params.id}
             service={socialService}
             onBack={() => navigation.goBack()}
+            onOpenProfile={id => navigation.push('SocialProfile', { id })}
+          />
+        )}
+      </SocialStack.Screen>
+      <SocialStack.Screen name="SocialProfile">
+        {({ navigation, route }) => (
+          <SocialProfileScreen
+            token={token}
+            userId={route.params.id}
+            service={socialService}
+            onBack={() => navigation.goBack()}
+            onOpenPost={id => navigation.push('SocialThread', { id })}
+            onOpenDiscovery={(kind, id) =>
+              navigation.navigate('SocialDiscover', {
+                screen: 'DiscoveryProfile',
+                params: { kind, id },
+                initial: false,
+              })
+            }
+            onOwnProfile={() =>
+              (
+                navigation.getParent() as
+                  | BottomTabNavigationProp<MainRoutes>
+                  | undefined
+              )?.navigate('Profile')
+            }
           />
         )}
       </SocialStack.Screen>

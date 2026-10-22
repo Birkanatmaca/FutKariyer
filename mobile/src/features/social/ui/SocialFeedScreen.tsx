@@ -56,6 +56,7 @@ export function SocialFeedScreen({
   requestsLoadedAt = 0,
   onRequests,
   onMenu,
+  onOpenProfile,
 }: {
   token: string;
   service: SocialService;
@@ -70,6 +71,8 @@ export function SocialFeedScreen({
   // Absent for a coach running a club account: the club's requests stay private.
   onRequests?: () => void;
   onMenu(): void;
+  // A post's photo or name opens its author's profile (22 Oct 2026).
+  onOpenProfile?(userId: string): void;
 }) {
   // Oyunlar left this screen for its own hub page on 19 Oct 2026.
   const [scope, setScope] = useState<FeedScope>('explore');
@@ -346,6 +349,9 @@ export function SocialFeedScreen({
             busy={!!busy}
             onLike={() => like(item.id, item.liked)}
             onReplies={() => onOpen(item.id)}
+            onAuthor={
+              onOpenProfile ? () => onOpenProfile(item.author.id) : undefined
+            }
             onFollow={() => follow(item.author.id, item.author.following)}
             onDelete={() => setDeleting(item.id)}
             onMore={() =>

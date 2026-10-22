@@ -32,12 +32,15 @@ export function SocialThreadScreen({
   id,
   service,
   onBack,
+  onOpenProfile,
 }: {
   token: string;
   name: string;
   id: string;
   service: SocialService;
   onBack(): void;
+  // The post's or a reply's author photo or name opens their profile.
+  onOpenProfile?(userId: string): void;
 }) {
   const post = useSocialPost(service, token, id);
   const replies = useSocialList(
@@ -151,6 +154,11 @@ export function SocialThreadScreen({
                   service={service}
                   busy={busy || sending}
                   onLike={() => like()}
+                  onAuthor={
+                    onOpenProfile && post.data
+                      ? () => post.data && onOpenProfile(post.data.author.id)
+                      : undefined
+                  }
                   onDelete={() => setDeleteTarget({ id, reply: false })}
                   onMore={() =>
                     post.data &&
@@ -186,6 +194,9 @@ export function SocialThreadScreen({
             service={service}
             busy={busy || sending}
             onDelete={() => setDeleteTarget({ id: item.id, reply: true })}
+            onAuthor={
+              onOpenProfile ? () => onOpenProfile(item.author.id) : undefined
+            }
             onMore={() =>
               setModerating({
                 kind: 'reply',

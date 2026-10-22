@@ -59,6 +59,8 @@ export function createSocialService(repository: SocialRepository) {
     releaseMedia: (media: SelectedMedia) => repository.releaseMedia(media),
     mediaSource: (token: string, id: string) =>
       repository.mediaSource(token, id),
+    profile: (token: string, userId: string) =>
+      repository.profile(token, userId),
     follow: (token: string, id: string, following: boolean) =>
       repository.follow(token, id, following),
     deletePost: (token: string, id: string) => repository.deletePost(token, id),

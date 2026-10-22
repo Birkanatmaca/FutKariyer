@@ -11,6 +11,7 @@ import type {
   SocialAuthor,
   SocialPage,
   SocialPost,
+  SocialProfile,
   SocialReply,
   SocialRepository,
 } from '../domain/models';
@@ -40,6 +41,17 @@ function authorValid(value: unknown): value is SocialAuthor {
       )) &&
     (author.licenseStatus === undefined ||
       ['unknown', 'licensed', 'unlicensed'].includes(author.licenseStatus))
+  );
+}
+function profileValid(value: unknown): value is SocialProfile {
+  const profile = value as SocialProfile;
+  return (
+    authorValid(profile) &&
+    countValid(profile.posts) &&
+    countValid(profile.followers) &&
+    countValid(profile.followingCount) &&
+    typeof profile.self === 'boolean' &&
+    typeof profile.discovery === 'boolean'
   );
 }
 function mediaValid(value: unknown): boolean {
@@ -167,6 +179,15 @@ export const socialRepository: SocialRepository = {
   pickMedia,
   releaseMedia,
   mediaSource: (token, id) => mediaSource(token, path(id) + '/media'),
+  async profile(token, userId) {
+    const result = await request<{ profile: unknown }>(
+      '/v1/social/users/' + encodeURIComponent(userId) + '/profile',
+      { token },
+    );
+    if (!result || !profileValid(result.profile))
+      throw new ApiError(copy.social.profileError);
+    return result.profile;
+  },
   async follow(token, id, following) {
     const result = await request<{ following: unknown }>(
       '/v1/social/users/' + encodeURIComponent(id) + '/follow',

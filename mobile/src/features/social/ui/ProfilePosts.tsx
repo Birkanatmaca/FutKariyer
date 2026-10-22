@@ -18,6 +18,7 @@ export function ProfilePosts({
   service,
   onOpen,
   onCompose,
+  flush,
 }: {
   token: string;
   userId: string;
@@ -25,6 +26,8 @@ export function ProfilePosts({
   onOpen(id: string): void;
   // Own profile: start a new post from here.
   onCompose?(): void;
+  // Inside a padded screen: no extra side padding.
+  flush?: boolean;
 }) {
   const posts = useSocialList(
     useCallback(
@@ -66,7 +69,7 @@ export function ProfilePosts({
     }
   }
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, flush && styles.flush]}>
       {onCompose ? (
         <Button label={copy.social.profileCompose} onPress={onCompose} />
       ) : null}
@@ -127,6 +130,7 @@ export function ProfilePosts({
 
 const styles = StyleSheet.create({
   root: { gap: space.md, paddingHorizontal: space.xl, paddingTop: space.md },
+  flush: { paddingHorizontal: 0, paddingTop: 0 },
   loader: { paddingVertical: space.xxl },
   empty: {
     paddingHorizontal: space.xl,

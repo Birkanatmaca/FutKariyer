@@ -314,6 +314,23 @@ export const copy = {
     follow: 'Takip et',
     unfollow: 'Takibi bırak',
     followed: 'Takip ediliyor',
+    openProfile: (name: string) => name + ' profilini aç',
+    profileTitle: 'Profil',
+    profileError: 'Profil yüklenemedi. Biraz sonra tekrar dene.',
+    profilePosts: 'Gönderi',
+    profileFollowers: 'Takipçi',
+    profileFollowing: 'Takip',
+    profileFootball: 'Futbol profili',
+    profileLicensed: 'Lisanslı',
+    profileUnlicensed: 'Lisanssız',
+    profileOwn: 'Profilime git',
+    profileVisitNote:
+      'Ziyaretin profil sahibinin Ziyaretçiler listesinde görünür.',
+    profilePostsTab: 'Gönderiler',
+    profileMediaTab: 'Fotoğraf ve video',
+    profileMediaEmpty: 'Henüz paylaşılan fotoğraf veya video yok.',
+    profileOpenPhoto: 'Fotoğrafı aç',
+    profileOpenVideo: 'Videoyu aç',
     compose: 'Gönderi oluştur',
     composeTitle: 'Yeni gönderi',
     composePrompt: 'Ne paylaşmak istersin?',
@@ -2138,15 +2155,7 @@ export const copy = {
       team: string,
       played: number,
       points: number,
-    ) =>
-      position +
-      '. ' +
-      team +
-      ', ' +
-      played +
-      ' maç, ' +
-      points +
-      ' puan',
+    ) => position + '. ' + team + ', ' + played + ' maç, ' + points + ' puan',
     generateTitle: 'Fikstür oluştur',
     generateHelp:
       'Kabul edilen takımlar için her takımın birbiriyle oynadığı fikstür hazırlanır. Takımlara bildirim gider.',
@@ -2209,8 +2218,7 @@ export const copy = {
     invitationTitle: 'Turnuva daveti',
     invitationNote:
       'Bu turnuvaya davet edildin. Daveti Turnuva başvurularım ekranından yanıtla.',
-    declinedNote:
-      'Daveti reddettin; turnuva açıksa yine de başvurabilirsin.',
+    declinedNote: 'Daveti reddettin; turnuva açıksa yine de başvurabilirsin.',
     acceptInvite: 'Kabul et',
     declineInvite: 'Reddet',
     acceptInviteTitle: 'Daveti kabul et',

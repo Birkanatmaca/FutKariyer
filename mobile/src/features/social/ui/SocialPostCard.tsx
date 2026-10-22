@@ -34,6 +34,7 @@ export function SocialPostCard({
   token,
   service,
   framed,
+  onAuthor,
 }: {
   item: SocialPost | SocialReply;
   busy?: boolean;
@@ -47,46 +48,59 @@ export function SocialPostCard({
   service: SocialService;
   // Feed cards: rounded surface card with a one-comment preview.
   framed?: boolean;
+  // Opens the author's profile from the photo or name (22 Oct 2026).
+  onAuthor?(): void;
 }) {
   const post = 'likeCount' in item ? item : null;
   return (
     <View style={[styles.card, framed && styles.framed]}>
       <View style={styles.row}>
-        <Avatar
-          name={item.author.fullName}
-          uri={avatarUrl(item.author.id, item.author.avatarVersion)}
-          size={44}
-          square={item.author.role === 'club'}
-        />
-        <View style={styles.identity}>
-          <View style={styles.nameRow}>
-            <Text style={styles.name}>{item.author.fullName}</Text>
-            {item.author.verified && (
-              <BadgeCheck
-                accessibilityLabel={copy.social.verified}
-                size={16}
-                color={colors.accent}
-              />
-            )}
-            {item.author.isPro ? <ProBadge /> : null}
-          </View>
-          <Text style={styles.meta}>
-            {copy.roles[item.author.role]} · {copy.social.date(item.createdAt)}
-          </Text>
-          {item.author.footballType &&
-          item.author.footballType !== 'unknown' ? (
-            <Text style={styles.authorType}>
-              {copy.football.types[item.author.footballType]}
-              {item.author.licenseStatus &&
-              item.author.licenseStatus !== 'unknown'
-                ? ' · ' +
-                  copy.playerProfile.licenseDeclaration +
-                  ': ' +
-                  copy.football.licenseStatuses[item.author.licenseStatus]
-                : ''}
+        <Pressable
+          accessibilityRole={onAuthor ? 'link' : undefined}
+          accessibilityLabel={
+            onAuthor ? copy.social.openProfile(item.author.fullName) : undefined
+          }
+          disabled={!onAuthor}
+          onPress={onAuthor}
+          style={styles.author}
+        >
+          <Avatar
+            name={item.author.fullName}
+            uri={avatarUrl(item.author.id, item.author.avatarVersion)}
+            size={44}
+            square={item.author.role === 'club'}
+          />
+          <View style={styles.identity}>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{item.author.fullName}</Text>
+              {item.author.verified && (
+                <BadgeCheck
+                  accessibilityLabel={copy.social.verified}
+                  size={16}
+                  color={colors.accent}
+                />
+              )}
+              {item.author.isPro ? <ProBadge /> : null}
+            </View>
+            <Text style={styles.meta}>
+              {copy.roles[item.author.role]} ·{' '}
+              {copy.social.date(item.createdAt)}
             </Text>
-          ) : null}
-        </View>
+            {item.author.footballType &&
+            item.author.footballType !== 'unknown' ? (
+              <Text style={styles.authorType}>
+                {copy.football.types[item.author.footballType]}
+                {item.author.licenseStatus &&
+                item.author.licenseStatus !== 'unknown'
+                  ? ' · ' +
+                    copy.playerProfile.licenseDeclaration +
+                    ': ' +
+                    copy.football.licenseStatuses[item.author.licenseStatus]
+                  : ''}
+              </Text>
+            ) : null}
+          </View>
+        </Pressable>
         {!item.owned && onFollow ? (
           <Pressable
             accessibilityRole="button"
@@ -184,6 +198,12 @@ export function SocialPostCard({
   );
 }
 const styles = StyleSheet.create({
+  author: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+  },
   framed: {
     paddingVertical: space.lg,
     paddingHorizontal: space.lg,

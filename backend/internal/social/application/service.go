@@ -240,3 +240,13 @@ func (s *Service) DeleteReply(ctx context.Context, userID, postID, id string) er
 	}
 	return s.repo.DeleteReply(ctx, userID, postID, id)
 }
+
+// Profile opens an author's social profile; viewing someone else's records a
+// profile view for them.
+func (s *Service) Profile(ctx context.Context, viewerID, userID string) (domain.Profile, error) {
+	reader, ok := s.repo.(domain.ProfileReader)
+	if !ok || !idPattern.MatchString(userID) {
+		return domain.Profile{}, domain.ErrNotFound
+	}
+	return reader.Profile(ctx, viewerID, userID)
+}

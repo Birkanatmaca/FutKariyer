@@ -4,6 +4,7 @@ export { SocialFeedScreen } from './ui/SocialFeedScreen';
 export { SocialThreadScreen } from './ui/SocialThreadScreen';
 export { SocialPublishScreen } from './ui/SocialPublishScreen';
 export { ProfilePosts } from './ui/ProfilePosts';
+export { SocialProfileScreen } from './ui/SocialProfileScreen';
 export { PostMediaThumb } from './ui/PostMediaThumb';
 export {
   useProfilePostMedia,

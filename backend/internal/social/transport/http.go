@@ -105,6 +105,14 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 		w.Header().Set("Content-Type", media.MIME)
 		http.ServeContent(w, r, "media", time.Time{}, bytes.NewReader(media.Data))
 	})
+	mux.HandleFunc("GET /v1/social/users/{id}/profile", func(w http.ResponseWriter, r *http.Request) {
+		out, err := service.Profile(r.Context(), viewerID(r), r.PathValue("id"))
+		if err != nil {
+			failure(w, err)
+			return
+		}
+		write(w, 200, map[string]any{"profile": out})
+	})
 	mux.HandleFunc("GET /v1/social/users/{id}/posts", func(w http.ResponseWriter, r *http.Request) {
 		out, err := service.UserPosts(r.Context(), viewerID(r), r.PathValue("id"), r.URL.Query().Get("cursor"), r.URL.Query().Get("filter"))
 		if err != nil {

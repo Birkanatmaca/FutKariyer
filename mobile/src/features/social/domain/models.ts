@@ -61,6 +61,16 @@ export type SocialReply = {
   owned: boolean;
 };
 export type SocialPage<T> = { items: T[]; nextCursor: string };
+// An author's social profile, opened from a post's name or photo (22 Oct
+// 2026). Opening someone else's records a visit in their Ziyaretçiler.
+export type SocialProfile = SocialAuthor & {
+  posts: number;
+  followers: number;
+  followingCount: number;
+  self: boolean;
+  // The viewer may also open the author's discovery profile.
+  discovery: boolean;
+};
 export interface SocialRepository {
   feed(
     token: string,
@@ -81,6 +91,7 @@ export interface SocialRepository {
     showOnProfile?: boolean,
   ): Promise<SocialPost>;
   follow(token: string, id: string, following: boolean): Promise<boolean>;
+  profile(token: string, userId: string): Promise<SocialProfile>;
   pickMedia(kind: MediaKind): Promise<SelectedMedia | null>;
   releaseMedia(media: SelectedMedia): void;
   mediaSource(token: string, id: string): Promise<MediaSource>;
