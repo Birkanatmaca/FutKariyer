@@ -28,6 +28,11 @@ import {
   leagueRepository,
 } from '../features/leagues';
 import {
+  OrganizersPanel,
+  createOrganizerService,
+  organizerRepository,
+} from '../features/organizers';
+import {
   PaymentsPanel,
   createPaymentService,
   paymentsRepository,
@@ -85,6 +90,7 @@ const contentService = createContentService(contentRepository);
 // Popup images use the same content image store as banner ads.
 const popupService = createPopupService(popupRepository, contentService);
 const leagueService = createLeagueService(leagueRepository);
+const organizerService = createOrganizerService(organizerRepository);
 const paymentService = createPaymentService(paymentsRepository);
 const giftService = createGiftService(giftsRepository);
 const ratingService = createRatingService(ratingRepository);
@@ -206,6 +212,7 @@ export function App() {
     route === 'popups' ||
     route === 'news' ||
     route === 'leagues' ||
+    route === 'organizers' ||
     route === 'payments' ||
     route === 'gifts' ||
     route === 'rating' ||
@@ -251,6 +258,8 @@ export function App() {
         <ReportsPanel service={reportsService} onOpenCount={setOpenReports} />
       ) : section === 'leagues' ? (
         <LeaguesPanel service={leagueService} />
+      ) : section === 'organizers' ? (
+        <OrganizersPanel service={organizerService} />
       ) : section === 'payments' ? (
         <PaymentsPanel service={paymentService} />
       ) : section === 'gifts' ? (

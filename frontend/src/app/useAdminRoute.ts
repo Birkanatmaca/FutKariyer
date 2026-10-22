@@ -9,6 +9,7 @@ export type PanelSection =
   | 'popups'
   | 'news'
   | 'leagues'
+  | 'organizers'
   | 'payments'
   | 'gifts'
   | 'rating'
@@ -36,6 +37,7 @@ function currentRoute(): Route {
   if (path === '/securityadmin/popups') return 'popups';
   if (path === '/securityadmin/news') return 'news';
   if (path === '/securityadmin/leagues') return 'leagues';
+  if (path === '/securityadmin/organizers') return 'organizers';
   if (path === '/securityadmin/payments') return 'payments';
   if (path === '/securityadmin/gifts') return 'gifts';
   if (path === '/securityadmin/rating') return 'rating';

@@ -9,6 +9,15 @@ function adminEntryRedirect(): Plugin {
   const configure = (server: ViteDevServer | PreviewServer) => {
     server.middlewares.use((request, response, next) => {
       const url = new URL(request.url || '/', 'http://localhost');
+      // The organizer area (22 Oct 2026) is the organizer.html entry page.
+      if (
+        url.pathname === '/organizasyon' ||
+        url.pathname.startsWith('/organizasyon/')
+      ) {
+        request.url = '/securityadmin/organizer.html';
+        next();
+        return;
+      }
       if (url.pathname === '/securityadmin') {
         response.writeHead(307, { Location: '/securityadmin/' + url.search });
         response.end();
@@ -34,6 +43,14 @@ const proxy = {
 export default defineConfig({
   base: '/securityadmin/',
   plugins: [adminEntryRedirect()],
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        organizer: 'organizer.html',
+      },
+    },
+  },
   server: { proxy },
   preview: { proxy },
 });

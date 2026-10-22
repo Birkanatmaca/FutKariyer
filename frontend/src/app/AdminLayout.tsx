@@ -9,7 +9,10 @@ import type { PanelSection } from './useAdminRoute';
 // and security & monitoring.
 const groups: { key: keyof typeof copy.panel.groups; items: PanelSection[] }[] =
   [
-    { key: 'accounts', items: ['users', 'clubs', 'applications'] },
+    {
+      key: 'accounts',
+      items: ['users', 'clubs', 'organizers', 'applications'],
+    },
     { key: 'content', items: ['news', 'ads', 'popups', 'announcements'] },
     { key: 'football', items: ['leagues', 'rating'] },
     { key: 'revenue', items: ['payments', 'gifts'] },
