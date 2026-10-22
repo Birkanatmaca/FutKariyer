@@ -1705,10 +1705,11 @@ function SocialNavigator() {
             service={socialService}
             onBack={() => navigation.goBack()}
             onOpenPost={id => navigation.push('SocialThread', { id })}
-            onOpenDiscovery={(kind, id) =>
+            onOpenDiscovery={(role, id) =>
               navigation.navigate('SocialDiscover', {
                 screen: 'DiscoveryProfile',
-                params: { kind, id },
+                // Discovery sections are plural: players, clubs, coaches.
+                params: { kind: `${role}s` as DiscoveryKind, id },
                 initial: false,
               })
             }
