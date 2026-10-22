@@ -248,6 +248,7 @@ type Notification struct {
 	Body        string
 	ResourceID  string
 	SourceKey   string
+	ActorID     string
 	CreatedAt   time.Time
 	Read        bool
 }

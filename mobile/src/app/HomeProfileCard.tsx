@@ -71,6 +71,8 @@ export function HomeProfileCard({
   onRetry(): void;
 }) {
   const avatarSource = useAvatarSource(avatarUri);
+  // A photo that fails to load falls back to the initial, not an empty ring.
+  const [failedSource, setFailedSource] = useState<typeof avatarSource>();
   const [size, setSize] = useState({ width: 0, height: 0 });
   return (
     <View
@@ -99,11 +101,12 @@ export function HomeProfileCard({
       >
         <View style={styles.avatarRing}>
           <View style={styles.avatar}>
-            {avatarSource ? (
+            {avatarSource && failedSource !== avatarSource ? (
               <Image
                 source={avatarSource}
                 style={StyleSheet.absoluteFill}
                 resizeMode="cover"
+                onError={() => setFailedSource(avatarSource)}
               />
             ) : (
               <Text style={styles.initial}>{initial}</Text>
@@ -139,7 +142,12 @@ export function HomeProfileCard({
                     : value.toLocaleString('tr-TR')}
                 </Text>
               </View>
-              <Text numberOfLines={1} style={styles.label}>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+                style={styles.label}
+              >
                 {label}
               </Text>
             </>

@@ -197,7 +197,7 @@ func (r *Postgres) CreateRequest(ctx context.Context, playerID, clubID, requestI
 	}
 	request.CreatedAt = request.CreatedAt.UTC()
 	request.UpdatedAt = request.UpdatedAt.UTC()
-	if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewTeamApplicationReceived(clubID, requestID)); err != nil {
+	if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewTeamApplicationReceived(clubID, requestID, playerID)); err != nil {
 		return domain.JoinRequest{}, domain.Quota{}, err
 	}
 	quota = domain.NewQuota(quota.Used+1, quota.Purchased, quota.Earned, quota.Pro)
@@ -276,7 +276,7 @@ func (r *Postgres) DecideRequest(ctx context.Context, clubID, requestID, decisio
 			return domain.JoinRequest{}, err
 		}
 	}
-	if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewTeamApplicationDecision(item.PlayerID, item.ID, decision)); err != nil {
+	if err = notificationsdata.CreateInTx(ctx, tx, notificationsdomain.NewTeamApplicationDecision(item.PlayerID, item.ID, item.ClubID, decision)); err != nil {
 		return domain.JoinRequest{}, err
 	}
 	item.CreatedAt, item.UpdatedAt = item.CreatedAt.UTC(), item.UpdatedAt.UTC()

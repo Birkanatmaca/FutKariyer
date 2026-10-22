@@ -32,7 +32,8 @@ export function HomeNews({
 }: {
   items: Article[];
   imageUrl(id: string): string;
-  onNews(): void;
+  // Without an id: the news list; a slide passes its article's id.
+  onNews(id?: string): void;
 }) {
   return (
     <View style={styles.section}>
@@ -40,7 +41,7 @@ export function HomeNews({
         accessibilityRole="button"
         accessibilityLabel={copy.news.all}
         style={styles.heading}
-        onPress={onNews}
+        onPress={() => onNews()}
       >
         <Text accessibilityRole="header" style={styles.title}>
           {copy.news.title}
@@ -66,7 +67,7 @@ function NewsCarousel({
 }: {
   items: Article[];
   imageUrl(id: string): string;
-  onNews(): void;
+  onNews(id?: string): void;
 }) {
   const scroll = useRef<ScrollView>(null);
   const progress = useRef(new Animated.Value(0)).current;
@@ -195,7 +196,7 @@ function NewsCarousel({
             article={article}
             uri={article.imageId ? imageUrl(article.imageId) : ''}
             width={width}
-            onPress={onNews}
+            onPress={() => onNews(article.id)}
             bar={
               rotating ? (
                 <View style={styles.bar}>

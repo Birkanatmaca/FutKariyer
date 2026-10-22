@@ -56,7 +56,7 @@ export function HomeScreen({
   giftsService: GiftsService;
   notificationsService: { unreadCount(token: string): Promise<number> };
   onProfile(): void;
-  onNews(): void;
+  onNews(id?: string): void;
   // The profile views metric opens the visitors screen.
   onVisitors?(): void;
   // Header shortcuts: team application rights and the notification center.

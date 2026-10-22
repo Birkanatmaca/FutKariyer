@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Shield, Trophy } from 'lucide-react-native';
 import { CoachTeamView, type ClubService } from '../features/clubs';
@@ -22,14 +22,22 @@ export function CoachTeamTab({
   onSwitch,
   onInvitations,
   onLeagues,
+  open,
+  onOpenRights,
 }: {
   token: string;
   clubService: ClubService;
   onSwitch(clubId: string): Promise<void>;
   onInvitations(): void;
   onLeagues(): void;
+  // A team picked elsewhere (Lig ara) opens in the Takımlar directory.
+  open?: { id: string; at: number };
+  onOpenRights?(): void;
 }) {
-  const [tab, setTab] = useState<Tab>('mine');
+  const [tab, setTab] = useState<Tab>(open ? 'teams' : 'mine');
+  useEffect(() => {
+    if (open) setTab('teams');
+  }, [open]);
   const switcher = (
     <View style={styles.segments} accessibilityRole="tablist">
       {tabs.map(({ key, icon: Icon }) => {
@@ -56,7 +64,10 @@ export function CoachTeamTab({
       })}
     </View>
   );
-  if (tab === 'teams') return <TeamsScreen header={switcher} />;
+  if (tab === 'teams')
+    return (
+      <TeamsScreen header={switcher} open={open} onOpenRights={onOpenRights} />
+    );
   return (
     <Screen>
       <Brand mark={false} />

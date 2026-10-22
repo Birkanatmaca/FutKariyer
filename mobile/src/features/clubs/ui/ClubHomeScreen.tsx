@@ -36,7 +36,7 @@ export function ClubHomeScreen({
   onLinkTff(): void;
   onLeagues(): void;
   onTeamRequests(): void;
-  onNews(): void;
+  onNews(id?: string): void;
   onComposeNews(): void;
   onMyNews(): void;
   onDiscover(): void;

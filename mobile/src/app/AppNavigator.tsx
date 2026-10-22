@@ -437,10 +437,12 @@ function MainTabs() {
                     initial: false,
                   })
                 }
-                onNews={() =>
+                onNews={id =>
                   navigation.navigate('More', {
                     screen: 'News',
-                    params: { screen: 'NewsList' },
+                    params: id
+                      ? { screen: 'NewsDetail', params: { id } }
+                      : { screen: 'NewsList' },
                     initial: false,
                   })
                 }
@@ -518,10 +520,12 @@ function MainTabs() {
                 }
                 onNotifications={() => navigation.navigate('Notifications')}
                 onProfile={() => navigation.navigate('Profile')}
-                onNews={() =>
+                onNews={id =>
                   navigation.navigate('More', {
                     screen: 'News',
-                    params: { screen: 'NewsList' },
+                    params: id
+                      ? { screen: 'NewsDetail', params: { id } }
+                      : { screen: 'NewsList' },
                     initial: false,
                   })
                 }
@@ -540,7 +544,7 @@ function MainTabs() {
           component={LeaguesNavigator}
           options={{ popToTopOnBlur: true }}
         />
-        {member ? (
+        {member && (!delegate || delegate.permissions.includes('social')) ? (
           <Tabs.Screen
             name="Social"
             component={SocialNavigator}
@@ -566,6 +570,13 @@ function MainTabs() {
                   })
                 }
                 onLeagues={() => navigation.navigate('Leagues')}
+                open={route.params?.open}
+                onOpenRights={() =>
+                  navigation.navigate('More', {
+                    screen: 'TeamRights',
+                    initial: false,
+                  })
+                }
               />
             ) : (
               <TeamsScreen
@@ -909,7 +920,12 @@ function MoreNavigator() {
               token={token}
               id={route.params.id}
               service={tournamentsService}
-              club={user?.role === 'club' ? clubEntrySource : undefined}
+              club={
+                user?.role === 'club' &&
+                (!delegate || delegate.permissions.includes('tournaments'))
+                  ? clubEntrySource
+                  : undefined
+              }
               onBack={() => navigation.goBack()}
               onEntries={() => navigation.navigate('TournamentEntries')}
             />
@@ -968,22 +984,34 @@ function NotificationsTab({
           ? openMore({ screen: 'Staff' })
           : undefined
       }
-      onOpenProfile={(id, role) =>
-        openMore({
-          screen: 'Discover',
-          params: {
-            screen: 'DiscoveryProfile',
-            params: {
-              id,
-              kind:
-                role === 'club'
-                  ? 'clubs'
-                  : role === 'coach'
-                  ? 'coaches'
-                  : 'players',
-            },
-          },
+      // Any follower opens as a social profile: discovery rules would refuse
+      // a club or coach following another club or coach (22 Oct 2026).
+      onOpenProfile={id =>
+        navigation.navigate('Social', {
+          screen: 'SocialProfile',
+          params: { id },
+          initial: false,
         })
+      }
+      onOpenTeamApplications={() =>
+        user?.role === 'player'
+          ? openMore({ screen: 'TeamApplications' })
+          : user?.role === 'club' &&
+            (!user.delegate ||
+              user.delegate.permissions.includes('applications'))
+          ? openMore({ screen: 'TeamJoinRequests' })
+          : undefined
+      }
+      onOpenPayment={pro =>
+        user?.delegate
+          ? undefined
+          : openMore({ screen: pro ? 'Pro' : 'TeamRights' })
+      }
+      onOpenNews={() =>
+        user?.role === 'club' &&
+        (!user.delegate || user.delegate.permissions.includes('news'))
+          ? openMore({ screen: 'ClubNewsMine' })
+          : undefined
       }
       onFollowBack={id =>
         socialService.follow(token, id, true).then(() => undefined)
@@ -1727,9 +1755,12 @@ function SocialNavigator() {
   );
 }
 function LeaguesNavigator() {
-  const { token, user } = useAuth();
+  const { token, user, delegate } = useAuth();
   // Clubs get Maçlarım; their crest is the account photo.
   const club = user?.role === 'club';
+  // A coach running the club enters tournaments only with that permission.
+  const canEnter =
+    club && (!delegate || delegate.permissions.includes('tournaments'));
   const account = useAccountProfile(accountRepository, club ? token : null);
   if (!token) return null;
   return (
@@ -1804,7 +1835,7 @@ function LeaguesNavigator() {
             token={token}
             id={route.params.id}
             service={tournamentsService}
-            club={club ? clubEntrySource : undefined}
+            club={canEnter ? clubEntrySource : undefined}
             onBack={() => navigation.goBack()}
             onEntries={() =>
               (

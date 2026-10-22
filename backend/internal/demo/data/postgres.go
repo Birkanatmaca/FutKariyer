@@ -277,8 +277,8 @@ func (b *batch) notification(n domain.Notification) {
 		at := n.CreatedAt.Add(3 * time.Hour)
 		readAt = &at
 	}
-	b.exec(`INSERT INTO notifications(id,recipient_id,kind,title,body,resource_id,source_key,created_at,read_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-		n.ID, n.RecipientID, n.Kind, n.Title, n.Body, n.ResourceID, n.SourceKey, n.CreatedAt, readAt)
+	b.exec(`INSERT INTO notifications(id,recipient_id,kind,title,body,resource_id,source_key,created_at,read_at,actor_id) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,NULLIF($10,''))`,
+		n.ID, n.RecipientID, n.Kind, n.Title, n.Body, n.ResourceID, n.SourceKey, n.CreatedAt, readAt, n.ActorID)
 }
 
 // followTarget makes demo players follow an existing account, like its latest

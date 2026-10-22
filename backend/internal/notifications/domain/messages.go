@@ -1,24 +1,28 @@
 package domain
 
-func NewTeamApplicationReceived(recipientID, requestID string) NewNotification {
+// The player and club names come from the actor (22 Oct 2026), so a card
+// says who applied or answered.
+func NewTeamApplicationReceived(recipientID, requestID, playerID string) NewNotification {
 	return NewNotification{
 		RecipientID: recipientID,
 		Kind:        KindTeamApplication,
+		ActorID:     playerID,
 		Title:       "Yeni takım başvurusu",
-		Body:        "Takımına katılmak isteyen bir sporcu var. Başvuru detaylarını inceleyebilirsin.",
+		Body:        Actor + " takımına katılmak istiyor. Başvuruyu inceleyebilirsin.",
 		ResourceID:  requestID,
 		SourceKey:   "team-request:" + requestID + ":new",
 	}
 }
 
-func NewTeamApplicationDecision(recipientID, requestID, decision string) NewNotification {
-	title, body := "Takım başvurun yanıtlandı", "Kulüp başvurunu reddetti. Diğer takımları inceleyip yeni bir başvuru gönderebilirsin."
+func NewTeamApplicationDecision(recipientID, requestID, clubID, decision string) NewNotification {
+	title, body := "Takım başvurun yanıtlandı", Actor+" başvurunu reddetti. Diğer takımları inceleyip yeni bir başvuru gönderebilirsin."
 	if decision == "accepted" {
-		title, body = "Takım başvurun kabul edildi", "Kulüp başvurunu kabul etti. Takım başvurularım alanından ayrıntıları görebilirsin."
+		title, body = "Takım başvurun kabul edildi", Actor+" başvurunu kabul etti. Artık kadrosundasın."
 	}
 	return NewNotification{
 		RecipientID: recipientID,
 		Kind:        KindTeamApplication,
+		ActorID:     clubID,
 		Title:       title,
 		Body:        body,
 		ResourceID:  requestID,

@@ -73,6 +73,8 @@ export function LeaguesSearchScreen({
   const [query, setQuery] = useState('');
   const [rows, setRows] = useState<{ title: string; rows: Row[] }[]>([]);
   const [busy, setBusy] = useState(false);
+  // Every source failed: say so instead of "no results".
+  const [failed, setFailed] = useState(false);
   // Inline callbacks change every render; keep them out of the search effect.
   const open = useRef({
     onOpenCompetition,
@@ -102,22 +104,28 @@ export function LeaguesSearchScreen({
     if (query.length < minSearchLength) {
       setRows([]);
       setBusy(false);
+      setFailed(false);
       return;
     }
     setBusy(true);
+    setFailed(false);
     async function run() {
-      if (!catalog.current) {
+      let known = catalog.current;
+      if (!known) {
         const [competitions, leagues] = await Promise.all([
           footballService.competitions(token).catch(() => null),
           leagueService.list(token, 1).catch(() => null),
         ]);
-        catalog.current = {
+        const next = {
           competitions: competitions
             ? [...competitions.competitions, ...competitions.cups]
             : [],
           ankara: competitions?.ankara.name ?? copy.footballData.ankaraTitle,
           leagues: leagues?.items ?? [],
         };
+        // A failed load is retried on the next search instead of staying empty.
+        if (competitions && leagues) catalog.current = next;
+        known = next;
       }
       const [teams, players] = await Promise.all([
         teamsService.list(token, 1, query).catch(() => null),
@@ -134,7 +142,18 @@ export function LeaguesSearchScreen({
           })
           .catch(() => null),
       ]);
-      const known = catalog.current;
+      if (
+        current &&
+        teams === null &&
+        players === null &&
+        !known.competitions.length &&
+        !known.leagues.length
+      ) {
+        setRows([]);
+        setFailed(true);
+        setBusy(false);
+        return;
+      }
       const leagueRows: Row[] = [
         ...known.competitions
           .filter(item => matchesSearch(query, item.name, item.country))
@@ -196,7 +215,10 @@ export function LeaguesSearchScreen({
       setBusy(false);
     }
     run().catch(() => {
-      if (current) setBusy(false);
+      if (current) {
+        setFailed(true);
+        setBusy(false);
+      }
     });
     return () => {
       current = false;
@@ -234,6 +256,8 @@ export function LeaguesSearchScreen({
         <Text style={styles.hint}>{copy.leagues.searchHint}</Text>
       ) : busy && !rows.length ? (
         <ActivityIndicator color={colors.brand} />
+      ) : failed ? (
+        <Text style={styles.hint}>{copy.leagues.searchFailed}</Text>
       ) : !rows.length ? (
         <Text style={styles.hint}>{copy.leagues.searchNone}</Text>
       ) : (

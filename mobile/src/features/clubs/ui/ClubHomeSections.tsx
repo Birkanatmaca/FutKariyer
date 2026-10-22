@@ -28,7 +28,7 @@ export function ClubNewsSection({
 }: {
   token: string | null;
   service: ContentService;
-  onNews(): void;
+  onNews(id?: string): void;
   onCompose?(): void;
   onMine?(): void;
 }) {

@@ -78,9 +78,8 @@ export function SwitchClubButton({
         {busy && only ? (
           <ActivityIndicator size="small" color={colors.brandInk} />
         ) : (
-          <ArrowLeftRight size={16} color={colors.brandInk} strokeWidth={2.4} />
+          <ArrowLeftRight size={18} color={colors.brandInk} strokeWidth={2.4} />
         )}
-        <Text style={styles.pillText}>{text.switch}</Text>
       </Pressable>
       {error && only ? (
         <View style={styles.inlineError}>
@@ -154,17 +153,17 @@ export function SwitchClubButton({
 }
 
 const styles = StyleSheet.create({
+  // A round icon the size of the other header buttons, so the header fits a
+  // phone; the accessibility label keeps the "Geçiş yap" wording.
   pill: {
-    minHeight: 44,
-    flexDirection: 'row',
+    width: 44,
+    height: 44,
     alignItems: 'center',
-    gap: space.xs,
-    paddingHorizontal: space.md,
+    justifyContent: 'center',
     borderRadius: radius.pill,
     backgroundColor: colors.brand,
     ...shadow.glow,
   },
-  pillText: { color: colors.brandInk, fontSize: 13, fontWeight: '800' },
   pressed: { opacity: 0.85 },
   inlineError: { position: 'absolute', top: 52, right: 0, width: 260 },
   scrim: { flex: 1, backgroundColor: colors.scrim },

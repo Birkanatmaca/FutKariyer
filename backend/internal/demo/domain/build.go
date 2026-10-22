@@ -54,7 +54,7 @@ func (b *builder) past(t time.Time) time.Time {
 func (b *builder) notify(n notify.NewNotification, at time.Time) {
 	b.data.Notifications = append(b.data.Notifications, Notification{
 		ID: ID("notification", n.RecipientID+"/"+n.SourceKey), RecipientID: n.RecipientID, Kind: n.Kind, Title: n.Title, Body: n.Body,
-		ResourceID: n.ResourceID, SourceKey: n.SourceKey, CreatedAt: at, Read: b.now.Sub(at) > 5*24*time.Hour,
+		ResourceID: n.ResourceID, SourceKey: n.SourceKey, ActorID: n.ActorID, CreatedAt: at, Read: b.now.Sub(at) > 5*24*time.Hour,
 	})
 }
 
@@ -267,9 +267,9 @@ func (b *builder) teams() {
 			item.ListingID = listingID[r.club]
 		}
 		b.data.JoinRequests = append(b.data.JoinRequests, item)
-		b.notify(notify.NewTeamApplicationReceived(item.ClubID, item.ID), created)
+		b.notify(notify.NewTeamApplicationReceived(item.ClubID, item.ID, item.PlayerID), created)
 		if r.status != "pending" {
-			b.notify(notify.NewTeamApplicationDecision(item.PlayerID, item.ID, r.status), updated)
+			b.notify(notify.NewTeamApplicationDecision(item.PlayerID, item.ID, item.ClubID, r.status), updated)
 		}
 		if r.status == "accepted" {
 			current[r.player] = b.names[r.club]
@@ -297,12 +297,12 @@ func (b *builder) connections() {
 		if _, isClub := b.clubKey(c.sender); isClub {
 			item.PlayerID, item.PartnerID = item.RecipientID, item.SenderID
 		}
-		b.notify(notify.NewConnectionRequest(item.RecipientID, item.ID, b.names[c.sender]), item.CreatedAt)
+		b.notify(notify.NewConnectionRequest(item.RecipientID, item.ID, item.SenderID), item.CreatedAt)
 		if c.status != "pending" {
 			at := b.past(item.CreatedAt.Add(30 * time.Hour))
 			item.RespondedAt = &at
 			if c.status == "accepted" {
-				b.notify(notify.NewConnectionAccepted(item.SenderID, item.ID, b.names[c.recipient]), at)
+				b.notify(notify.NewConnectionAccepted(item.SenderID, item.ID, item.RecipientID), at)
 			}
 		}
 		b.data.Connections = append(b.data.Connections, item)
@@ -405,13 +405,7 @@ func (b *builder) tournament() {
 		{ID: ID("tournament-entry", "barisspor"), ClubID: UserID("barisspor"), Message: "Kupada genç oyuncularımıza süre vermek istiyoruz.", Status: "pending", CreatedAt: b.at(3, 16, 10), PlayerIDs: []string{UserID("emre"), UserID("burak")}},
 	}
 	for _, e := range entries {
-		club := ""
-		for _, a := range b.data.Accounts {
-			if a.ID == e.ClubID {
-				club = a.FullName
-			}
-		}
-		b.notify(notify.NewTournamentEntry(t.OrganizerID, e.ID, club, t.Name), e.CreatedAt)
+		b.notify(notify.NewTournamentEntry(t.OrganizerID, e.ID, e.ClubID, t.Name), e.CreatedAt)
 		if e.DecidedAt != nil {
 			b.notify(notify.NewTournamentDecision(e.ClubID, e.ID, t.Name, e.Status == "accepted"), *e.DecidedAt)
 		}

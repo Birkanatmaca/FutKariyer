@@ -41,6 +41,9 @@ export function NotificationsScreen({
   onOpenSquadInvite,
   onOpenProfile,
   onFollowBack,
+  onOpenTeamApplications,
+  onOpenPayment,
+  onOpenNews,
 }: {
   token: string;
   service: NotificationsService;
@@ -56,6 +59,13 @@ export function NotificationsScreen({
   // Follow notifications: open the follower's profile and follow them back.
   onOpenProfile?(userId: string, role: AppNotification['actorRole']): void;
   onFollowBack?(userId: string): Promise<void>;
+  // Team application and game reward cards open the applications screen
+  // (club: incoming, player: own with remaining rights).
+  onOpenTeamApplications?(): void;
+  // Payment cards open the purchase screen they are about.
+  onOpenPayment?(pro: boolean): void;
+  // News review cards open the club's own news.
+  onOpenNews?(): void;
 }) {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<NotificationFilter>('all');
@@ -108,6 +118,11 @@ export function NotificationsScreen({
       onOpenListing?.(item.resourceId);
     else if (item.kind === 'tournament' && target)
       onOpenTournament?.(item.resourceId);
+    else if (item.kind === 'team_application' || item.kind === 'game_reward')
+      onOpenTeamApplications?.();
+    else if (item.kind === 'payment')
+      onOpenPayment?.(/\bPro\b/.test(item.title + ' ' + item.body));
+    else if (item.kind === 'news_review') onOpenNews?.();
   }
 
   function toggle(id: string) {

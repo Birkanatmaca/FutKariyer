@@ -785,6 +785,7 @@ export const copy = {
     searchPlaceholder: 'Lig, takım veya oyuncu ara',
     searchHint: 'Aramak için en az 2 harf yaz.',
     searchNone: 'Sonuç bulunamadı',
+    searchFailed: 'Arama yapılamadı. Bağlantını kontrol edip tekrar dene.',
     searchLeagues: 'Ligler',
     searchTeams: 'Takımlar',
     searchPlayers: 'Oyuncular',

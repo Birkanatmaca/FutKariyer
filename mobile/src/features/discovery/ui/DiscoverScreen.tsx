@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
+import { ApiError } from '../../../shared/api/client';
 import { Floodlight } from '../../../shared/ui/Floodlight';
 import { copy } from '../../../shared/lib/copy';
 import { Avatar } from '../../../shared/ui/Avatar';
@@ -102,8 +103,17 @@ export function DiscoverScreen({
         item.status === 'fulfilled' ? item.value : [],
       );
       setResults(found);
+      // An unverified club or coach is told why, not shown a network error.
+      const unverified = settled.some(
+        item =>
+          item.status === 'rejected' &&
+          item.reason instanceof ApiError &&
+          item.reason.code === 'verification_required',
+      );
       setError(
-        !found.length && settled.every(item => item.status === 'rejected')
+        unverified
+          ? text.verificationBody
+          : !found.length && settled.every(item => item.status === 'rejected')
           ? text.searchError
           : '',
       );
@@ -112,7 +122,14 @@ export function DiscoverScreen({
     return () => {
       current = false;
     };
-  }, [service, token, search, kindKey, text.searchError]);
+  }, [
+    service,
+    token,
+    search,
+    kindKey,
+    text.searchError,
+    text.verificationBody,
+  ]);
   const searching = search.length >= MIN_LENGTH;
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safe}>
