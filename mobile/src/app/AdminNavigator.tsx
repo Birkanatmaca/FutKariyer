@@ -213,9 +213,6 @@ function AccountsNavigator({ services }: { services: AdminServices }) {
             onSection={section =>
               navigation.setParams({ section, notice: undefined })
             }
-            onCreate={section =>
-              navigation.navigate('AccountEditor', { section })
-            }
             onEdit={account =>
               navigation.navigate('AccountEditor', {
                 section: route.params?.section ?? 'users',

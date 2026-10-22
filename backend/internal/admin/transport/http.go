@@ -40,7 +40,9 @@ func New(authService *auth.Service, service *application.Service, browser Browse
 		clubOnly := kind == "clubs"
 		path := "/v1/admin/" + kind
 		mux.HandleFunc("GET "+path, func(w http.ResponseWriter, r *http.Request) { h.list(w, r, clubOnly) })
-		mux.HandleFunc("POST "+path, func(w http.ResponseWriter, r *http.Request) { h.create(w, r, clubOnly) })
+		// Accounts sign up themselves (user decision, 21 Oct 2026); the panel
+		// has no create route.
+		mux.HandleFunc("GET "+path+"/stats", func(w http.ResponseWriter, r *http.Request) { h.stats(w, r, clubOnly) })
 		mux.HandleFunc("GET "+path+"/{id}", func(w http.ResponseWriter, r *http.Request) { h.get(w, r, clubOnly) })
 		mux.HandleFunc("PUT "+path+"/{id}", func(w http.ResponseWriter, r *http.Request) { h.update(w, r, clubOnly) })
 		mux.HandleFunc("DELETE "+path+"/{id}", func(w http.ResponseWriter, r *http.Request) { h.delete(w, r, clubOnly) })
@@ -175,7 +177,7 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request, clubOnly bool) {
 			size = 0
 		}
 	}
-	result, err := h.service.List(r.Context(), domain.Query{Page: page, PageSize: size, Search: r.URL.Query().Get("search"), ClubsOnly: clubOnly})
+	result, err := h.service.List(r.Context(), domain.Query{Page: page, PageSize: size, Search: r.URL.Query().Get("search"), Role: r.URL.Query().Get("role"), Status: r.URL.Query().Get("status"), ClubsOnly: clubOnly})
 	if err != nil {
 		failure(w, err)
 		return
@@ -190,17 +192,13 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request, clubOnly bool) {
 	}
 	write(w, 200, map[string]any{"account": result})
 }
-func (h *Handler) create(w http.ResponseWriter, r *http.Request, clubOnly bool) {
-	var in application.CreateInput
-	if !decode(w, r, &in) {
-		return
-	}
-	result, err := h.service.Create(r.Context(), in, clubOnly)
+func (h *Handler) stats(w http.ResponseWriter, r *http.Request, clubOnly bool) {
+	result, err := h.service.Stats(r.Context(), clubOnly)
 	if err != nil {
 		failure(w, err)
 		return
 	}
-	write(w, 201, map[string]any{"account": result})
+	write(w, 200, map[string]any{"stats": result})
 }
 func (h *Handler) update(w http.ResponseWriter, r *http.Request, clubOnly bool) {
 	var in application.UpdateInput

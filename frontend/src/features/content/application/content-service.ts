@@ -8,6 +8,7 @@ import type {
 export function createContentService(repo: ContentRepository) {
   return {
     list: (section: ContentSection, page: number) => repo.list(section, page),
+    listAll: (section: ContentSection) => repo.listAll(section),
     listPendingReviews: () => repo.pendingReviews(),
     review: (id: string, decision: ReviewDecision) => repo.review(id, decision),
     save: (section: ContentSection, form: ContentForm, id?: string) =>

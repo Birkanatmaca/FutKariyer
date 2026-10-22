@@ -873,7 +873,6 @@ describe('admin screens', () => {
           services={fakeServices({ list })}
           section="users"
           onSection={jest.fn()}
-          onCreate={jest.fn()}
           onEdit={onEdit}
           onOverview={jest.fn()}
         />,
@@ -913,7 +912,6 @@ describe('admin screens', () => {
           services={fakeServices({ list })}
           section="clubs"
           onSection={jest.fn()}
-          onCreate={jest.fn()}
           onEdit={jest.fn()}
           onOverview={jest.fn()}
         />,

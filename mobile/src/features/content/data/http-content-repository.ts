@@ -98,7 +98,11 @@ export const contentRepository: ContentRepository = {
       throw new ApiError(copy.form.unexpected);
     // Only the picture reaches the home screen; admin titles are dropped here.
     const advertisements = (out.advertisements as AdvertisementPayload[]).map(
-      ({ id, imageId }): Advertisement => ({ id, imageId }),
+      ({ id, imageId, displaySeconds }): Advertisement => ({
+        id,
+        imageId,
+        displaySeconds,
+      }),
     );
     return { advertisements, news: out.news } satisfies HomeContent;
   },

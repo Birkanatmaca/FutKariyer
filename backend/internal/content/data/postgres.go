@@ -34,17 +34,20 @@ func (r *Postgres) Image(ctx context.Context, id string, admin bool) (domain.Ima
 
 type scanner interface{ Scan(...any) error }
 
-const adColumns = `id,title,image_id,active,sort_order,created_at,updated_at`
-const newsColumns = `id,title,summary,body,COALESCE(image_id,''),published,show_on_home,created_at,updated_at,review_status,COALESCE((SELECT full_name FROM users u WHERE u.id=news_articles.author_user_id),'')`
+// live limits public reads to items inside their publishing window.
+const live = `(starts_at IS NULL OR starts_at<=now()) AND (ends_at IS NULL OR ends_at>now())`
+
+const adColumns = `id,title,image_id,active,sort_order,display_seconds,starts_at,ends_at,created_at,updated_at`
+const newsColumns = `id,title,summary,body,COALESCE(image_id,''),published,show_on_home,sort_order,display_seconds,starts_at,ends_at,created_at,updated_at,review_status,COALESCE((SELECT full_name FROM users u WHERE u.id=news_articles.author_user_id),'')`
 
 func ad(row scanner) (domain.Advertisement, error) {
 	var out domain.Advertisement
-	err := row.Scan(&out.ID, &out.Title, &out.ImageID, &out.Active, &out.SortOrder, &out.CreatedAt, &out.UpdatedAt)
+	err := row.Scan(&out.ID, &out.Title, &out.ImageID, &out.Active, &out.SortOrder, &out.DisplaySeconds, &out.StartsAt, &out.EndsAt, &out.CreatedAt, &out.UpdatedAt)
 	return out, found(err)
 }
 func article(row scanner) (domain.Article, error) {
 	var out domain.Article
-	err := row.Scan(&out.ID, &out.Title, &out.Summary, &out.Body, &out.ImageID, &out.Published, &out.ShowOnHome, &out.CreatedAt, &out.UpdatedAt, &out.ReviewStatus, &out.AuthorName)
+	err := row.Scan(&out.ID, &out.Title, &out.Summary, &out.Body, &out.ImageID, &out.Published, &out.ShowOnHome, &out.SortOrder, &out.DisplaySeconds, &out.StartsAt, &out.EndsAt, &out.CreatedAt, &out.UpdatedAt, &out.ReviewStatus, &out.AuthorName)
 	return out, found(err)
 }
 func (r *Postgres) Ads(ctx context.Context, admin bool, page int) (domain.Page[domain.Advertisement], error) {
@@ -54,10 +57,10 @@ func (r *Postgres) Ads(ctx context.Context, admin bool, page int) (domain.Page[d
 		return out, err
 	}
 	defer tx.Rollback()
-	if err = tx.QueryRowContext(ctx, `SELECT count(*) FROM advertisements WHERE $1 OR active`, admin).Scan(&out.Total); err != nil {
+	if err = tx.QueryRowContext(ctx, `SELECT count(*) FROM advertisements WHERE $1 OR (active AND `+live+`)`, admin).Scan(&out.Total); err != nil {
 		return out, err
 	}
-	rows, err := tx.QueryContext(ctx, `SELECT `+adColumns+` FROM advertisements WHERE $1 OR active ORDER BY sort_order,created_at DESC,id DESC LIMIT 20 OFFSET $2`, admin, (page-1)*20)
+	rows, err := tx.QueryContext(ctx, `SELECT `+adColumns+` FROM advertisements WHERE $1 OR (active AND `+live+`) ORDER BY sort_order,created_at DESC,id DESC LIMIT 20 OFFSET $2`, admin, (page-1)*20)
 	if err != nil {
 		return out, err
 	}
@@ -80,9 +83,9 @@ func (r *Postgres) Ads(ctx context.Context, admin bool, page int) (domain.Page[d
 }
 func (r *Postgres) SaveAd(ctx context.Context, in domain.Advertisement, create bool) (domain.Advertisement, error) {
 	if create {
-		return ad(r.db.QueryRowContext(ctx, `INSERT INTO advertisements(id,title,image_id,active,sort_order) VALUES($1,$2,$3,$4,$5) RETURNING `+adColumns, in.ID, in.Title, in.ImageID, in.Active, in.SortOrder))
+		return ad(r.db.QueryRowContext(ctx, `INSERT INTO advertisements(id,title,image_id,active,sort_order,display_seconds,starts_at,ends_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING `+adColumns, in.ID, in.Title, in.ImageID, in.Active, in.SortOrder, in.DisplaySeconds, in.StartsAt, in.EndsAt))
 	}
-	return ad(r.db.QueryRowContext(ctx, `UPDATE advertisements SET title=$2,image_id=$3,active=$4,sort_order=$5,updated_at=now() WHERE id=$1 RETURNING `+adColumns, in.ID, in.Title, in.ImageID, in.Active, in.SortOrder))
+	return ad(r.db.QueryRowContext(ctx, `UPDATE advertisements SET title=$2,image_id=$3,active=$4,sort_order=$5,display_seconds=$6,starts_at=$7,ends_at=$8,updated_at=now() WHERE id=$1 RETURNING `+adColumns, in.ID, in.Title, in.ImageID, in.Active, in.SortOrder, in.DisplaySeconds, in.StartsAt, in.EndsAt))
 }
 func (r *Postgres) News(ctx context.Context, admin, home bool, page int) (domain.Page[domain.Article], error) {
 	size := 20
@@ -95,11 +98,11 @@ func (r *Postgres) News(ctx context.Context, admin, home bool, page int) (domain
 		return out, err
 	}
 	defer tx.Rollback()
-	where := ` WHERE ($1 OR published) AND (NOT $2 OR show_on_home)`
+	where := ` WHERE ($1 OR (published AND ` + live + `)) AND (NOT $2 OR show_on_home)`
 	if err = tx.QueryRowContext(ctx, `SELECT count(*) FROM news_articles`+where, admin, home).Scan(&out.Total); err != nil {
 		return out, err
 	}
-	rows, err := tx.QueryContext(ctx, `SELECT `+newsColumns+` FROM news_articles`+where+` ORDER BY created_at DESC,id DESC LIMIT $3 OFFSET $4`, admin, home, size, (page-1)*size)
+	rows, err := tx.QueryContext(ctx, `SELECT `+newsColumns+` FROM news_articles`+where+` ORDER BY sort_order,created_at DESC,id DESC LIMIT $3 OFFSET $4`, admin, home, size, (page-1)*size)
 	if err != nil {
 		return out, err
 	}
@@ -121,13 +124,13 @@ func (r *Postgres) News(ctx context.Context, admin, home bool, page int) (domain
 	return out, tx.Commit()
 }
 func (r *Postgres) Article(ctx context.Context, id string, admin bool) (domain.Article, error) {
-	return article(r.db.QueryRowContext(ctx, `SELECT `+newsColumns+` FROM news_articles WHERE id=$1 AND ($2 OR published)`, id, admin))
+	return article(r.db.QueryRowContext(ctx, `SELECT `+newsColumns+` FROM news_articles WHERE id=$1 AND ($2 OR (published AND `+live+`))`, id, admin))
 }
 func (r *Postgres) SaveArticle(ctx context.Context, in domain.Article, create bool) (domain.Article, error) {
 	if create {
-		return article(r.db.QueryRowContext(ctx, `INSERT INTO news_articles(id,title,summary,body,image_id,published,show_on_home) VALUES($1,$2,$3,$4,NULLIF($5,''),$6,$7) RETURNING `+newsColumns, in.ID, in.Title, in.Summary, in.Body, in.ImageID, in.Published, in.ShowOnHome))
+		return article(r.db.QueryRowContext(ctx, `INSERT INTO news_articles(id,title,summary,body,image_id,published,show_on_home,sort_order,display_seconds,starts_at,ends_at) VALUES($1,$2,$3,$4,NULLIF($5,''),$6,$7,$8,$9,$10,$11) RETURNING `+newsColumns, in.ID, in.Title, in.Summary, in.Body, in.ImageID, in.Published, in.ShowOnHome, in.SortOrder, in.DisplaySeconds, in.StartsAt, in.EndsAt))
 	}
-	return article(r.db.QueryRowContext(ctx, `UPDATE news_articles SET title=$2,summary=$3,body=$4,image_id=NULLIF($5,''),published=CASE WHEN author_user_id IS NULL OR review_status='approved' THEN $6 ELSE false END,show_on_home=$7,updated_at=now() WHERE id=$1 RETURNING `+newsColumns, in.ID, in.Title, in.Summary, in.Body, in.ImageID, in.Published, in.ShowOnHome))
+	return article(r.db.QueryRowContext(ctx, `UPDATE news_articles SET title=$2,summary=$3,body=$4,image_id=NULLIF($5,''),published=CASE WHEN author_user_id IS NULL OR review_status='approved' THEN $6 ELSE false END,show_on_home=$7,sort_order=$8,display_seconds=$9,starts_at=$10,ends_at=$11,updated_at=now() WHERE id=$1 RETURNING `+newsColumns, in.ID, in.Title, in.Summary, in.Body, in.ImageID, in.Published, in.ShowOnHome, in.SortOrder, in.DisplaySeconds, in.StartsAt, in.EndsAt))
 }
 func (r *Postgres) delete(ctx context.Context, table, id string) error {
 	result, err := r.db.ExecContext(ctx, `DELETE FROM `+table+` WHERE id=$1`, id)

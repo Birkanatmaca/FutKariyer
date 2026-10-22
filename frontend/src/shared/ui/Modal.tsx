@@ -17,7 +17,7 @@ export function Modal({
 }: {
   title: string;
   eyebrow?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   busy?: boolean;
   onClose(): void;
   children: ReactNode;

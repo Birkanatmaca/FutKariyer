@@ -46,6 +46,9 @@ type Popup struct {
 	Active          bool   `json:"active"`
 	IntervalMinutes int    `json:"intervalMinutes"`
 	MaxViews        int    `json:"maxViews"`
+	// StartsAt and EndsAt bound when the popup may be shown; nil is open.
+	StartsAt *time.Time `json:"startsAt"`
+	EndsAt   *time.Time `json:"endsAt"`
 	// Views counts every showing, Viewers the accounts it reached.
 	Views     int       `json:"views"`
 	Viewers   int       `json:"viewers"`

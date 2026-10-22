@@ -81,7 +81,7 @@ func TestMobileAdminBearerSessions(t *testing.T) {
 	// Bearer sessions need no Origin; account routes and every feature route are reachable.
 	call("GET", "/v1/admin/auth/me", login.Token, "", "", nil, 200)
 	call("GET", "/v1/admin/users?page=1", login.Token, "", "", nil, 200)
-	call("POST", "/v1/admin/users", login.Token, "", "", map[string]string{"fullName": "Yeni Oyuncu", "email": "new@example.com", "password": "test-password-123", "role": "player"}, 201)
+	call("GET", "/v1/admin/users/stats", login.Token, "", "", nil, 200)
 	call("GET", "/v1/admin/payments", login.Token, "", "", nil, 204)
 	call("POST", "/v1/admin/leagues", login.Token, "", "", map[string]string{}, 204)
 	if len(featurePaths) != 2 || featurePaths[0] != "/v1/admin/payments" {

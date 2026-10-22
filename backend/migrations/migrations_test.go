@@ -24,7 +24,7 @@ func TestMigrationLifecycleAndSchemaGuard(t *testing.T) {
 		t.Fatal(err)
 	}
 	results, err := provider.Up(ctx)
-	if err != nil || len(results) != 43 {
+	if err != nil || len(results) != 44 {
 		t.Fatalf("initial migrations: count=%d error=%v", len(results), err)
 	}
 	if err := migrations.CheckCurrent(ctx, database.DB); err != nil {
@@ -34,7 +34,7 @@ func TestMigrationLifecycleAndSchemaGuard(t *testing.T) {
 	if err != nil || len(results) != 0 {
 		t.Fatalf("repeat up must not reapply migrations: count=%d error=%v", len(results), err)
 	}
-	for i := 0; i < 43; i++ {
+	for i := 0; i < 44; i++ {
 		if _, err := provider.Down(ctx); err != nil {
 			t.Fatal(err)
 		}
@@ -48,7 +48,7 @@ func TestMigrationLifecycleAndSchemaGuard(t *testing.T) {
 		}
 	}
 	results, err = provider.Up(ctx)
-	if err != nil || len(results) != 43 {
+	if err != nil || len(results) != 44 {
 		t.Fatalf("migrations after rollback: count=%d error=%v", len(results), err)
 	}
 	if err := migrations.CheckCurrent(ctx, database.DB); err != nil {

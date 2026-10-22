@@ -3,6 +3,7 @@ package transport
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"futcareer/backend/internal/content/domain"
 )
@@ -57,16 +58,18 @@ func (h *Handler) popupViewed(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) savePopup(w http.ResponseWriter, r *http.Request) {
 	var in struct {
-		Title           string `json:"title"`
-		ImageID         string `json:"imageId"`
-		Active          bool   `json:"active"`
-		IntervalMinutes int    `json:"intervalMinutes"`
-		MaxViews        int    `json:"maxViews"`
+		Title           string     `json:"title"`
+		ImageID         string     `json:"imageId"`
+		Active          bool       `json:"active"`
+		IntervalMinutes int        `json:"intervalMinutes"`
+		MaxViews        int        `json:"maxViews"`
+		StartsAt        *time.Time `json:"startsAt"`
+		EndsAt          *time.Time `json:"endsAt"`
 	}
 	if !decode(w, r, &in) {
 		return
 	}
-	out, err := h.service.SavePopup(r.Context(), domain.Popup{ID: r.PathValue("id"), Title: in.Title, ImageID: in.ImageID, Active: in.Active, IntervalMinutes: in.IntervalMinutes, MaxViews: in.MaxViews}, r.Method == "POST")
+	out, err := h.service.SavePopup(r.Context(), domain.Popup{ID: r.PathValue("id"), Title: in.Title, ImageID: in.ImageID, Active: in.Active, IntervalMinutes: in.IntervalMinutes, MaxViews: in.MaxViews, StartsAt: in.StartsAt, EndsAt: in.EndsAt}, r.Method == "POST")
 	if err != nil {
 		failure(w, err)
 		return
