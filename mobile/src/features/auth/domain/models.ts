@@ -100,8 +100,9 @@ type RegisterBase = {
 export type RegisterInput =
   | (RegisterBase & { role: 'player'; licenseStatus: DeclaredLicenseStatus })
   | (RegisterBase & { role: 'coach'; licenseLevel: DeclaredCoachLicense });
-// Club and organizer accounts apply here and wait for admin approval.
-export type ApplicationRole = Extract<AccountRole, 'club' | 'organizer'>;
+// Only club accounts apply here and wait for admin approval; organizer
+// accounts are opened by the admin (22 Oct 2026).
+export type ApplicationRole = Extract<AccountRole, 'club'>;
 export type AccountApplicationInput = {
   role: ApplicationRole;
   fullName: string;

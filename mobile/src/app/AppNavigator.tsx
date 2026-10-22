@@ -103,6 +103,7 @@ import {
 } from '../features/listings';
 import {
   MembershipsScreen,
+  SquadInvitesScreen,
   SquadScreen,
   createSquadService,
   squadRepository,
@@ -219,6 +220,8 @@ type MoreRoutes = {
   ClubNewsMine: undefined;
   Squad: undefined;
   Memberships: undefined;
+  // Player: clubs' squad invitations (22 Oct 2026).
+  SquadInvites: undefined;
   ClubListings: undefined;
   Listings: undefined;
   ListingDetail: { id: string };
@@ -234,6 +237,9 @@ type MoreRoutes = {
 };
 type LeaguesRoutes = {
   LeaguesHome: undefined;
+  // Halı saha leagues and tournaments (22 Oct 2026) with their tables.
+  HalisahaTournaments: undefined;
+  LeagueTournament: { id: string };
   Competition: { competition: Competition };
   Ankara: undefined;
   LeagueDetail: { id: string };
@@ -845,6 +851,17 @@ function MoreNavigator() {
           ) : null
         }
       </MoreStack.Screen>
+      <MoreStack.Screen name="SquadInvites">
+        {({ navigation }) =>
+          token && user?.role === 'player' ? (
+            <SquadInvitesScreen
+              token={token}
+              service={squadService}
+              onBack={() => navigation.goBack()}
+            />
+          ) : null
+        }
+      </MoreStack.Screen>
       <MoreStack.Screen name="Listings">
         {({ navigation }) =>
           token && member ? (
@@ -902,6 +919,7 @@ function MoreNavigator() {
             <TournamentEntriesScreen
               token={token}
               service={tournamentsService}
+              club={clubEntrySource}
               onBack={() => navigation.goBack()}
               onOpen={id => navigation.navigate('TournamentDetail', { id })}
             />
@@ -977,31 +995,41 @@ function NotificationsTab({
           })
           .catch(() => undefined)
       }
+      onOpenSquadInvite={() =>
+        // Players answer in Kulüp davetleri; clubs (and coaches with the
+        // Kadro permission) see answers in Kadrom.
+        user?.role === 'player'
+          ? openMore({ screen: 'SquadInvites' })
+          : user?.role === 'club' &&
+            (!user.delegate || user.delegate.permissions.includes('squad'))
+          ? openMore({ screen: 'Squad' })
+          : undefined
+      }
       onOpenTournament={resourceId =>
         // New tournament notifications carry the tournament id; entry,
-        // decision and cancellation notifications carry an entry id.
-        tournamentsService
-          .find(token, resourceId)
-          .then(tournament => {
-            if (user?.role === 'organizer') {
-              if (tournament && tournament.organizerId === user.id) {
+        // decision, invitation, fixture and cancellation notifications
+        // carry an entry id.
+        (user?.role === 'organizer'
+          ? tournamentsService
+              .organizerTournamentOf(token, resourceId)
+              .then(id => {
+                if (id) {
+                  openMore({ screen: 'OrganizerTournament', params: { id } });
+                } else {
+                  navigation.navigate('Home');
+                }
+              })
+          : tournamentsService.find(token, resourceId).then(tournament => {
+              if (tournament) {
                 openMore({
-                  screen: 'OrganizerTournament',
+                  screen: 'TournamentDetail',
                   params: { id: tournament.id },
                 });
-              } else {
-                navigation.navigate('Home');
+              } else if (user?.role === 'club') {
+                openMore({ screen: 'TournamentEntries' });
               }
-            } else if (tournament) {
-              openMore({
-                screen: 'TournamentDetail',
-                params: { id: tournament.id },
-              });
-            } else if (user?.role === 'club') {
-              openMore({ screen: 'TournamentEntries' });
-            }
-          })
-          .catch(() => undefined)
+            })
+        ).catch(() => undefined)
       }
     />
   );
@@ -1025,6 +1053,23 @@ function MoreHomeRoute({
 }) {
   const { token, user, delegate, switchBack } = useAuth();
   const account = useAccountProfile(accountRepository, token);
+  // Open club invitations are counted for the Kulüp davetleri row.
+  const [squadInviteCount, setSquadInviteCount] = useState<number | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      if (!token || !isPlayer) return;
+      let current = true;
+      squadService
+        .playerInvites(token)
+        .then(items => {
+          if (current) setSquadInviteCount(items.length);
+        })
+        .catch(() => undefined);
+      return () => {
+        current = false;
+      };
+    }, [token, isPlayer]),
+  );
   // A switched coach sees no club profile card: the club's account is the
   // owner's to edit.
   const profile =
@@ -1060,6 +1105,10 @@ function MoreHomeRoute({
       onMemberships={() => navigation.navigate('Memberships')}
       onTournaments={() => navigation.navigate('Tournaments')}
       onTournamentEntries={() => navigation.navigate('TournamentEntries')}
+      onSquadInvites={
+        isPlayer ? () => navigation.navigate('SquadInvites') : undefined
+      }
+      squadInviteCount={squadInviteCount}
       isClub={isClub}
       isPlayer={isPlayer}
       isOrganizer={isOrganizer}
@@ -1696,6 +1745,39 @@ function LeaguesNavigator() {
               navigation.navigate('LeagueDetail', { id: league.id })
             }
             onSearch={() => navigation.navigate('Search')}
+            onHalisaha={() => navigation.navigate('HalisahaTournaments')}
+          />
+        )}
+      </LeaguesStack.Screen>
+      <LeaguesStack.Screen name="HalisahaTournaments">
+        {({ navigation }) => (
+          <TournamentsScreen
+            token={token}
+            service={tournamentsService}
+            view="halisaha"
+            onBack={() => navigation.goBack()}
+            onOpen={id => navigation.navigate('LeagueTournament', { id })}
+          />
+        )}
+      </LeaguesStack.Screen>
+      <LeaguesStack.Screen name="LeagueTournament">
+        {({ navigation, route }) => (
+          <TournamentDetailScreen
+            token={token}
+            id={route.params.id}
+            service={tournamentsService}
+            club={club ? clubEntrySource : undefined}
+            onBack={() => navigation.goBack()}
+            onEntries={() =>
+              (
+                navigation.getParent() as
+                  | BottomTabNavigationProp<MainRoutes>
+                  | undefined
+              )?.navigate('More', {
+                screen: 'TournamentEntries',
+                initial: false,
+              })
+            }
           />
         )}
       </LeaguesStack.Screen>

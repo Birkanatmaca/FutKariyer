@@ -156,7 +156,7 @@ function charLength(value: string) {
 export function validateApplication(input: ApplicationDraft): FieldErrors {
   const fields: FieldErrors = {};
   const text = copy.application;
-  if (input.role !== 'club' && input.role !== 'organizer') {
+  if (input.role !== 'club') {
     fields.role = text.roleError;
   }
   const fullName = charLength(input.fullName.trim());
@@ -188,7 +188,7 @@ export function validateApplication(input: ApplicationDraft): FieldErrors {
   if (charLength(input.district.trim()) > 80) {
     fields.district = text.districtError;
   }
-  if (input.role === 'club' && !footballTypes.includes(input.footballType)) {
+  if (!footballTypes.includes(input.footballType)) {
     fields.footballType = text.footballTypeError;
   }
   if (charLength(input.note.trim()) > 500) {
@@ -196,8 +196,7 @@ export function validateApplication(input: ApplicationDraft): FieldErrors {
   }
   return fields;
 }
-// Builds the request body; empty optional fields are left out and only
-// clubs send a team type.
+// Builds the request body; empty optional fields are left out.
 export function toApplicationInput(
   input: ApplicationDraft,
 ): AccountApplicationInput {
@@ -218,7 +217,7 @@ export function toApplicationInput(
   if (district) {
     body.district = district;
   }
-  if (input.role === 'club' && input.footballType) {
+  if (input.footballType) {
     body.footballType = input.footballType;
   }
   if (note) {

@@ -12,7 +12,8 @@ import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
 import { colors, space } from '../../../styles/tokens';
 import type { TournamentsService } from '../application/tournaments-service';
 import { errorMessage } from '../application/validation';
-import type { TournamentEntry } from '../domain/models';
+import type { ClubEntrySource, TournamentEntry } from '../domain/models';
+import { TournamentEntryForm } from './TournamentEntryForm';
 import { EntryCard, type EntryAction } from './TournamentParts';
 
 const text = copy.tournaments;
@@ -20,11 +21,14 @@ const text = copy.tournaments;
 export function TournamentEntriesScreen({
   token,
   service,
+  club,
   onBack,
   onOpen,
 }: {
   token: string;
   service: TournamentsService;
+  // The club's squad, used to pick the roster when accepting an invitation.
+  club?: ClubEntrySource;
   onBack(): void;
   onOpen(tournamentId: string): void;
 }) {
@@ -34,6 +38,29 @@ export function TournamentEntriesScreen({
   const [busyId, setBusyId] = useState('');
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [accepting, setAccepting] = useState<TournamentEntry | null>(null);
+
+  async function decline(entry: TournamentEntry) {
+    if (busyId) return;
+    const confirmed = await confirmAction(
+      text.declineInviteTitle,
+      text.declineInviteBody(entry.tournamentName),
+      text.declineInvite,
+    );
+    if (!confirmed) return;
+    setBusyId(entry.id);
+    setNotice('');
+    setError('');
+    try {
+      await service.respond(token, entry.id, 'decline');
+      setNotice(text.inviteDeclined);
+      state.retry();
+    } catch (failure) {
+      setError(errorMessage(failure));
+    } finally {
+      setBusyId('');
+    }
+  }
 
   async function withdraw(entry: TournamentEntry) {
     if (busyId) return;
@@ -66,6 +93,23 @@ export function TournamentEntriesScreen({
         onPress: () => onOpen(entry.tournamentId),
       });
     }
+    if (entry.status === 'invited') {
+      if (club) {
+        list.push({
+          label: text.acceptInvite,
+          onPress: () => {
+            setNotice('');
+            setError('');
+            setAccepting(entry);
+          },
+        });
+      }
+      list.push({
+        label: text.declineInvite,
+        danger: true,
+        onPress: () => decline(entry),
+      });
+    }
     if (entry.status === 'pending' || entry.status === 'accepted') {
       list.push({
         label: text.withdraw,
@@ -85,7 +129,33 @@ export function TournamentEntriesScreen({
         </Text>
       ) : null}
       <ErrorBanner message={error} />
-      {state.loading ? (
+      {accepting && club ? (
+        <TournamentEntryForm
+          token={token}
+          tournamentId={accepting.tournamentId}
+          service={service}
+          loadSquad={club.squad}
+          title={text.acceptInviteTitle + ' · ' + accepting.tournamentName}
+          submitLabel={text.acceptInviteSubmit}
+          sendingLabel={text.acceptInviteSending}
+          withMessage={false}
+          send={input =>
+            service.respond(token, accepting.id, 'accept', input.playerIds)
+          }
+          onSubmitted={() => {
+            setNotice(text.inviteAccepted(accepting.tournamentName));
+            setAccepting(null);
+            state.retry();
+          }}
+          onCancel={(final, message) => {
+            setAccepting(null);
+            if (final) {
+              setError(message);
+              state.retry();
+            }
+          }}
+        />
+      ) : state.loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : state.error ? (
         <>

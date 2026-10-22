@@ -12,6 +12,7 @@ import {
   Megaphone,
   Shield,
   Undo2,
+  UserRoundPlus,
   Users,
   UsersRound,
   type LucideIcon,
@@ -52,6 +53,8 @@ export function MoreScreen({
   onMemberships,
   onTournaments,
   onTournamentEntries,
+  onSquadInvites,
+  squadInviteCount,
   isClub,
   isPlayer,
   isOrganizer = false,
@@ -74,6 +77,9 @@ export function MoreScreen({
   onMemberships(): void;
   onTournaments(): void;
   onTournamentEntries(): void;
+  // Player: Kulüp davetleri with the number of open invitations when known.
+  onSquadInvites?(): void;
+  squadInviteCount?: number | null;
   isClub: boolean;
   isPlayer: boolean;
   // Organizers only see tournaments, news and account; the other entries
@@ -230,6 +236,18 @@ export function MoreScreen({
                     Shield,
                     onMemberships,
                   ),
+                  ...(onSquadInvites
+                    ? [
+                        entry(
+                          text.squadInvites,
+                          squadInviteCount
+                            ? text.squadInvitesPending(squadInviteCount)
+                            : text.squadInvitesHint,
+                          UserRoundPlus,
+                          onSquadInvites,
+                        ),
+                      ]
+                    : []),
                 ]
               : []),
             tournaments,

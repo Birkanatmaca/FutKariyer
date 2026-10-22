@@ -15,11 +15,12 @@ import {
 } from 'lucide-react-native';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
-import type {
-  EntryStatus,
-  Tournament,
-  TournamentEntry,
-  TournamentStatus,
+import {
+  leaguePhase,
+  type EntryStatus,
+  type Tournament,
+  type TournamentEntry,
+  type TournamentStatus,
 } from '../domain/models';
 
 const text = copy.tournaments;
@@ -37,16 +38,27 @@ export const tournamentDates = (tournament: Tournament) =>
 export const eligibleLabel = (tournament: Tournament) =>
   tournament.eligibleTypes.map(type => text.teamTypes[type]).join(', ');
 
+// League badges read a halı saha tournament as a season (Başvuru açık,
+// Devam ediyor, Tamamlandı).
 export function StatusBadge({
   status,
+  league = false,
 }: {
   status: TournamentStatus | EntryStatus;
+  league?: boolean;
 }) {
-  const highlighted = status === 'open' || status === 'accepted';
-  const danger = status === 'cancelled' || status === 'rejected';
+  const highlighted =
+    status === 'open' ||
+    status === 'accepted' ||
+    status === 'invited' ||
+    (league && status === 'closed');
+  const danger =
+    status === 'cancelled' || status === 'rejected' || status === 'declined';
   const label =
     status in text.status
-      ? text.status[status as TournamentStatus]
+      ? league
+        ? text.leagueStatus[leaguePhase(status as TournamentStatus)]
+        : text.status[status as TournamentStatus]
       : text.entryStatus[status as EntryStatus];
   return (
     <View
@@ -102,10 +114,12 @@ export function Chip({
 export function TournamentCard({
   tournament,
   showOrganizer,
+  league = false,
   onOpen,
 }: {
   tournament: Tournament;
   showOrganizer: boolean;
+  league?: boolean;
   onOpen(): void;
 }) {
   return (
@@ -121,7 +135,7 @@ export function TournamentCard({
           <Text numberOfLines={2} style={styles.title}>
             {tournament.name}
           </Text>
-          <StatusBadge status={tournament.status} />
+          <StatusBadge status={tournament.status} league={league} />
         </View>
         {showOrganizer ? (
           <Text numberOfLines={1} style={styles.organizer}>
@@ -151,6 +165,44 @@ export function TournamentCard({
       </View>
       <ChevronRight size={18} color={colors.muted} />
     </Pressable>
+  );
+}
+
+// Segmented tabs used by the tournament detail and management screens.
+export function Segments<K extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { key: K; label: string }[];
+  value: K;
+  onChange(key: K): void;
+}) {
+  return (
+    <View accessibilityRole="tablist" style={styles.segments}>
+      {options.map(option => {
+        const selected = option.key === value;
+        return (
+          <Pressable
+            key={option.key}
+            accessibilityRole="tab"
+            accessibilityLabel={option.label}
+            accessibilityState={{ selected }}
+            onPress={() => onChange(option.key)}
+            style={[styles.segment, selected && styles.segmentOn]}
+          >
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.85}
+              style={[styles.segmentText, selected && styles.segmentTextOn]}
+            >
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 
@@ -192,8 +244,12 @@ export function EntryCard({
         <Text style={styles.message}>{entry.message}</Text>
       ) : null}
       <Text style={styles.meta}>
-        {text.appliedAt(formatDate(entry.createdAt))}
-        {entry.decidedAt
+        {entry.status === 'invited' || entry.status === 'declined'
+          ? text.invitedAt(formatDate(entry.createdAt))
+          : text.appliedAt(formatDate(entry.createdAt))}
+        {entry.status === 'invited'
+          ? ''
+          : entry.decidedAt
           ? ' · ' + text.decidedAt(formatDate(entry.decidedAt))
           : ''}
       </Text>
@@ -375,4 +431,26 @@ const styles = StyleSheet.create({
   actionText: { color: colors.brand, fontSize: 12, fontWeight: '700' },
   actionTextDanger: { color: colors.danger },
   disabled: { opacity: 0.45 },
+  segments: {
+    flexDirection: 'row',
+    padding: space.xs,
+    gap: space.xs,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    backgroundColor: colors.surface,
+  },
+  segment: {
+    flex: 1,
+    minHeight: 40,
+    paddingHorizontal: space.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: colors.transparent,
+  },
+  segmentOn: { backgroundColor: colors.overlay, borderColor: colors.brandSoft },
+  segmentText: { color: colors.muted, fontSize: 13, fontWeight: '700' },
+  segmentTextOn: { color: colors.text },
 });

@@ -1,6 +1,12 @@
 import React, { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { CalendarDays, Search, Trophy } from 'lucide-react-native';
+import {
+  CalendarDays,
+  ChevronRight,
+  Medal,
+  Search,
+  Trophy,
+} from 'lucide-react-native';
 import {
   FootballLeaguesSection,
   type Competition,
@@ -30,6 +36,7 @@ export function LeaguesHomeScreen({
   onOpenAnkara,
   onOpenLeague,
   onSearch,
+  onHalisaha,
 }: {
   token: string;
   footballService: FootballService;
@@ -39,6 +46,8 @@ export function LeaguesHomeScreen({
   onOpenAnkara(): void;
   onOpenLeague(league: League): void;
   onSearch(): void;
+  // Halı saha leagues and tournaments run by organizers (22 Oct 2026).
+  onHalisaha(): void;
 }) {
   const [tab, setTab] = useState<Tab>('mine');
   const showMine = !!clubMatches && tab === 'mine';
@@ -100,6 +109,32 @@ export function LeaguesHomeScreen({
             {copy.footballData.futCareerTitle}
           </Text>
           <LeagueRail onOpen={onOpenLeague} />
+          <Text accessibilityRole="header" style={styles.title}>
+            {copy.tournaments.halisahaTitle}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={copy.tournaments.halisahaTitle}
+            accessibilityHint={copy.tournaments.halisahaHint}
+            onPress={onHalisaha}
+            style={({ pressed }) => [
+              styles.halisaha,
+              pressed && styles.halisahaPressed,
+            ]}
+          >
+            <View style={styles.halisahaIcon}>
+              <Medal size={22} color={colors.brand} />
+            </View>
+            <View style={styles.halisahaText}>
+              <Text style={styles.halisahaTitle}>
+                {copy.tournaments.halisahaTitle}
+              </Text>
+              <Text style={styles.halisahaHint}>
+                {copy.tournaments.halisahaHint}
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.muted} />
+          </Pressable>
         </>
       )}
     </Screen>
@@ -154,4 +189,26 @@ const styles = StyleSheet.create({
     letterSpacing: -0.3,
     marginTop: space.sm,
   },
+  halisaha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    padding: space.lg,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.hairline,
+    backgroundColor: colors.surface,
+  },
+  halisahaPressed: { backgroundColor: colors.raised },
+  halisahaIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.brandWash,
+  },
+  halisahaText: { flex: 1, minWidth: 0, gap: 2 },
+  halisahaTitle: { color: colors.text, fontSize: 15, fontWeight: '700' },
+  halisahaHint: { color: colors.muted, fontSize: 12, lineHeight: 17 },
 });

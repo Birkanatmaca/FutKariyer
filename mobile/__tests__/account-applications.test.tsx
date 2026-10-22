@@ -61,23 +61,23 @@ const club: ApplicationDraft = {
   footballType: 'amateur',
   note: '',
 };
-const organizer: ApplicationDraft = {
-  ...club,
-  role: 'organizer',
-  footballType: '',
-  username: 'ankara_kupa-2026',
-};
 
 describe('application validation', () => {
-  test('valid club and organizer drafts pass', () => {
+  test('a valid club draft passes', () => {
     expect(validateApplication(club)).toEqual({});
-    expect(validateApplication(organizer)).toEqual({});
   });
-  test('club requires a team type; organizer does not', () => {
+  test('club requires a team type', () => {
     expect(
       Object.keys(validateApplication({ ...club, footballType: '' })),
     ).toEqual(['footballType']);
-    expect(validateApplication({ ...organizer, footballType: '' })).toEqual({});
+  });
+  test('organizer applications are no longer accepted', () => {
+    expect(
+      validateApplication({
+        ...club,
+        role: 'organizer' as unknown as ApplicationDraft['role'],
+      }).role,
+    ).toBe(text.roleError);
   });
   test('username accepts only 3-32 lowercase latin, digit, dot, underscore, dash', () => {
     for (const username of ['ab', 'Kulup', 'kulüp', 'ku lup', 'a'.repeat(33)]) {
@@ -128,23 +128,23 @@ describe('application validation', () => {
       validateApplication({ ...club, password: 'ş'.repeat(37) }).password,
     ).toBe(copy.form.passwordMax);
   });
-  test('request body trims values, drops empty optionals and organizer team type', () => {
+  test('request body trims values and drops empty optionals', () => {
     expect(
       toApplicationInput({
-        ...organizer,
-        fullName: ' Ankara Kupası ',
-        email: ' org@example.com ',
-        footballType: 'amateur',
+        ...club,
+        fullName: ' Ankara Gücü ',
+        email: ' kulup2@example.com ',
         district: ' Çankaya ',
       }),
     ).toEqual({
-      role: 'organizer',
-      fullName: 'Ankara Kupası',
+      role: 'club',
+      fullName: 'Ankara Gücü',
       contactName: 'Ayşe Demir',
-      username: 'ankara_kupa-2026',
-      email: 'org@example.com',
+      username: 'cankaya.genclik',
+      email: 'kulup2@example.com',
       password: 'strong-password',
       district: 'Çankaya',
+      footballType: 'amateur',
     });
     expect(
       toApplicationInput({ ...club, phone: ' 0312 ', note: 'Not' }),
@@ -290,7 +290,7 @@ async function fill(root: ReactTestRenderer, values: Record<string, string>) {
 }
 
 describe('sign-up screens', () => {
-  test('account type step lists player, coach, club and organizer', async () => {
+  test('account type step lists player, coach and club but not organizer', async () => {
     const onSelect = jest.fn();
     const root = await render(
       <AccountTypeScreen onBack={jest.fn()} onSelect={onSelect} />,
@@ -306,10 +306,9 @@ describe('sign-up screens', () => {
         copy.accountType.coachDescription,
         copy.accountType.club,
         copy.accountType.clubDescription,
-        copy.accountType.organizer,
-        copy.accountType.organizerDescription,
       ]),
     );
+    expect(shown).not.toContain(copy.roles.organizer);
     await act(async () =>
       pressable(
         root,
@@ -435,7 +434,7 @@ describe('sign-up screens', () => {
     expect(onSignIn).toHaveBeenCalled();
   });
 
-  test('organizer form has no team type and shows server field errors', async () => {
+  test('club form shows server field errors', async () => {
     const repository = makeRepository({
       apply: jest
         .fn()
@@ -449,24 +448,29 @@ describe('sign-up screens', () => {
         ),
     });
     const root = await render(
-      <ApplicationScreen
-        role="organizer"
-        onBack={jest.fn()}
-        onSignIn={jest.fn()}
-      />,
+      <ApplicationScreen role="club" onBack={jest.fn()} onSignIn={jest.fn()} />,
       repository,
     );
-    expect(texts(root)).not.toContain(text.footballType);
+    expect(texts(root)).toContain(text.footballType);
     await fill(root, {
-      [text.organizerName]: 'Ankara Kupası',
+      [text.clubName]: 'Ankara Gücü',
       [text.contactName]: 'Ayşe Demir',
-      [text.username]: 'ankara.kupa',
-      [copy.form.email]: 'org@example.com',
+      [text.username]: 'ankara.gucu',
+      [copy.form.email]: 'kulup@example.com',
       [copy.form.password]: 'strong-password',
     });
+    const amateur = root.root.find(
+      node =>
+        node.props.accessibilityRole === 'radio' &&
+        typeof node.props.onPress === 'function' &&
+        node.findAll(
+          child => child.props.children === text.footballTypes.amateur,
+        ).length > 0,
+    );
+    await act(async () => amateur.props.onPress());
     await act(async () => pressable(root, text.button).props.onPress());
     expect(repository.apply).toHaveBeenCalledWith(
-      expect.not.objectContaining({ footballType: expect.anything() }),
+      expect.objectContaining({ role: 'club', footballType: 'amateur' }),
     );
     expect(texts(root)).toContain('Bu e-posta adresi zaten kayıtlı.');
     expect(texts(root)).not.toContain(text.successTitle);

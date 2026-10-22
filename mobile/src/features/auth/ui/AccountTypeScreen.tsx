@@ -4,7 +4,6 @@ import {
   ChevronRight,
   ClipboardList,
   Shield,
-  Trophy,
   UserRound,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -13,11 +12,9 @@ import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space, type } from '../../../styles/tokens';
 import type { AccountRole } from '../domain/models';
 
-// Players and coaches sign up at once; clubs and organizers apply.
-export type SignUpKind = Extract<
-  AccountRole,
-  'player' | 'coach' | 'club' | 'organizer'
->;
+// Players and coaches sign up at once; clubs apply. Organizer accounts are
+// opened only by the admin and sign in on the normal sign-in screen.
+export type SignUpKind = Extract<AccountRole, 'player' | 'coach' | 'club'>;
 type Option = {
   kind: SignUpKind;
   icon: LucideIcon;
@@ -45,12 +42,6 @@ const applied: Option[] = [
     icon: Shield,
     title: text.club,
     description: text.clubDescription,
-  },
-  {
-    kind: 'organizer',
-    icon: Trophy,
-    title: text.organizer,
-    description: text.organizerDescription,
   },
 ];
 

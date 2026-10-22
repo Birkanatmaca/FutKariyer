@@ -58,7 +58,6 @@ export function ApplicationScreen({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const club = role === 'club';
 
   function change(key: TextKey) {
     return (value: string) =>
@@ -99,7 +98,7 @@ export function ApplicationScreen({
     }
   }
 
-  const title = club ? text.clubTitle : text.organizerTitle;
+  const title = text.clubTitle;
   if (submitted) {
     return (
       <AuthFrame title={title} description={text.description}>
@@ -126,14 +125,12 @@ export function ApplicationScreen({
       <View style={styles.form}>
         <AuthNotice message={text.notice} />
         <Field
-          label={club ? text.clubName : text.organizerName}
+          label={text.clubName}
           icon={Shield}
           value={draft.fullName}
           onChangeText={change('fullName')}
           error={fields.fullName}
-          placeholder={
-            club ? text.clubNamePlaceholder : text.organizerNamePlaceholder
-          }
+          placeholder={text.clubNamePlaceholder}
           autoComplete="organization"
           textContentType="organizationName"
           editable={!busy}
@@ -195,27 +192,25 @@ export function ApplicationScreen({
           hint={copy.signUp.passwordHelp}
           editable={!busy}
         />
-        {club ? (
-          <View style={styles.choiceSection}>
-            <Text style={styles.choiceTitle}>{text.footballType}</Text>
-            <View accessibilityRole="radiogroup" style={styles.options}>
-              {(['amateur', 'professional', 'halisaha'] as const).map(value => (
-                <Choice
-                  key={value}
-                  label={text.footballTypes[value]}
-                  selected={draft.footballType === value}
-                  disabled={busy}
-                  onPress={() => chooseFootballType(value)}
-                />
-              ))}
-            </View>
-            {fields.footballType ? (
-              <Text accessibilityRole="alert" style={styles.fieldError}>
-                {fields.footballType}
-              </Text>
-            ) : null}
+        <View style={styles.choiceSection}>
+          <Text style={styles.choiceTitle}>{text.footballType}</Text>
+          <View accessibilityRole="radiogroup" style={styles.options}>
+            {(['amateur', 'professional', 'halisaha'] as const).map(value => (
+              <Choice
+                key={value}
+                label={text.footballTypes[value]}
+                selected={draft.footballType === value}
+                disabled={busy}
+                onPress={() => chooseFootballType(value)}
+              />
+            ))}
           </View>
-        ) : null}
+          {fields.footballType ? (
+            <Text accessibilityRole="alert" style={styles.fieldError}>
+              {fields.footballType}
+            </Text>
+          ) : null}
+        </View>
         <Field
           label={text.phone}
           icon={Phone}
@@ -253,12 +248,7 @@ export function ApplicationScreen({
           maxLength={500}
         />
         <ErrorBanner message={error} />
-        <Button
-          label={text.button}
-          onPress={submit}
-          loading={busy}
-          compact
-        />
+        <Button label={text.button} onPress={submit} loading={busy} compact />
       </View>
     </AuthFrame>
   );

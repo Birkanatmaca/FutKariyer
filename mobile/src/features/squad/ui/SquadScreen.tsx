@@ -14,6 +14,7 @@ import type { SquadService } from '../application/squad-service';
 import { useSquadAction } from '../application/useSquadAction';
 import type { SquadMember } from '../domain/models';
 import { formatDate, RosterCard } from './SquadParts';
+import { SquadInvitePanel } from './SquadInvitePanel';
 
 const text = copy.squad;
 
@@ -54,6 +55,7 @@ export function SquadScreen({
         </Text>
       ) : null}
       <ErrorBanner message={action.error} />
+      <SquadInvitePanel token={token} service={service} />
       {state.loading ? (
         <ActivityIndicator color={colors.brand} />
       ) : state.error ? (

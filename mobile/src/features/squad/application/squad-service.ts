@@ -1,7 +1,17 @@
-import type { SquadRepository } from '../domain/models';
+import type { SquadInviteDecision, SquadRepository } from '../domain/models';
 
 export function createSquadService(repository: SquadRepository) {
   return {
+    candidates: (token: string, query: string) =>
+      repository.candidates(token, query.trim()),
+    clubInvites: (token: string) => repository.clubInvites(token),
+    invite: (token: string, playerId: string, message: string) =>
+      repository.invite(token, playerId, message.trim()),
+    cancelInvite: (token: string, id: string) =>
+      repository.cancelInvite(token, id),
+    playerInvites: (token: string) => repository.playerInvites(token),
+    respondInvite: (token: string, id: string, decision: SquadInviteDecision) =>
+      repository.respondInvite(token, id, decision),
     squad: (token: string) => repository.squad(token),
     removeMember: (token: string, playerId: string) =>
       repository.removeMember(token, playerId),

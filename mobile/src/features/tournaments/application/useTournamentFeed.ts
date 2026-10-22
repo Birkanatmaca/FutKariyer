@@ -1,17 +1,30 @@
 import { useCallback, useState } from 'react';
 import { copy } from '../../../shared/lib/copy';
 import { useFocusedResource } from '../../../shared/lib/useFocusedResource';
-import type { Tournament, TournamentPage } from '../domain/models';
+import type {
+  Tournament,
+  TournamentFeedView,
+  TournamentPage,
+} from '../domain/models';
 import type { TournamentsService } from './tournaments-service';
 
 type More = { base: TournamentPage; pages: TournamentPage[] };
 
 // Loads the first page on focus; further pages are appended. Extra pages
 // belong to the first page they were loaded after, so a refetch drops them.
-export function useTournamentFeed(service: TournamentsService, token: string) {
-  const first = useFocusedResource(
-    useCallback(() => service.open(token, 1), [service, token]),
+export function useTournamentFeed(
+  service: TournamentsService,
+  token: string,
+  view: TournamentFeedView = 'open',
+) {
+  const load = useCallback(
+    (page: number) =>
+      view === 'halisaha'
+        ? service.halisaha(token, page)
+        : service.open(token, page),
+    [service, token, view],
   );
+  const first = useFocusedResource(useCallback(() => load(1), [load]));
   const [more, setMore] = useState<More | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreError, setMoreError] = useState<{
@@ -39,7 +52,7 @@ export function useTournamentFeed(service: TournamentsService, token: string) {
     setLoadingMore(true);
     setMoreError(null);
     try {
-      const next = await service.open(token, last.page + 1);
+      const next = await load(last.page + 1);
       setMore(current => ({
         base,
         pages: [

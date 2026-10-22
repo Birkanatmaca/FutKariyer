@@ -3,8 +3,10 @@ import { copy } from '../../../shared/lib/copy';
 import type { PlayerFootballType } from '../../../shared/domain/football';
 import {
   tournamentLimits,
+  type MatchInput,
   type TournamentFormat,
   type TournamentInput,
+  type TournamentMatch,
 } from '../domain/models';
 
 const text = copy.tournaments;
@@ -171,4 +173,146 @@ export function errorMessage(failure: unknown) {
   return failure instanceof Error && failure.message
     ? failure.message
     : copy.form.unexpected;
+}
+
+// The match form keeps every value as typed. Kickoff is a local calendar day
+// and a 24-hour time; both are given together or left empty.
+export type MatchDraft = {
+  round: string;
+  homeEntryId: string;
+  awayEntryId: string;
+  kickoffDate: string;
+  kickoffTime: string;
+  venue: string;
+  homeGoals: string;
+  awayGoals: string;
+};
+
+export type MatchField = 'round' | 'teams' | 'kickoff' | 'venue' | 'score';
+export type MatchErrors = Partial<Record<MatchField, string>>;
+
+const pad = (value: number) => String(value).padStart(2, '0');
+
+export function emptyMatchDraft(round = 1): MatchDraft {
+  return {
+    round: String(round),
+    homeEntryId: '',
+    awayEntryId: '',
+    kickoffDate: '',
+    kickoffTime: '',
+    venue: '',
+    homeGoals: '',
+    awayGoals: '',
+  };
+}
+
+// Shows a stored match in the device's local time.
+export function matchDraftOf(match: TournamentMatch): MatchDraft {
+  const at = match.kickoffAt ? new Date(match.kickoffAt) : null;
+  return {
+    round: String(match.round),
+    homeEntryId: match.homeEntryId,
+    awayEntryId: match.awayEntryId,
+    kickoffDate: at
+      ? at.getFullYear() +
+        '-' +
+        pad(at.getMonth() + 1) +
+        '-' +
+        pad(at.getDate())
+      : '',
+    kickoffTime: at ? pad(at.getHours()) + ':' + pad(at.getMinutes()) : '',
+    venue: match.venue,
+    homeGoals: match.homeGoals === null ? '' : String(match.homeGoals),
+    awayGoals: match.awayGoals === null ? '' : String(match.awayGoals),
+  };
+}
+
+const wholeNumber = (value: string) =>
+  /^\d+$/.test(value.trim()) ? Number(value.trim()) : NaN;
+
+export function isClockTime(value: string) {
+  const match = /^(\d{2}):(\d{2})$/.exec(value.trim());
+  return !!match && Number(match[1]) < 24 && Number(match[2]) < 60;
+}
+
+export function validateMatch(draft: MatchDraft): MatchErrors {
+  const errors: MatchErrors = {};
+  const limits = tournamentLimits;
+  const round = wholeNumber(draft.round);
+  if (!(round >= limits.round.min && round <= limits.round.max)) {
+    errors.round = text.roundError(limits.round.min, limits.round.max);
+  }
+  if (!draft.homeEntryId || !draft.awayEntryId) {
+    errors.teams = text.teamsError;
+  } else if (draft.homeEntryId === draft.awayEntryId) {
+    errors.teams = text.sameTeamError;
+  }
+  const date = draft.kickoffDate.trim();
+  const time = draft.kickoffTime.trim();
+  if (date || time) {
+    if (!isCalendarDay(date) || !isClockTime(time)) {
+      errors.kickoff = text.kickoffError;
+    }
+  }
+  if (textLength(draft.venue) > limits.matchVenue) {
+    errors.venue = text.tooLong(limits.matchVenue);
+  }
+  const home = draft.homeGoals.trim();
+  const away = draft.awayGoals.trim();
+  if (!home !== !away) {
+    errors.score = text.scorePairError;
+  } else if (home) {
+    const goals = [wholeNumber(home), wholeNumber(away)];
+    if (
+      !goals.every(
+        value => value >= limits.goals.min && value <= limits.goals.max,
+      )
+    ) {
+      errors.score = text.scoreError(limits.goals.min, limits.goals.max);
+    }
+  }
+  return errors;
+}
+
+// Call only after validateMatch returned no errors.
+export function toMatchInput(draft: MatchDraft): MatchInput {
+  const date = draft.kickoffDate.trim();
+  let kickoffAt: string | null = null;
+  if (date) {
+    const [year, month, day] = date.split('-').map(Number);
+    const [hour, minute] = draft.kickoffTime.trim().split(':').map(Number);
+    kickoffAt = new Date(year, month - 1, day, hour, minute).toISOString();
+  }
+  const home = draft.homeGoals.trim();
+  return {
+    round: wholeNumber(draft.round),
+    homeEntryId: draft.homeEntryId,
+    awayEntryId: draft.awayEntryId,
+    kickoffAt,
+    venue: draft.venue,
+    homeGoals: home ? wholeNumber(home) : null,
+    awayGoals: home ? wholeNumber(draft.awayGoals) : null,
+  };
+}
+
+// Keeps the 422 field errors that belong to the match form.
+export function matchFieldErrors(failure: unknown): MatchErrors {
+  const errors: MatchErrors = {};
+  if (!(failure instanceof ApiError) || failure.status !== 422) return errors;
+  for (const key of ['round', 'teams', 'venue', 'score'] as const) {
+    const message = failure.fields[key];
+    if (typeof message === 'string' && message) errors[key] = message;
+  }
+  const kickoff = failure.fields.kickoffAt;
+  if (typeof kickoff === 'string' && kickoff) errors.kickoff = kickoff;
+  return errors;
+}
+
+// Searches start at two letters, as the server requires.
+export function isSearchQuery(value: string) {
+  const length = textLength(value);
+  return (
+    length >= tournamentLimits.search.min &&
+    length <= tournamentLimits.search.max
+  );
 }

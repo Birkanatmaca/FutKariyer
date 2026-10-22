@@ -24,6 +24,7 @@ import {
 } from '../application/validation';
 import {
   tournamentLimits,
+  type EntryInput,
   type RosterCandidate,
   type TournamentEntry,
 } from '../domain/models';
@@ -37,11 +38,22 @@ export function TournamentEntryForm({
   loadSquad,
   onSubmitted,
   onCancel,
+  send,
+  title = text.entryTitle,
+  submitLabel = text.submit,
+  sendingLabel = text.sending,
+  withMessage = true,
 }: {
   token: string;
   tournamentId: string;
   service: TournamentsService;
   loadSquad(token: string): Promise<RosterCandidate[]>;
+  // Accepting an invitation sends the roster elsewhere and has no message.
+  send?(input: EntryInput): Promise<TournamentEntry>;
+  title?: string;
+  submitLabel?: string;
+  sendingLabel?: string;
+  withMessage?: boolean;
   onSubmitted(entry: TournamentEntry): void;
   // Called with true when the server says another attempt cannot succeed.
   onCancel(blocked: boolean, message: string): void;
@@ -66,11 +78,12 @@ export function TournamentEntryForm({
     Keyboard.dismiss();
     setBusy(true);
     try {
+      const input = {
+        message: withMessage ? message : '',
+        playerIds: selected,
+      };
       onSubmitted(
-        await service.enter(token, tournamentId, {
-          message,
-          playerIds: selected,
-        }),
+        await (send ? send(input) : service.enter(token, tournamentId, input)),
       );
     } catch (failure) {
       if (isFinalEntryError(failure)) {
@@ -89,20 +102,22 @@ export function TournamentEntryForm({
   return (
     <View style={styles.form}>
       <Text accessibilityRole="header" style={styles.title}>
-        {text.entryTitle}
+        {title}
       </Text>
-      <Field
-        label={text.message}
-        value={message}
-        onChangeText={value => {
-          setMessage(value);
-          setMessageError('');
-        }}
-        multiline
-        editable={!busy}
-        error={messageError}
-        hint={text.counter(textLength(message), tournamentLimits.message)}
-      />
+      {withMessage ? (
+        <Field
+          label={text.message}
+          value={message}
+          onChangeText={value => {
+            setMessage(value);
+            setMessageError('');
+          }}
+          multiline
+          editable={!busy}
+          error={messageError}
+          hint={text.counter(textLength(message), tournamentLimits.message)}
+        />
+      ) : null}
       <View style={styles.rosterHead}>
         <Text style={styles.label}>{text.roster}</Text>
         <Text style={[styles.count, full && styles.countFull]}>
@@ -162,7 +177,7 @@ export function TournamentEntryForm({
       )}
       <ErrorBanner message={formError} />
       <Button
-        label={busy ? text.sending : text.submit}
+        label={busy ? sendingLabel : submitLabel}
         loading={busy}
         disabled={squad.loading}
         onPress={submit}

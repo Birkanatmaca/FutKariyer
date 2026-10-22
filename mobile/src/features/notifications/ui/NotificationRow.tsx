@@ -17,6 +17,7 @@ import {
   Sparkles,
   Trophy,
   UserPlus,
+  UserRoundPlus,
   UsersRound,
   type LucideIcon,
 } from 'lucide-react-native';
@@ -38,6 +39,7 @@ const kindIcon: Record<DisplayNotificationKind, LucideIcon> = {
   tournament: Medal,
   follow: UserPlus,
   staff: UsersRound,
+  squad_invite: UserRoundPlus,
   other: Bell,
 };
 

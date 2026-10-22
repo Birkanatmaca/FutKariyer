@@ -38,6 +38,7 @@ export function NotificationsScreen({
   onOpenStaff,
   onOpenListing,
   onOpenTournament,
+  onOpenSquadInvite,
   onOpenProfile,
   onFollowBack,
 }: {
@@ -50,6 +51,8 @@ export function NotificationsScreen({
   onOpenStaff?(): void;
   onOpenListing?(id: string): void;
   onOpenTournament?(resourceId: string): void;
+  // Squad invitations open Kulüp davetleri (player) or Kadrom (club).
+  onOpenSquadInvite?(): void;
   // Follow notifications: open the follower's profile and follow them back.
   onOpenProfile?(userId: string, role: AppNotification['actorRole']): void;
   onFollowBack?(userId: string): Promise<void>;
@@ -100,6 +103,7 @@ export function NotificationsScreen({
     else if (item.kind === 'gift') onOpenGifts?.();
     else if (item.kind === 'connection') onOpenConnections?.();
     else if (item.kind === 'staff') onOpenStaff?.();
+    else if (item.kind === 'squad_invite') onOpenSquadInvite?.();
     else if (item.kind === 'opportunity' && target)
       onOpenListing?.(item.resourceId);
     else if (item.kind === 'tournament' && target)

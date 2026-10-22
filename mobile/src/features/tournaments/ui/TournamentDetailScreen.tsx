@@ -19,13 +19,21 @@ import {
 } from '../domain/models';
 import { TournamentEntryForm } from './TournamentEntryForm';
 import {
+  Segments,
   StatusBadge,
   eligibleLabel,
   formatDay,
   tournamentDates,
 } from './TournamentParts';
+import { FixtureView, StandingsView } from './TournamentTableViews';
 
 const text = copy.tournaments;
+type DetailTab = 'about' | 'standings' | 'fixture';
+const detailTabs: { key: DetailTab; label: string }[] = [
+  { key: 'about', label: text.tabs.about },
+  { key: 'standings', label: text.tabs.standings },
+  { key: 'fixture', label: text.tabs.fixture },
+];
 
 export function TournamentDetailScreen({
   token,
@@ -46,6 +54,7 @@ export function TournamentDetailScreen({
   const state = useFocusedResource(
     useCallback(() => service.detail(token, id), [service, token, id]),
   );
+  const [tab, setTab] = useState<DetailTab>('about');
   const tournament = state.data;
   return (
     <Screen>
@@ -59,17 +68,33 @@ export function TournamentDetailScreen({
         </>
       ) : tournament ? (
         <>
-          <TournamentSummary tournament={tournament} showOrganizer />
-          {club ? (
-            <ClubEntryPanel
+          <Segments<DetailTab>
+            options={detailTabs}
+            value={tab}
+            onChange={setTab}
+          />
+          {tab !== 'about' ? (
+            <PublicTable
               token={token}
-              tournament={tournament}
+              id={tournament.id}
               service={service}
-              club={club}
-              onEntries={onEntries}
+              tab={tab}
             />
           ) : (
-            <Text style={styles.help}>{text.browseOnly}</Text>
+            <>
+              <TournamentSummary tournament={tournament} showOrganizer />
+              {club ? (
+                <ClubEntryPanel
+                  token={token}
+                  tournament={tournament}
+                  service={service}
+                  club={club}
+                  onEntries={onEntries}
+                />
+              ) : (
+                <Text style={styles.help}>{text.browseOnly}</Text>
+              )}
+            </>
           )}
         </>
       ) : null}
@@ -138,6 +163,37 @@ export function TournamentSummary({
   );
 }
 
+// Puan durumu and Fikstür from the public table; loaded when a tab opens.
+function PublicTable({
+  token,
+  id,
+  service,
+  tab,
+}: {
+  token: string;
+  id: string;
+  service: TournamentsService;
+  tab: Exclude<DetailTab, 'about'>;
+}) {
+  const state = useFocusedResource(
+    useCallback(() => service.table(token, id), [service, token, id]),
+  );
+  if (state.loading) return <ActivityIndicator color={colors.brand} />;
+  if (state.error || !state.data) {
+    return (
+      <>
+        <ErrorBanner message={state.error} />
+        <Button label={copy.form.retry} secondary onPress={state.retry} />
+      </>
+    );
+  }
+  return tab === 'standings' ? (
+    <StandingsView standings={state.data.standings} />
+  ) : (
+    <FixtureView matches={state.data.matches} />
+  );
+}
+
 type ClubState = { clubType: FootballType; entry: TournamentEntry | null };
 
 function ClubEntryPanel({
@@ -179,7 +235,21 @@ function ClubEntryPanel({
   }
   const { clubType } = state.data;
   const entry = submitted ?? state.data.entry;
-  if (entry && entry.status !== 'withdrawn') {
+  if (entry?.status === 'invited') {
+    return (
+      <View style={styles.done}>
+        <Text style={styles.cardTitle}>{text.invitationTitle}</Text>
+        <View style={styles.row}>
+          <StatusBadge status={entry.status} />
+        </View>
+        <Text style={styles.help}>{text.invitationNote}</Text>
+        {onEntries ? (
+          <Button label={text.entriesTitle} secondary onPress={onEntries} />
+        ) : null}
+      </View>
+    );
+  }
+  if (entry && entry.status !== 'withdrawn' && entry.status !== 'declined') {
     return (
       <View style={styles.done}>
         <Text style={styles.cardTitle}>{text.entryStatusTitle}</Text>
@@ -235,6 +305,8 @@ function ClubEntryPanel({
       <Text style={styles.help}>{text.applyHelp}</Text>
       {entry?.status === 'withdrawn' ? (
         <Text style={styles.help}>{text.withdrawnNote}</Text>
+      ) : entry?.status === 'declined' ? (
+        <Text style={styles.help}>{text.declinedNote}</Text>
       ) : null}
       <Button
         label={text.apply}
