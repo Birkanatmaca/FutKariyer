@@ -6,6 +6,9 @@ import { createSocialService } from '../src/features/social/application/social-s
 import { SocialPostCard } from '../src/features/social/ui/SocialPostCard';
 import type { SocialPost } from '../src/features/social/domain/models';
 
+jest.mock('../src/features/players', () =>
+  jest.requireActual('../src/features/players/domain/profile'),
+);
 jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(),
 }));
@@ -41,6 +44,7 @@ const profile = {
   followingCount: 4,
   self: false,
   discovery: false,
+  playerProfile: null,
 };
 beforeEach(() => jest.clearAllMocks());
 
@@ -60,6 +64,23 @@ test('a post author profile is read from the social profile endpoint and validat
     { profile: { ...profile, followers: -1 } },
     { profile: { ...profile, role: 'organizer' } },
     { profile: { ...profile, self: 'no' } },
+    // A football card only comes with a player the viewer may discover.
+    {
+      profile: {
+        ...profile,
+        playerProfile: {
+          position: 'Forvet',
+          dominantFoot: 'right',
+          experienceYears: 3,
+          currentClub: '',
+          availability: 'seeking_team',
+          discoverable: true,
+          footballType: 'halisaha',
+          licenseStatus: 'licensed',
+          updatedAt: '2026-10-22T10:00:00Z',
+        },
+      },
+    },
   ]) {
     (request as jest.Mock).mockResolvedValueOnce(payload);
     await expect(service.profile('token', id)).rejects.toThrow();

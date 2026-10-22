@@ -33,10 +33,7 @@ export const ProfileShareCard = forwardRef<
     avatarUri?: string;
     isPro?: boolean;
   }
->(function ShareCard(
-  { fullName, profile, counts, avatarUri, isPro },
-  ref,
-) {
+>(function ShareCard({ fullName, profile, counts, avatarUri, isPro }, ref) {
   const text = copy.playerOverview;
   const facts = [
     profile.position,

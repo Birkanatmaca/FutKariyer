@@ -59,9 +59,47 @@ export function PlayerMediaGallery({
 }: Partial<GalleryProps> & { posts?: ProfilePostsSlot }) {
   return props.token && props.ownerId && props.service ? (
     <LoadedGallery {...(props as GalleryProps)} posts={posts} />
+  ) : posts ? (
+    <PostsGallery posts={posts} />
   ) : (
     <GalleryFrame selected="photos" onSelect={() => {}}>
       <Empty tab="photos" />
+    </GalleryFrame>
+  );
+}
+
+// Someone whose gallery the viewer cannot open (a club, a coach, a player
+// hidden from discovery): the same tabs, filled from their posts only.
+function PostsGallery({ posts }: { posts: ProfilePostsSlot }) {
+  const [selected, setSelected] = useState<Tab>('posts');
+  if (selected === 'posts')
+    return (
+      <GalleryFrame selected={selected} onSelect={setSelected} withPosts>
+        {posts.postsTab}
+      </GalleryFrame>
+    );
+  const tab: MediaTab = selected === 'videos' ? 'videos' : 'photos';
+  const kind = tab === 'photos' ? 'image' : 'video';
+  const tiles = posts.media.filter(item => item.kind === kind);
+  return (
+    <GalleryFrame selected={tab} onSelect={setSelected} withPosts>
+      {tiles.length ? (
+        <View style={styles.grid}>
+          {tiles.map(tile => (
+            <Pressable
+              key={'post' + tile.id}
+              accessibilityRole="button"
+              accessibilityLabel={text.openPost}
+              onPress={() => posts.onOpenMedia(tile.id)}
+              style={styles.tile}
+            >
+              {posts.renderMedia(tile)}
+            </Pressable>
+          ))}
+        </View>
+      ) : (
+        <Empty tab={tab} />
+      )}
     </GalleryFrame>
   );
 }

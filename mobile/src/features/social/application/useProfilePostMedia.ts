@@ -15,6 +15,9 @@ export function useProfilePostMedia(
   service: SocialService,
   token: string | null,
   userId: string,
+  // 'all' takes every post with media (clubs and coaches cannot pick
+  // profile media); 'media' keeps the player's chosen profile media.
+  filter: 'media' | 'all' = 'media',
 ) {
   const [items, setItems] = useState<ProfilePostMedia[]>([]);
   useFocusEffect(
@@ -22,7 +25,7 @@ export function useProfilePostMedia(
       let current = true;
       if (token)
         service
-          .userPosts(token, userId, '', 'media')
+          .userPosts(token, userId, '', filter)
           .then(page => {
             if (current)
               setItems(
@@ -43,7 +46,7 @@ export function useProfilePostMedia(
       return () => {
         current = false;
       };
-    }, [service, token, userId]),
+    }, [service, token, userId, filter]),
   );
   return items;
 }

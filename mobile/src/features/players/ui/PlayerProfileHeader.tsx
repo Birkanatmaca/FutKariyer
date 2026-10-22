@@ -7,7 +7,14 @@ import {
   View,
   type ImageSourcePropType,
 } from 'react-native';
-import { Pencil, Share, Shield, Eye, EyeOff } from 'lucide-react-native';
+import {
+  BadgeCheck,
+  Pencil,
+  Share,
+  Shield,
+  Eye,
+  EyeOff,
+} from 'lucide-react-native';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
 import type { PlayerProfile } from '../domain/profile';
@@ -18,6 +25,8 @@ export type ProfileCounts = {
   views: number;
   followers: number;
   following: number;
+  // Someone else's profile shows their post count where the owner sees views.
+  posts?: number;
 };
 import { ProBadge } from '../../../shared/ui/ProBadge';
 
@@ -29,6 +38,8 @@ export function PlayerProfileHeader({
   onShare,
   counts,
   isPro = false,
+  verified = false,
+  actions,
 }: {
   fullName: string;
   profile: PlayerProfile;
@@ -38,6 +49,9 @@ export function PlayerProfileHeader({
   onEdit?(): void;
   // Opens the share sheet; an icon-only button beside Profili düzenle.
   onShare?(): void;
+  verified?: boolean;
+  // Someone else's profile: follow and other buttons in place of Düzenle.
+  actions?: React.ReactNode;
 }) {
   const [failedSource, setFailedSource] = useState<ImageSourcePropType | null>(
     null,
@@ -69,7 +83,9 @@ export function PlayerProfileHeader({
   // following) and the football facts move into one bio line.
   const top = counts
     ? [
-        [copy.playerOverview.views, String(counts.views)],
+        counts.posts !== undefined
+          ? [copy.playerOverview.postCount, String(counts.posts)]
+          : [copy.playerOverview.views, String(counts.views)],
         [copy.playerOverview.followers, String(counts.followers)],
         [copy.playerOverview.following, String(counts.following)],
       ]
@@ -132,6 +148,13 @@ export function PlayerProfileHeader({
           <Text accessibilityRole="header" style={styles.name}>
             {fullName}
           </Text>
+          {verified ? (
+            <BadgeCheck
+              accessibilityLabel={copy.social.verified}
+              size={17}
+              color={colors.accent}
+            />
+          ) : null}
           {isPro ? <ProBadge /> : null}
         </View>
         <Text style={styles.role}>{copy.roles.player}</Text>
@@ -169,6 +192,7 @@ export function PlayerProfileHeader({
           </View>
         ) : null}
       </View>
+      {!onEdit && actions ? actions : null}
       {onEdit && (
         <>
           <View style={styles.actions}>

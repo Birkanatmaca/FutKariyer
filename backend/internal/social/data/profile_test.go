@@ -65,8 +65,15 @@ func TestProfileOpensFromAnyPostAndRecordsTheVisit(t *testing.T) {
 		t.Fatalf("one view per profile and day expected, got %d %v", views, err)
 	}
 	// A player may open a verified club's discovery profile too.
-	if p, err = repo.Profile(ctx, player, club); err != nil || !p.Discovery || p.FollowingCount != 1 {
+	if p, err = repo.Profile(ctx, player, club); err != nil || !p.Discovery || p.FollowingCount != 1 || p.PlayerProfile != nil {
 		t.Fatalf("club seen by a player: %+v %v", p, err)
+	}
+	// A discoverable player's football card comes with the profile.
+	if _, err := db.DB.ExecContext(ctx, `UPDATE player_profiles SET discoverable=true,position='Forvet' WHERE user_id=$1`, player); err != nil {
+		t.Fatal(err)
+	}
+	if p, err = repo.Profile(ctx, club, player); err != nil || !p.Discovery || p.PlayerProfile == nil || p.PlayerProfile.Position != "Forvet" || p.FootballType != "halisaha" {
+		t.Fatalf("discoverable player seen by a verified club: %+v %v", p, err)
 	}
 	// Own profile: no view recorded.
 	if p, err = repo.Profile(ctx, player, player); err != nil || !p.Self {

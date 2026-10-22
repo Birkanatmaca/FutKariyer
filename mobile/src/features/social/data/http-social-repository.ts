@@ -7,6 +7,7 @@ import {
 import { mediaSource } from '../../../shared/lib/media-source';
 import { maxImageBytes, maxVideoBytes } from '../domain/models';
 import { copy } from '../../../shared/lib/copy';
+import { isPlayerProfile } from '../../players';
 import type {
   SocialAuthor,
   SocialPage,
@@ -51,7 +52,11 @@ function profileValid(value: unknown): value is SocialProfile {
     countValid(profile.followers) &&
     countValid(profile.followingCount) &&
     typeof profile.self === 'boolean' &&
-    typeof profile.discovery === 'boolean'
+    typeof profile.discovery === 'boolean' &&
+    (profile.playerProfile === null ||
+      (profile.discovery &&
+        profile.role === 'player' &&
+        isPlayerProfile(profile.playerProfile)))
   );
 }
 function mediaValid(value: unknown): boolean {

@@ -1,6 +1,7 @@
 export { PlayerProfileScreen } from './ui/PlayerProfileScreen';
 export { PlayerOverviewScreen } from './ui/PlayerOverviewScreen';
 export { PlayerProfileContent } from './ui/PlayerProfileContent';
+export { PlayerMediaGallery } from './ui/PlayerMediaGallery';
 export type { ProfileCounts } from './ui/PlayerProfileHeader';
 export type { ProfilePostsSlot } from './ui/PlayerMediaGallery';
 export { createPlayerProfileService } from './application/profile-service';

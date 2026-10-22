@@ -1,3 +1,4 @@
+import type { PlayerProfile } from '../../players';
 import type { AccountRole } from '../../auth';
 import type {
   FootballType,
@@ -70,6 +71,8 @@ export type SocialProfile = SocialAuthor & {
   self: boolean;
   // The viewer may also open the author's discovery profile.
   discovery: boolean;
+  // A player's football card, when discovery rules let the viewer see it.
+  playerProfile: PlayerProfile | null;
 };
 export interface SocialRepository {
   feed(

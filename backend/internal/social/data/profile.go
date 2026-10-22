@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
 	"futcareer/backend/internal/social/domain"
 )
@@ -46,6 +47,18 @@ func (r *Postgres) Profile(ctx context.Context, viewerID, userID string) (domain
 	}
 	if err != nil {
 		return p, err
+	}
+	if p.Discovery && p.Role == "player" {
+		var card domain.PlayerCard
+		var updated time.Time
+		if err = tx.QueryRowContext(ctx, `SELECT COALESCE(position,''),COALESCE(dominant_foot,''),COALESCE(experience_years,0),COALESCE(current_club,''),
+			COALESCE(availability,'not_available'),discoverable,COALESCE(football_type,'unknown'),COALESCE(license_status,'unknown'),updated_at
+			FROM player_profiles WHERE user_id=$1`, userID).Scan(&card.Position, &card.DominantFoot, &card.ExperienceYears, &card.CurrentClub,
+			&card.Availability, &card.Discoverable, &card.FootballType, &card.LicenseStatus, &updated); err != nil {
+			return p, err
+		}
+		card.UpdatedAt = updated.UTC().Format(time.RFC3339)
+		p.PlayerProfile = &card
 	}
 	if !p.Self {
 		if _, err = tx.ExecContext(ctx, `INSERT INTO profile_views(profile_id,viewer_id,last_viewed_at,private)
