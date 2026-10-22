@@ -473,7 +473,9 @@ type ApplyInput struct {
 
 var phonePattern = regexp.MustCompile(`^[0-9 +()-]{0,30}$`)
 
-// Apply records a club or organizer sign-up. The account cannot sign in until an
+// Apply records a club sign-up. Organizer accounts are opened only by
+// administrators since 22 Oct 2026; earlier organizer applications stay in
+// the review queue. The account cannot sign in until an
 // administrator approves it, so no session is created here.
 func (s *Service) Apply(ctx context.Context, in ApplyInput) error {
 	repo, ok := s.repo.(domain.ApplicationRepository)
@@ -488,8 +490,8 @@ func (s *Service) Apply(ctx context.Context, in ApplyInput) error {
 	in.District = strings.TrimSpace(in.District)
 	in.Note = strings.TrimSpace(in.Note)
 	fields := ValidationError{}
-	if in.Role != "club" && in.Role != "organizer" {
-		fields["role"] = "Başvuru türü kulüp veya organizasyon olmalı."
+	if in.Role != "club" {
+		fields["role"] = "Başvuru türü kulüp olmalı. Organizasyon hesaplarını yönetici açar."
 	}
 	if n := utf8.RuneCountInString(in.FullName); n < 2 || n > 80 {
 		fields["fullName"] = "Ad 2–80 karakter arasında olmalı."

@@ -14,7 +14,7 @@ import (
 )
 
 // Requires TEST_DATABASE_URL; skipped otherwise.
-func TestClubAndOrganizerApplicationsNeedApproval(t *testing.T) {
+func TestClubApplicationsNeedApproval(t *testing.T) {
 	db := testpostgres.New(t).DB
 	ctx := context.Background()
 	svc := auth.New(authdata.New(db), time.Hour)
@@ -23,11 +23,15 @@ func TestClubAndOrganizerApplicationsNeedApproval(t *testing.T) {
 	if err := svc.Apply(ctx, club); err != nil {
 		t.Fatal(err)
 	}
-	organizer := auth.ApplyInput{Role: "organizer", FullName: "Ankara Turnuva", ContactName: "Ayşe Yılmaz", Username: "ankaraturnuva", Email: "org@example.com", Password: "guclu-sifre-456"}
-	if err := svc.Apply(ctx, organizer); err != nil {
+	// Only administrators open organizer accounts (22 Oct 2026).
+	if err := svc.Apply(ctx, auth.ApplyInput{Role: "organizer", FullName: "Ankara Turnuva", ContactName: "Ayşe Yılmaz", Username: "orgturnuva", Email: "org2@example.com", Password: "guclu-sifre-456"}); !errors.As(err, new(auth.ValidationError)) {
+		t.Fatalf("organizer application accepted: %v", err)
+	}
+	second := auth.ApplyInput{Role: "club", FullName: "Ankara Turnuva", ContactName: "Ayşe Yılmaz", Username: "ankaraturnuva", Email: "org@example.com", Password: "guclu-sifre-456", FootballType: "amateur"}
+	if err := svc.Apply(ctx, second); err != nil {
 		t.Fatal(err)
 	}
-	dup := organizer
+	dup := second
 	dup.Email = "baska@example.com"
 	if err := svc.Apply(ctx, dup); !errors.Is(err, authdomain.ErrUsernameExists) {
 		t.Fatalf("duplicate username accepted: %v", err)
@@ -63,7 +67,7 @@ func TestClubAndOrganizerApplicationsNeedApproval(t *testing.T) {
 	if err != nil || rejected.Status != "rejected" || rejected.RejectionReason != "Belgeler eksik" {
 		t.Fatalf("reject: %+v %v", rejected, err)
 	}
-	if _, err := svc.Login(ctx, auth.LoginInput{Identifier: "ankaraturnuva", Password: organizer.Password}); !errors.Is(err, authdomain.ErrApplicationRejected) {
-		t.Fatalf("rejected organizer signed in: %v", err)
+	if _, err := svc.Login(ctx, auth.LoginInput{Identifier: "ankaraturnuva", Password: second.Password}); !errors.Is(err, authdomain.ErrApplicationRejected) {
+		t.Fatalf("rejected club signed in: %v", err)
 	}
 }

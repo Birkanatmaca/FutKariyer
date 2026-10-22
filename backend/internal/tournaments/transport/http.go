@@ -33,6 +33,18 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 	mux.HandleFunc("PUT /v1/me/tournaments/{id}/status", h.status)
 	mux.HandleFunc("GET /v1/me/tournaments/{id}/entries", h.entries)
 	mux.HandleFunc("PUT /v1/me/tournaments/{id}/entries/{entryId}", h.decide)
+	// Halı saha league play (22 Oct 2026): fixture, scores, standings, invitations.
+	mux.HandleFunc("GET /v1/tournaments/{id}/table", h.table)
+	mux.HandleFunc("PUT /v1/me/tournament-entries/{id}/respond", h.respond)
+	mux.HandleFunc("GET /v1/me/tournaments/{id}/table", h.organizerTable)
+	mux.HandleFunc("POST /v1/me/tournaments/{id}/fixture", h.generateFixture)
+	mux.HandleFunc("DELETE /v1/me/tournaments/{id}/fixture", h.clearFixture)
+	mux.HandleFunc("POST /v1/me/tournaments/{id}/matches", h.createMatch)
+	mux.HandleFunc("PUT /v1/me/tournaments/{id}/matches/{matchId}", h.updateMatch)
+	mux.HandleFunc("DELETE /v1/me/tournaments/{id}/matches/{matchId}", h.deleteMatch)
+	mux.HandleFunc("GET /v1/me/tournaments/{id}/candidates", h.candidates)
+	mux.HandleFunc("POST /v1/me/tournaments/{id}/invites", h.invite)
+	mux.HandleFunc("DELETE /v1/me/tournaments/{id}/invites/{entryId}", h.cancelInvite)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -68,6 +80,18 @@ func failure(w http.ResponseWriter, err error) {
 		status, code, message = 409, "invalid_state", "Bu işlem şu anki durumda yapılamaz. Listeyi yenile."
 	case errors.Is(err, domain.ErrNotInSquad):
 		status, code, message = 422, "not_in_squad", "Turnuva kadrosu yalnızca kulübünün kadrosundaki oyunculardan oluşabilir."
+	case errors.Is(err, domain.ErrFixtureExists):
+		status, code, message = 409, "fixture_exists", "Bu turnuvanın fikstürü zaten var. Önce oynanmamış maçları temizle."
+	case errors.Is(err, domain.ErrTooFewTeams):
+		status, code, message = 409, "too_few_teams", "Fikstür için en az iki kabul edilmiş takım gerekir."
+	case errors.Is(err, domain.ErrNotTeam):
+		status, code, message = 422, "not_team", "Maçtaki iki takım da turnuvaya kabul edilmiş olmalı."
+	case errors.Is(err, domain.ErrNotInvitable):
+		status, code, message = 409, "not_invitable", "Bu takım turnuvaya davet edilemez. Zaten başvurmuş, davet edilmiş veya reddedilmiş olabilir."
+	case errors.Is(err, authdomain.ErrUsernameExists):
+		status, code, message = 409, "username_exists", "Bu kullanıcı adı kullanılıyor."
+	case errors.Is(err, authdomain.ErrEmailExists):
+		status, code, message = 409, "email_exists", "Bu e-posta adresi kullanılıyor."
 	case errors.As(err, &fields):
 		status, code, message = 422, "validation_error", fields.Error()
 	default:
@@ -113,16 +137,12 @@ func (h *Handler) open(w http.ResponseWriter, r *http.Request) {
 	if _, ok := h.actor(w, r, ""); !ok {
 		return
 	}
-	page := 1
-	if raw := r.URL.Query().Get("page"); raw != "" {
-		n, err := strconv.Atoi(raw)
-		if err != nil {
-			failure(w, auth.ValidationError{"page": "Sayfa numarası geçersiz."})
-			return
-		}
-		page = n
+	page, ok := pageOf(w, r)
+	if !ok {
+		return
 	}
-	out, err := h.service.Open(r.Context(), page)
+	query := r.URL.Query()
+	out, err := h.service.List(r.Context(), query.Get("format"), query.Get("view") == "all", page)
 	if err != nil {
 		failure(w, err)
 		return
@@ -267,4 +287,214 @@ func (h *Handler) decide(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	write(w, 200, map[string]any{"entry": out})
+}
+
+func pageOf(w http.ResponseWriter, r *http.Request) (int, bool) {
+	page := 1
+	if raw := r.URL.Query().Get("page"); raw != "" {
+		n, err := strconv.Atoi(raw)
+		if err != nil {
+			failure(w, auth.ValidationError{"page": "Sayfa numarası geçersiz."})
+			return 0, false
+		}
+		page = n
+	}
+	return page, true
+}
+
+func (h *Handler) table(w http.ResponseWriter, r *http.Request) {
+	if _, ok := h.actor(w, r, ""); !ok {
+		return
+	}
+	out, err := h.service.Table(r.Context(), r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, out)
+}
+
+func (h *Handler) respond(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r, "club")
+	if !ok {
+		return
+	}
+	var in struct {
+		Decision  string   `json:"decision"`
+		PlayerIDs []string `json:"playerIds"`
+	}
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := h.service.RespondInvite(r.Context(), id, r.PathValue("id"), in.Decision, in.PlayerIDs)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, map[string]any{"entry": out})
+}
+
+func (h *Handler) organizerTable(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r, "organizer")
+	if !ok {
+		return
+	}
+	out, err := h.service.OrganizerTable(r.Context(), id, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, out)
+}
+
+func (h *Handler) generateFixture(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r, "organizer")
+	if !ok {
+		return
+	}
+	var in struct {
+		Legs int `json:"legs"`
+	}
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := h.service.GenerateFixture(r.Context(), id, r.PathValue("id"), in.Legs)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 201, out)
+}
+
+func (h *Handler) clearFixture(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r, "organizer")
+	if !ok {
+		return
+	}
+	out, err := h.service.ClearFixture(r.Context(), id, r.PathValue("id"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, out)
+}
+
+func (h *Handler) saveMatch(w http.ResponseWriter, r *http.Request, matchID string) {
+	id, ok := h.actor(w, r, "organizer")
+	if !ok {
+		return
+	}
+	var in application.MatchInput
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := h.service.SaveMatch(r.Context(), id, r.PathValue("id"), matchID, in)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	status := 200
+	if matchID == "" {
+		status = 201
+	}
+	write(w, status, map[string]any{"match": out})
+}
+
+func (h *Handler) createMatch(w http.ResponseWriter, r *http.Request) { h.saveMatch(w, r, "") }
+
+func (h *Handler) updateMatch(w http.ResponseWriter, r *http.Request) {
+	h.saveMatch(w, r, r.PathValue("matchId"))
+}
+
+func (h *Handler) deleteMatch(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r, "organizer")
+	if !ok {
+		return
+	}
+	if err := h.service.DeleteMatch(r.Context(), id, r.PathValue("id"), r.PathValue("matchId")); err != nil {
+		failure(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) candidates(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r, "organizer")
+	if !ok {
+		return
+	}
+	out, err := h.service.Candidates(r.Context(), id, r.PathValue("id"), r.URL.Query().Get("q"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, map[string]any{"items": out})
+}
+
+func (h *Handler) invite(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r, "organizer")
+	if !ok {
+		return
+	}
+	var in struct {
+		ClubID  string `json:"clubId"`
+		Message string `json:"message"`
+	}
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := h.service.Invite(r.Context(), id, r.PathValue("id"), in.ClubID, in.Message)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 201, map[string]any{"entry": out})
+}
+
+func (h *Handler) cancelInvite(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r, "organizer")
+	if !ok {
+		return
+	}
+	out, err := h.service.CancelInvite(r.Context(), id, r.PathValue("id"), r.PathValue("entryId"))
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, map[string]any{"entry": out})
+}
+
+// NewAdmin serves organizer accounts for administrators. Mounted behind the
+// admin session check; only administrators open organizer accounts.
+func NewAdmin(service *application.Service) http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /v1/admin/organizers", func(w http.ResponseWriter, r *http.Request) {
+		page, ok := pageOf(w, r)
+		if !ok {
+			return
+		}
+		out, err := service.Organizers(r.Context(), page)
+		if err != nil {
+			failure(w, err)
+			return
+		}
+		write(w, 200, out)
+	})
+	mux.HandleFunc("POST /v1/admin/organizers", func(w http.ResponseWriter, r *http.Request) {
+		var in application.OrganizerInput
+		if !decode(w, r, &in) {
+			return
+		}
+		out, err := service.CreateOrganizer(r.Context(), in)
+		if err != nil {
+			failure(w, err)
+			return
+		}
+		write(w, 201, map[string]any{"organizer": out})
+	})
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		mux.ServeHTTP(w, r)
+	})
 }

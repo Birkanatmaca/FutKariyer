@@ -14,10 +14,15 @@ import (
 var sections = map[string]bool{
 	"home": true, "users": true, "clubs": true, "applications": true, "reports": true, "ads": true, "popups": true, "news": true,
 	"leagues": true, "payments": true, "gifts": true, "rating": true, "announcements": true, "audit": true, "logs": true,
+	"organizers": true,
 }
 var clubOverview = regexp.MustCompile(`^/securityadmin/clubs/[0-9a-f]{32}$`)
 
-// New serves only the admin app's entry routes and built public assets.
+// The organizer web area (22 Oct 2026): a separate entry page of the same
+// build, for organizer accounts only. Its assets live under /securityadmin/assets/.
+var organizerRoute = regexp.MustCompile(`^/organizasyon(/|/[0-9a-f]{32})?$`)
+
+// New serves only the admin app's and organizer area's entry routes and built public assets.
 func New(directory string) (http.Handler, error) {
 	root, err := filepath.Abs(directory)
 	if err != nil {
@@ -27,6 +32,10 @@ func New(directory string) (http.Handler, error) {
 	stat, err := os.Stat(index)
 	if err != nil || stat.IsDir() {
 		return nil, fmt.Errorf("ADMIN_FRONTEND_DIR must contain the built frontend index.html")
+	}
+	organizer := filepath.Join(root, "organizer.html")
+	if stat, err := os.Stat(organizer); err != nil || stat.IsDir() {
+		return nil, fmt.Errorf("ADMIN_FRONTEND_DIR must contain the built organizer.html")
 	}
 	assets := http.StripPrefix("/securityadmin/assets/", http.FileServer(http.Dir(filepath.Join(root, "assets"))))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -40,6 +49,11 @@ func New(directory string) (http.Handler, error) {
 		if r.URL.Path == "/securityadmin" || r.URL.Path == "/securityadmin/" || sections[strings.TrimPrefix(r.URL.Path, "/securityadmin/")] || clubOverview.MatchString(r.URL.Path) {
 			w.Header().Set("Cache-Control", "no-store")
 			http.ServeFile(w, r, index)
+			return
+		}
+		if organizerRoute.MatchString(r.URL.Path) {
+			w.Header().Set("Cache-Control", "no-store")
+			http.ServeFile(w, r, organizer)
 			return
 		}
 		http.NotFound(w, r)

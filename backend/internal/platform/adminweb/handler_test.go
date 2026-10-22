@@ -15,6 +15,9 @@ func TestPanelRoutesLoadTheAppDirectly(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "index.html"), []byte("<html></html>"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.WriteFile(filepath.Join(dir, "organizer.html"), []byte("<html>organizer</html>"), 0o644); err != nil {
+		t.Fatal(err)
+	}
 	handler, err := adminweb.New(dir)
 	if err != nil {
 		t.Fatal(err)
@@ -26,6 +29,11 @@ func TestPanelRoutesLoadTheAppDirectly(t *testing.T) {
 		"/securityadmin/clubs/" + "0123456789abcdef0123456789abcdef": 200,
 		"/securityadmin/unknown":                                     404,
 		"/securityadmin/clubs/../x":                                  404,
+		"/securityadmin/organizers":                                  200,
+		"/organizasyon":                                              200,
+		"/organizasyon/":                                             200,
+		"/organizasyon/0123456789abcdef0123456789abcdef":             200,
+		"/organizasyon/x":                                            404,
 	} {
 		rec := httptest.NewRecorder()
 		handler.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))

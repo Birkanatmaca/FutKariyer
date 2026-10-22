@@ -143,11 +143,16 @@ func (s *Service) Decide(ctx context.Context, organizerID, tournamentID, entryID
 	return s.repo.Decide(ctx, organizerID, tournamentID, entryID, decision == "accept")
 }
 
-func (s *Service) Open(ctx context.Context, page int) (domain.Page, error) {
+// List pages public tournaments; format narrows to one type and all adds
+// running and finished tournaments to those taking entries.
+func (s *Service) List(ctx context.Context, format string, all bool, page int) (domain.Page, error) {
 	if page < 1 || page > 100000 {
 		return domain.Page{}, auth.ValidationError{"page": "Sayfa numarası geçersiz."}
 	}
-	return s.repo.Open(ctx, page)
+	if format != "" && !domain.Formats[format] {
+		return domain.Page{}, auth.ValidationError{"format": "Geçerli bir turnuva türü seç."}
+	}
+	return s.repo.List(ctx, domain.Filter{Format: format, All: all}, page)
 }
 
 func (s *Service) Get(ctx context.Context, id string) (domain.Tournament, error) {

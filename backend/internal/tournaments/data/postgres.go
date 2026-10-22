@@ -311,15 +311,33 @@ func (r *Postgres) Decide(ctx context.Context, organizerID, tournamentID, entryI
 	return out, tx.Commit()
 }
 
-// Open lists tournaments still taking entries, soonest first.
-func (r *Postgres) Open(ctx context.Context, page int) (domain.Page, error) {
+// List pages the public tournaments. By default only those still taking
+// entries, soonest first; with filter.All also running and finished ones,
+// running first.
+func (r *Postgres) List(ctx context.Context, filter domain.Filter, page int) (domain.Page, error) {
 	const size = 20
 	out := domain.Page{Items: []domain.Tournament{}, Page: page, PageSize: size}
 	where := ` WHERE t.status='open' AND o.active AND t.application_deadline >= ` + today
-	if err := r.db.QueryRowContext(ctx, `SELECT count(*)`+joins+where).Scan(&out.Total); err != nil {
+	order := ` ORDER BY t.starts_on,t.id`
+	if filter.All {
+		where = ` WHERE t.status IN ('open','closed','finished') AND o.active`
+		order = ` ORDER BY CASE t.status WHEN 'closed' THEN 0 WHEN 'open' THEN 1 ELSE 2 END,t.starts_on DESC,t.id`
+	}
+	args := []any{size, (page - 1) * size}
+	if filter.Format != "" {
+		where += ` AND t.format=$3`
+		args = append(args, filter.Format)
+	}
+	countArgs := []any{}
+	countWhere := where
+	if filter.Format != "" {
+		countWhere = strings.Replace(where, "$3", "$1", 1)
+		countArgs = append(countArgs, filter.Format)
+	}
+	if err := r.db.QueryRowContext(ctx, `SELECT count(*)`+joins+countWhere, countArgs...).Scan(&out.Total); err != nil {
 		return out, err
 	}
-	items, err := list(r.db.QueryContext(ctx, `SELECT `+columns+joins+where+` ORDER BY t.starts_on,t.id LIMIT $1 OFFSET $2`, size, (page-1)*size))
+	items, err := list(r.db.QueryContext(ctx, `SELECT `+columns+joins+where+order+` LIMIT $1 OFFSET $2`, args...))
 	if err != nil {
 		return out, err
 	}
@@ -334,7 +352,7 @@ func (r *Postgres) Get(ctx context.Context, id string) (domain.Tournament, error
 }
 
 // Enter registers a club for a tournament with a roster from its squad. A club
-// that withdrew may enter again; a rejected club may not.
+// that withdrew or declined an invitation may enter again; a rejected club may not.
 func (r *Postgres) Enter(ctx context.Context, clubID, tournamentID, entryID, message string, playerIDs []string) (domain.Entry, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -384,7 +402,7 @@ func (r *Postgres) Enter(ctx context.Context, clubID, tournamentID, entryID, mes
 		}
 	case err != nil:
 		return domain.Entry{}, err
-	case existingStatus != "withdrawn":
+	case existingStatus != "withdrawn" && existingStatus != "declined":
 		return domain.Entry{}, domain.ErrDuplicate
 	default:
 		entryID = existingID

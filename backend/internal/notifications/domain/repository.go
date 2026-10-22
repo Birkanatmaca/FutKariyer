@@ -19,12 +19,13 @@ const (
 	KindConnection      = "connection"
 	KindTournament      = "tournament"
 	KindFollow          = "follow"
+	KindSquadInvite     = "squad_invite"
 )
 
 // ValidKind lists every kind the notification center knows how to display.
 func ValidKind(kind string) bool {
 	switch kind {
-	case KindTeamApplication, KindPayment, KindOpportunity, KindGift, KindGameReward, KindNewsReview, KindConnection, KindTournament, KindFollow:
+	case KindTeamApplication, KindPayment, KindOpportunity, KindGift, KindGameReward, KindNewsReview, KindConnection, KindTournament, KindFollow, KindSquadInvite:
 		return true
 	}
 	return false

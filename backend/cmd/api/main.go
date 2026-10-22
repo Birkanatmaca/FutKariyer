@@ -91,6 +91,9 @@ import (
 	socialapplication "futcareer/backend/internal/social/application"
 	socialdata "futcareer/backend/internal/social/data"
 	socialtransport "futcareer/backend/internal/social/transport"
+	squadinviteapplication "futcareer/backend/internal/squadinvites/application"
+	squadinvitedata "futcareer/backend/internal/squadinvites/data"
+	squadinvitetransport "futcareer/backend/internal/squadinvites/transport"
 	systemlogsapplication "futcareer/backend/internal/systemlogs/application"
 	systemlogsdata "futcareer/backend/internal/systemlogs/data"
 	systemlogstransport "futcareer/backend/internal/systemlogs/transport"
@@ -247,6 +250,8 @@ func run() error {
 	leagueAdminHandler := leaguetransport.NewAdmin(leagueService)
 	adminFeatures.Handle("/v1/admin/leagues", leagueAdminHandler)
 	adminFeatures.Handle("/v1/admin/leagues/", leagueAdminHandler)
+	tournamentService := tournamentapplication.New(tournamentdata.New(db))
+	adminFeatures.Handle("/v1/admin/organizers", tournamenttransport.NewAdmin(tournamentService))
 	adminFeatures.Handle("/v1/admin/gifts", gifttransport.NewAdmin(giftService))
 	adminFeatures.Handle("/v1/admin/rating/", ratingtransport.NewAdmin(ratingService))
 	applicationAdmin := registrationtransport.NewAdmin(registrationdata.New(db))
@@ -278,7 +283,7 @@ func run() error {
 	routes.Handle("/v1/listings/", listingHandler)
 	routes.Handle("/v1/me/listings", listingHandler)
 	routes.Handle("/v1/me/listings/", listingHandler)
-	tournamentHandler := tournamenttransport.New(authService, tournamentapplication.New(tournamentdata.New(db)))
+	tournamentHandler := tournamenttransport.New(authService, tournamentService)
 	for _, path := range []string{"/v1/tournaments", "/v1/tournaments/", "/v1/me/tournaments", "/v1/me/tournaments/", "/v1/me/tournament-entries", "/v1/me/tournament-entries/"} {
 		routes.Handle(path, tournamentHandler)
 	}
@@ -299,6 +304,10 @@ func run() error {
 	routes.Handle("/v1/me/coach-team", clubHandler)
 	routes.Handle("/v1/me/squad", clubHandler)
 	routes.Handle("/v1/me/squad/", clubHandler)
+	squadInviteHandler := squadinvitetransport.New(authService, squadinviteapplication.New(squadinvitedata.New(db)))
+	for _, path := range []string{"/v1/me/squad/candidates", "/v1/me/squad/invites", "/v1/me/squad/invites/", "/v1/me/squad-invites", "/v1/me/squad-invites/"} {
+		routes.Handle(path, squadInviteHandler)
+	}
 	routes.Handle("/v1/me/memberships", clubHandler)
 	routes.Handle("/v1/me/memberships/", clubHandler)
 	publicPayments := paymenttransport.NewPublic(authService, paymentService, paymentAdapterSecret)
@@ -363,6 +372,8 @@ func run() error {
 		combined.Handle("/api/", http.StripPrefix("/api", guarded))
 		combined.Handle("GET /securityadmin", web)
 		combined.Handle("GET /securityadmin/", web)
+		combined.Handle("GET /organizasyon", web)
+		combined.Handle("GET /organizasyon/", web)
 		combined.Handle("/", guarded)
 		handler = combined
 	}
