@@ -101,6 +101,21 @@ func failure(w http.ResponseWriter, err error) {
 	write(w, status, map[string]any{"error": map[string]any{"code": code, "message": message, "fields": fields}})
 }
 
+// user resolves the signed-in mobile account without a role check.
+func (h *Handler) user(w http.ResponseWriter, r *http.Request) (auth.PublicUser, bool) {
+	parts := strings.Fields(r.Header.Get("Authorization"))
+	token := ""
+	if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+		token = parts[1]
+	}
+	u, err := h.auth.Me(r.Context(), token)
+	if err != nil {
+		failure(w, err)
+		return u, false
+	}
+	return u, true
+}
+
 // actor resolves the signed-in mobile account; role restricts it when set.
 func (h *Handler) actor(w http.ResponseWriter, r *http.Request, role string) (string, bool) {
 	parts := strings.Fields(r.Header.Get("Authorization"))
@@ -317,11 +332,20 @@ func (h *Handler) table(w http.ResponseWriter, r *http.Request) {
 
 // playerTournaments lists the player's tournaments (23 Oct 2026).
 func (h *Handler) playerTournaments(w http.ResponseWriter, r *http.Request) {
-	id, ok := h.actor(w, r, "player")
+	user, ok := h.user(w, r)
 	if !ok {
 		return
 	}
-	out, err := h.service.PlayerTournaments(r.Context(), id)
+	var out []domain.PlayerTournament
+	var err error
+	switch user.Role {
+	case "player":
+		out, err = h.service.PlayerTournaments(r.Context(), user.ID)
+	case "club":
+		out, err = h.service.ClubTournaments(r.Context(), user.ID)
+	default:
+		err = domain.ErrForbidden
+	}
 	if err != nil {
 		failure(w, err)
 		return

@@ -256,7 +256,9 @@ type PlayerTournament struct {
 	Teams      int        `json:"teams"`
 }
 
-// PlayerTournaments is implemented by the PostgreSQL repository.
+// PlayerTournaments is implemented by the PostgreSQL repository. A club
+// gets its own accepted entries the same way (halı saha home card).
 type PlayerTournaments interface {
 	PlayerTournaments(ctx context.Context, playerID string) ([]PlayerTournament, error)
+	ClubTournaments(ctx context.Context, clubID string) ([]PlayerTournament, error)
 }

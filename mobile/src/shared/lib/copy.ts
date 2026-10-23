@@ -1961,6 +1961,14 @@ export const copy = {
     playerEmptyBody:
       'Takımın seni turnuva kadrosuna eklediğinde turnuva burada görünür.',
     playerBrowse: 'Halısaha liglerine göz at',
+    clubCardEyebrow: 'TURNUVAN',
+    clubCardPosition: 'Sıra',
+    clubCardPoints: 'Puan',
+    clubCardTeams: 'Takım',
+    clubCardJoinTitle: 'Halısaha ligine katıl',
+    clubCardJoinBody:
+      'Başvuru alan halısaha lig ve turnuvalarını gör; kadronla başvur, maçlarını ve puan durumunu burada takip et.',
+    clubCardBrowse: 'Ligleri gör',
     eyebrow: 'TURNUVALAR',
     title: 'Turnuvalar',
     description:

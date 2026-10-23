@@ -23,6 +23,7 @@ export function ClubCenterSection({
   onLeagues,
   onLinkTff,
   now,
+  hideTffLink = false,
 }: {
   // The home screen's single center read (useClubCenter).
   state: ClubCenterState;
@@ -36,6 +37,9 @@ export function ClubCenterSection({
   onLinkTff?(): void;
   // Fixed clock for tests.
   now?: number;
+  // Halı saha clubs play no TFF league; their tournament card stands in for
+  // the TFF link card (23 Oct 2026).
+  hideTffLink?: boolean;
 }) {
   const { center } = state;
   const league = center ? primaryLeague(center) : null;
@@ -75,7 +79,7 @@ export function ClubCenterSection({
           onLeagues={onLeagues}
           now={now}
         />
-      ) : center ? (
+      ) : center && !(hideTffLink && !center.tffLinked) ? (
         // No league yet: invite the club to link its TFF team, or say the
         // federation page is down when it is already linked.
         <View style={styles.card}>

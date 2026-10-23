@@ -209,3 +209,12 @@ func (s *Service) PlayerTournaments(ctx context.Context, playerID string) ([]dom
 	}
 	return reader.PlayerTournaments(ctx, playerID)
 }
+
+// ClubTournaments lists the club's accepted entries with position and next match.
+func (s *Service) ClubTournaments(ctx context.Context, clubID string) ([]domain.PlayerTournament, error) {
+	reader, ok := s.repo.(domain.PlayerTournaments)
+	if !ok {
+		return []domain.PlayerTournament{}, nil
+	}
+	return reader.ClubTournaments(ctx, clubID)
+}

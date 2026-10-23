@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useAuth, type StaffPermission } from '../../auth';
 import { accountRepository, avatarUrl, useAccountProfile } from '../../account';
@@ -28,6 +28,7 @@ export function ClubHomeScreen({
   onListings,
   onTournaments,
   onTournamentEntries,
+  tournamentCard,
 }: {
   clubService: ClubService;
   contentService: ContentService;
@@ -44,6 +45,9 @@ export function ClubHomeScreen({
   onListings(): void;
   onTournaments(): void;
   onTournamentEntries(): void;
+  // The app shell's tournament card; halisaha says the club is a halı saha
+  // team, which gets a join card and no TFF link card (23 Oct 2026).
+  tournamentCard?(halisaha: boolean): React.ReactNode;
 }) {
   const { user, token } = useAuth();
   // A coach running the club account only gets shortcuts to the sections the
@@ -55,6 +59,21 @@ export function ClubHomeScreen({
   // The crest is the club account's profile photo.
   const account = useAccountProfile(accountRepository, token);
   const center = useClubCenter(clubService, token);
+  const [halisaha, setHalisaha] = useState(false);
+  useEffect(() => {
+    let current = true;
+    if (token)
+      clubService
+        .profile(token)
+        .then(
+          profile =>
+            current && setHalisaha(profile.footballType === 'halisaha'),
+        )
+        .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+  }, [clubService, token]);
   return (
     <Screen>
       <Brand mark={false} />
@@ -73,7 +92,9 @@ export function ClubHomeScreen({
           onNews={allowed('news', onMyNews)}
           onLeagues={onLeagues}
           onLinkTff={allowed('profile', onLinkTff)}
+          hideTffLink={halisaha}
         />
+        {tournamentCard?.(halisaha)}
         <ClubNewsSection
           token={token}
           service={contentService}

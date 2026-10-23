@@ -137,6 +137,7 @@ import {
   TournamentEntriesScreen,
   TournamentsScreen,
   PlayerTournamentsScreen,
+  TeamTournamentCard,
   createTournamentsService,
   tournamentsRepository,
   type ClubEntrySource,
@@ -496,6 +497,28 @@ function MainTabs() {
                     screen: 'TournamentEntries',
                     initial: false,
                   })
+                }
+                tournamentCard={halisaha =>
+                  token ? (
+                    <TeamTournamentCard
+                      token={token}
+                      service={tournamentsService}
+                      invite={halisaha}
+                      onOpen={id =>
+                        navigation.navigate('More', {
+                          screen: 'TournamentDetail',
+                          params: { id },
+                          initial: false,
+                        })
+                      }
+                      onBrowse={() =>
+                        navigation.navigate('Leagues', {
+                          screen: 'HalisahaTournaments',
+                          initial: false,
+                        })
+                      }
+                    />
+                  ) : null
                 }
               />
             ) : (

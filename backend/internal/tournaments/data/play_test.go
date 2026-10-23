@@ -147,6 +147,9 @@ func TestHalisahaLeagueInvitesFixtureScoresAndStandings(t *testing.T) {
 	if err != nil || len(mine) != 1 || mine[0].EntryID != accB.ID || mine[0].Teams != 2 || mine[0].Position == 0 || mine[0].NextMatch == nil || mine[0].NextMatch.HomeGoals != nil {
 		t.Fatalf("player tournaments: %+v %v", mine, err)
 	}
+	if clubs, err := svc.ClubTournaments(ctx, clubB); err != nil || len(clubs) != 1 || clubs[0].EntryID != accB.ID {
+		t.Fatalf("club tournaments: %+v %v", clubs, err)
+	}
 	if none, err := svc.PlayerTournaments(ctx, other); err != nil || len(none) != 0 {
 		t.Fatalf("someone outside the roster: %+v %v", none, err)
 	}
