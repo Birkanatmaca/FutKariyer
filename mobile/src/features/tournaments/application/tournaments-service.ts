@@ -29,6 +29,7 @@ const trimMatch = (input: MatchInput): MatchInput => ({
 export function createTournamentsService(repository: TournamentsRepository) {
   return {
     open: (token: string, page: number) => repository.open(token, page),
+    playerTournaments: (token: string) => repository.playerTournaments(token),
     halisaha: (token: string, page: number) => repository.halisaha(token, page),
     table: (token: string, id: string) => repository.table(token, id),
     // A declined invitation carries no roster.

@@ -35,6 +35,7 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 	mux.HandleFunc("PUT /v1/me/tournaments/{id}/entries/{entryId}", h.decide)
 	// Halı saha league play (22 Oct 2026): fixture, scores, standings, invitations.
 	mux.HandleFunc("GET /v1/tournaments/{id}/table", h.table)
+	mux.HandleFunc("GET /v1/me/tournament-teams", h.playerTournaments)
 	mux.HandleFunc("PUT /v1/me/tournament-entries/{id}/respond", h.respond)
 	mux.HandleFunc("GET /v1/me/tournaments/{id}/table", h.organizerTable)
 	mux.HandleFunc("POST /v1/me/tournaments/{id}/fixture", h.generateFixture)
@@ -312,6 +313,20 @@ func (h *Handler) table(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	write(w, 200, out)
+}
+
+// playerTournaments lists the player's tournaments (23 Oct 2026).
+func (h *Handler) playerTournaments(w http.ResponseWriter, r *http.Request) {
+	id, ok := h.actor(w, r, "player")
+	if !ok {
+		return
+	}
+	out, err := h.service.PlayerTournaments(r.Context(), id)
+	if err != nil {
+		failure(w, err)
+		return
+	}
+	write(w, 200, map[string]any{"items": out})
 }
 
 func (h *Handler) respond(w http.ResponseWriter, r *http.Request) {

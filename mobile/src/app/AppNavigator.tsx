@@ -136,6 +136,7 @@ import {
   TournamentDetailScreen,
   TournamentEntriesScreen,
   TournamentsScreen,
+  PlayerTournamentsScreen,
   createTournamentsService,
   tournamentsRepository,
   type ClubEntrySource,
@@ -210,6 +211,7 @@ type MoreRoutes = {
   Account: undefined;
   // Settings for every account, organizers included (23 Oct 2026).
   AccountEdit: undefined;
+  PlayerTournaments: undefined;
   AccountPassword: undefined;
   AccountSessions: undefined;
   BlockedUsers: undefined;
@@ -701,6 +703,25 @@ function MoreNavigator() {
           />
         )}
       </MoreStack.Screen>
+      <MoreStack.Screen name="PlayerTournaments">
+        {({ navigation }) =>
+          token ? (
+            <PlayerTournamentsScreen
+              token={token}
+              service={tournamentsService}
+              onBack={() => navigation.goBack()}
+              onOpen={id => navigation.navigate('TournamentDetail', { id })}
+              onBrowse={() =>
+                (
+                  navigation.getParent() as
+                    | BottomTabNavigationProp<MainRoutes>
+                    | undefined
+                )?.navigate('Leagues')
+              }
+            />
+          ) : null
+        }
+      </MoreStack.Screen>
       <MoreStack.Screen name="AccountEdit">
         {({ navigation }) =>
           token ? (
@@ -1180,6 +1201,9 @@ function MoreHomeRoute({
       onTournamentEntries={() => navigation.navigate('TournamentEntries')}
       onSquadInvites={
         isPlayer ? () => navigation.navigate('SquadInvites') : undefined
+      }
+      onMyTournaments={
+        isPlayer ? () => navigation.navigate('PlayerTournaments') : undefined
       }
       squadInviteCount={squadInviteCount}
       isClub={isClub}

@@ -276,7 +276,19 @@ export function leaguePhase(status: TournamentStatus): LeaguePhase {
 // all halı saha tournaments that are open, running or finished.
 export type TournamentFeedView = 'open' | 'halisaha';
 
+// A tournament the player plays in through a team roster (23 Oct 2026).
+export type PlayerTournament = {
+  tournament: Tournament;
+  entryId: string;
+  clubId: string;
+  clubName: string;
+  nextMatch: TournamentMatch | null;
+  position: number;
+  points: number;
+  teams: number;
+};
 export interface TournamentsRepository {
+  playerTournaments(token: string): Promise<PlayerTournament[]>;
   open(token: string, page: number): Promise<TournamentPage>;
   halisaha(token: string, page: number): Promise<TournamentPage>;
   table(token: string, id: string): Promise<TournamentTable>;

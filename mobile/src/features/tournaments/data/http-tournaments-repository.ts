@@ -10,6 +10,7 @@ import {
   type CreatedTournament,
   type EntryPlayer,
   type InviteCandidate,
+  type PlayerTournament,
   type Standing,
   type Tournament,
   type TournamentEntry,
@@ -250,7 +251,28 @@ function field(
 
 const path = (id: string) => encodeURIComponent(id);
 
+function isPlayerTournament(value: unknown): value is PlayerTournament {
+  const item = value as PlayerTournament;
+  return (
+    !!item &&
+    isTournament(item.tournament) &&
+    validId(item.entryId) &&
+    validId(item.clubId) &&
+    isText(item.clubName) &&
+    (item.nextMatch === null || isTournamentMatch(item.nextMatch)) &&
+    isCount(item.position) &&
+    isInt(item.points) &&
+    isCount(item.teams)
+  );
+}
+
 export const tournamentsRepository: TournamentsRepository = {
+  async playerTournaments(token) {
+    return list(
+      await request<unknown>('/v1/me/tournament-teams', { token }),
+      isPlayerTournament,
+    );
+  },
   async open(token, page) {
     const result = await request<unknown>('/v1/tournaments?page=' + page, {
       token,

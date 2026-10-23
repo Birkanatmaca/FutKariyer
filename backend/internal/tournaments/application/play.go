@@ -200,3 +200,12 @@ func (s *Service) CreateOrganizer(ctx context.Context, in OrganizerInput) (domai
 	}
 	return s.repo.CreateOrganizer(ctx, u)
 }
+
+// PlayerTournaments lists the tournaments a player plays in through a team roster.
+func (s *Service) PlayerTournaments(ctx context.Context, playerID string) ([]domain.PlayerTournament, error) {
+	reader, ok := s.repo.(domain.PlayerTournaments)
+	if !ok {
+		return []domain.PlayerTournament{}, nil
+	}
+	return reader.PlayerTournaments(ctx, playerID)
+}

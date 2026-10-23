@@ -242,3 +242,21 @@ func RoundRobin(teams []string, legs int) []Pairing {
 	}
 	return out
 }
+
+// PlayerTournament is a tournament a player plays in through an accepted
+// team roster (23 Oct 2026), with the team's next match and table position.
+type PlayerTournament struct {
+	Tournament Tournament `json:"tournament"`
+	EntryID    string     `json:"entryId"`
+	ClubID     string     `json:"clubId"`
+	ClubName   string     `json:"clubName"`
+	NextMatch  *Match     `json:"nextMatch"`
+	Position   int        `json:"position"`
+	Points     int        `json:"points"`
+	Teams      int        `json:"teams"`
+}
+
+// PlayerTournaments is implemented by the PostgreSQL repository.
+type PlayerTournaments interface {
+	PlayerTournaments(ctx context.Context, playerID string) ([]PlayerTournament, error)
+}

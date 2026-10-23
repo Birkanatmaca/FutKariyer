@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   Scale,
   ShieldCheck,
+  Trophy,
   ShoppingBag,
   Settings,
   Newspaper,
@@ -59,6 +60,7 @@ export function MoreScreen({
   onTournaments,
   onTournamentEntries,
   onSquadInvites,
+  onMyTournaments,
   squadInviteCount,
   isClub,
   isPlayer,
@@ -84,6 +86,8 @@ export function MoreScreen({
   onTournamentEntries(): void;
   // Player: Kulüp davetleri with the number of open invitations when known.
   onSquadInvites?(): void;
+  // Players: tournaments their team plays in (23 Oct 2026).
+  onMyTournaments?(): void;
   squadInviteCount?: number | null;
   isClub: boolean;
   isPlayer: boolean;
@@ -250,6 +254,16 @@ export function MoreScreen({
                             : text.squadInvitesHint,
                           UserRoundPlus,
                           onSquadInvites,
+                        ),
+                      ]
+                    : []),
+                  ...(onMyTournaments
+                    ? [
+                        entry(
+                          copy.tournaments.playerTitle,
+                          copy.tournaments.playerHint,
+                          Trophy,
+                          onMyTournaments,
                         ),
                       ]
                     : []),

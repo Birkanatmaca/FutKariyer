@@ -285,7 +285,7 @@ func run() error {
 	routes.Handle("/v1/me/listings", listingHandler)
 	routes.Handle("/v1/me/listings/", listingHandler)
 	tournamentHandler := tournamenttransport.New(authService, tournamentService)
-	for _, path := range []string{"/v1/tournaments", "/v1/tournaments/", "/v1/me/tournaments", "/v1/me/tournaments/", "/v1/me/tournament-entries", "/v1/me/tournament-entries/"} {
+	for _, path := range []string{"/v1/tournaments", "/v1/tournaments/", "/v1/me/tournaments", "/v1/me/tournaments/", "/v1/me/tournament-entries", "/v1/me/tournament-entries/", "/v1/me/tournament-teams"} {
 		routes.Handle(path, tournamentHandler)
 	}
 	routes.Handle("/v1/teams", teamHandler)

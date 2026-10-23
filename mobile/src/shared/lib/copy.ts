@@ -1949,6 +1949,18 @@ export const copy = {
       'Aradığın mevkiyi anlatan bir ilan yayınla; uygun sporcular bildirim alır.',
   },
   tournaments: {
+    // Turnuvalarım for players (23 Oct 2026).
+    playerTitle: 'Turnuvalarım',
+    playerHint: 'Takımınla oynadığın turnuvalar ve maçların.',
+    playerStanding: (position: number, teams: number, points: number) =>
+      position + '. sıra · ' + teams + ' takım · ' + points + ' puan',
+    playerNext: (round: number, opponent: string, when: string) =>
+      'Sıradaki maç: Hafta ' + round + ' · ' + opponent + ' · ' + when,
+    playerNoNext: 'Planlanmış maç yok',
+    playerEmptyTitle: 'Henüz bir turnuvada değilsin',
+    playerEmptyBody:
+      'Takımın seni turnuva kadrosuna eklediğinde turnuva burada görünür.',
+    playerBrowse: 'Halısaha liglerine göz at',
     eyebrow: 'TURNUVALAR',
     title: 'Turnuvalar',
     description:

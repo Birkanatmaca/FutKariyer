@@ -142,6 +142,15 @@ func TestHalisahaLeagueInvitesFixtureScoresAndStandings(t *testing.T) {
 		t.Fatalf("second: %+v", second)
 	}
 
+	// The player in club B's roster sees the tournament with the next match.
+	mine, err := svc.PlayerTournaments(ctx, player)
+	if err != nil || len(mine) != 1 || mine[0].EntryID != accB.ID || mine[0].Teams != 2 || mine[0].Position == 0 || mine[0].NextMatch == nil || mine[0].NextMatch.HomeGoals != nil {
+		t.Fatalf("player tournaments: %+v %v", mine, err)
+	}
+	if none, err := svc.PlayerTournaments(ctx, other); err != nil || len(none) != 0 {
+		t.Fatalf("someone outside the roster: %+v %v", none, err)
+	}
+
 	// Clearing removes only unplayed matches.
 	cleared, err := svc.ClearFixture(ctx, org.ID, tour.ID)
 	if err != nil || len(cleared.Matches) != 2 {

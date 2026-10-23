@@ -1,4 +1,5 @@
 export { TournamentsScreen } from './ui/TournamentsScreen';
+export { PlayerTournamentsScreen } from './ui/PlayerTournamentsScreen';
 export { TournamentDetailScreen } from './ui/TournamentDetailScreen';
 export { TournamentEntriesScreen } from './ui/TournamentEntriesScreen';
 export { OrganizerHomeScreen } from './ui/OrganizerHomeScreen';
