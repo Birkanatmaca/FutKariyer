@@ -42,6 +42,8 @@ export function CoachOverviewScreen({
   onEdit,
   onEditCoach,
   posts,
+  onFollowers,
+  onFollowing,
 }: {
   token: string;
   userId: string;
@@ -54,6 +56,9 @@ export function CoachOverviewScreen({
   onEdit(): void;
   onEditCoach(): void;
   posts?: React.ReactNode;
+  // The follower and following counts open the lists (23 Oct 2026).
+  onFollowers?(): void;
+  onFollowing?(): void;
 }) {
   const [card, setCard] = useState<CoachCard | null>(null);
   const [error, setError] = useState('');
@@ -94,17 +99,24 @@ export function CoachOverviewScreen({
           <Avatar name={fullName} uri={avatarUri} size={84} />
         </View>
         <View style={styles.stats}>
-          {stats.map(([label, value]) => (
-            <View
-              key={label}
-              style={styles.stat}
-              accessible
-              accessibilityLabel={(value ?? '–') + ' ' + label}
-            >
-              <Text style={styles.statValue}>{value ?? '–'}</Text>
-              <Text style={styles.statLabel}>{label}</Text>
-            </View>
-          ))}
+          {stats.map(([label, value], index) => {
+            const onPress =
+              index === 1 ? onFollowers : index === 2 ? onFollowing : undefined;
+            return (
+              <Pressable
+                key={label}
+                disabled={!onPress}
+                onPress={onPress}
+                style={styles.stat}
+                accessible
+                accessibilityRole={onPress ? 'button' : undefined}
+                accessibilityLabel={(value ?? '–') + ' ' + label}
+              >
+                <Text style={styles.statValue}>{value ?? '–'}</Text>
+                <Text style={styles.statLabel}>{label}</Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
       <View style={styles.identity}>

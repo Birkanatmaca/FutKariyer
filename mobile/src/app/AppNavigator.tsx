@@ -113,6 +113,7 @@ import {
   SocialThreadScreen,
   SocialPublishScreen,
   SocialProfileScreen,
+  FollowListScreen,
   createSocialService,
   socialRepository,
 } from '../features/social';
@@ -252,6 +253,8 @@ type SocialRoutes = {
   SocialThread: { id: string };
   // A post author's profile (22 Oct 2026).
   SocialProfile: { id: string };
+  // Someone's followers or followed accounts (23 Oct 2026).
+  FollowList: { id: string; kind: 'followers' | 'following'; name: string };
   SocialPublish: undefined;
   // Header shortcuts (19 Oct 2026): open inside the Social stack so back
   // returns to the feed and the Social tab stays selected.
@@ -1507,8 +1510,22 @@ function OwnPlayerProfile({
       onEdit={() => navigation.navigate('AccountProfile')}
       counts={counts}
       posts={posts}
+      onFollowers={() => openFollowList(userId, 'followers', fullName)}
+      onFollowing={() => openFollowList(userId, 'following', fullName)}
     />
   );
+}
+// The own profile's counts open the lists in the Sosyal stack.
+function openFollowList(
+  id: string,
+  kind: 'followers' | 'following',
+  name: string,
+) {
+  navigationRef.navigate('Social', {
+    screen: 'FollowList',
+    params: { id, kind, name },
+    initial: false,
+  });
 }
 // The coach's own profile; posts open and are written inside the Profil stack.
 function OwnCoachProfile({
@@ -1550,6 +1567,8 @@ function OwnCoachProfile({
       onEdit={() => navigation.navigate('AccountProfile')}
       onEditCoach={() => navigation.navigate('CoachProfile')}
       posts={posts?.postsTab}
+      onFollowers={() => openFollowList(userId, 'followers', fullName)}
+      onFollowing={() => openFollowList(userId, 'following', fullName)}
     />
   );
 }
@@ -1748,6 +1767,27 @@ function SocialNavigator() {
                   | undefined
               )?.navigate('Profile')
             }
+            onFollowList={(kind, name) =>
+              navigation.push('FollowList', {
+                id: route.params.id,
+                kind,
+                name,
+              })
+            }
+          />
+        )}
+      </SocialStack.Screen>
+      <SocialStack.Screen name="FollowList">
+        {({ navigation, route }) => (
+          <FollowListScreen
+            token={token}
+            userId={route.params.id}
+            viewerId={user.id}
+            name={route.params.name}
+            kind={route.params.kind}
+            service={socialService}
+            onBack={() => navigation.goBack()}
+            onOpen={id => navigation.push('SocialProfile', { id })}
           />
         )}
       </SocialStack.Screen>

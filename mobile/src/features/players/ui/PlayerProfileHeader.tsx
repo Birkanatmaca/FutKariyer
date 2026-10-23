@@ -40,6 +40,8 @@ export function PlayerProfileHeader({
   isPro = false,
   verified = false,
   actions,
+  onFollowers,
+  onFollowing,
 }: {
   fullName: string;
   profile: PlayerProfile;
@@ -52,6 +54,9 @@ export function PlayerProfileHeader({
   verified?: boolean;
   // Someone else's profile: follow and other buttons in place of Düzenle.
   actions?: React.ReactNode;
+  // Tapping the follower and following counts opens the lists (23 Oct 2026).
+  onFollowers?(): void;
+  onFollowing?(): void;
 }) {
   const [failedSource, setFailedSource] = useState<ImageSourcePropType | null>(
     null,
@@ -126,21 +131,33 @@ export function PlayerProfileHeader({
           </View>
         </View>
         <View style={styles.stats}>
-          {top.map(([label, value]) => (
-            <View
-              key={label}
-              style={styles.stat}
-              accessible
-              accessibilityLabel={value + ' ' + label}
-            >
-              <Text style={[styles.statValue, counts && styles.countValue]}>
-                {value}
-              </Text>
-              <Text style={[styles.statLabel, counts && styles.countLabel]}>
-                {label}
-              </Text>
-            </View>
-          ))}
+          {top.map(([label, value], index) => {
+            const onPress = counts
+              ? index === 1
+                ? onFollowers
+                : index === 2
+                ? onFollowing
+                : undefined
+              : undefined;
+            return (
+              <Pressable
+                key={label}
+                disabled={!onPress}
+                onPress={onPress}
+                style={styles.stat}
+                accessible
+                accessibilityRole={onPress ? 'button' : undefined}
+                accessibilityLabel={value + ' ' + label}
+              >
+                <Text style={[styles.statValue, counts && styles.countValue]}>
+                  {value}
+                </Text>
+                <Text style={[styles.statLabel, counts && styles.countLabel]}>
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
       <View style={styles.identity}>

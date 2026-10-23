@@ -20,6 +20,8 @@ export function PlayerProfileContent({
   isPro = false,
   verified,
   actions,
+  onFollowers,
+  onFollowing,
 }: {
   // Gönderiler tab and shared post media, composed by the app shell.
   posts?: ProfilePostsSlot;
@@ -34,6 +36,8 @@ export function PlayerProfileContent({
   onShare?(): void;
   verified?: boolean;
   actions?: React.ReactNode;
+  onFollowers?(): void;
+  onFollowing?(): void;
 }) {
   return (
     <>
@@ -47,6 +51,8 @@ export function PlayerProfileContent({
         isPro={isPro}
         verified={verified}
         actions={actions}
+        onFollowers={onFollowers}
+        onFollowing={onFollowing}
       />
       <PlayerMediaGallery {...gallery} posts={posts} />
     </>

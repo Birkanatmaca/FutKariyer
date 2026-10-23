@@ -74,6 +74,10 @@ export type SocialProfile = SocialAuthor & {
   // A player's football card, when discovery rules let the viewer see it.
   playerProfile: PlayerProfile | null;
 };
+// One account in a followers or following list (23 Oct 2026); following
+// says whether the viewer follows it.
+export type FollowEntry = SocialAuthor & { followedAt: string };
+export type FollowListKind = 'followers' | 'following';
 export interface SocialRepository {
   feed(
     token: string,
@@ -95,6 +99,12 @@ export interface SocialRepository {
   ): Promise<SocialPost>;
   follow(token: string, id: string, following: boolean): Promise<boolean>;
   profile(token: string, userId: string): Promise<SocialProfile>;
+  follows(
+    token: string,
+    userId: string,
+    kind: FollowListKind,
+    cursor: string,
+  ): Promise<SocialPage<FollowEntry>>;
   pickMedia(kind: MediaKind): Promise<SelectedMedia | null>;
   releaseMedia(media: SelectedMedia): void;
   mediaSource(token: string, id: string): Promise<MediaSource>;

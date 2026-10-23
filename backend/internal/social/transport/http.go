@@ -113,6 +113,16 @@ func New(authService *auth.Service, service *application.Service) http.Handler {
 		}
 		write(w, 200, map[string]any{"profile": out})
 	})
+	for path, followers := range map[string]bool{"followers": true, "following": false} {
+		mux.HandleFunc("GET /v1/social/users/{id}/"+path, func(w http.ResponseWriter, r *http.Request) {
+			out, err := service.Follows(r.Context(), viewerID(r), r.PathValue("id"), followers, r.URL.Query().Get("cursor"))
+			if err != nil {
+				failure(w, err)
+				return
+			}
+			write(w, 200, out)
+		})
+	}
 	mux.HandleFunc("GET /v1/social/users/{id}/posts", func(w http.ResponseWriter, r *http.Request) {
 		out, err := service.UserPosts(r.Context(), viewerID(r), r.PathValue("id"), r.URL.Query().Get("cursor"), r.URL.Query().Get("filter"))
 		if err != nil {

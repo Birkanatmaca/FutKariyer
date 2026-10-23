@@ -250,3 +250,26 @@ func (s *Service) Profile(ctx context.Context, viewerID, userID string) (domain.
 	}
 	return reader.Profile(ctx, viewerID, userID)
 }
+
+// Follows pages someone's followers or followed accounts (23 Oct 2026).
+func (s *Service) Follows(ctx context.Context, viewerID, userID string, followers bool, rawCursor string) (domain.Page[domain.FollowEntry], error) {
+	lister, ok := s.repo.(domain.FollowLister)
+	if !ok || !idPattern.MatchString(userID) {
+		return domain.Page[domain.FollowEntry]{}, domain.ErrNotFound
+	}
+	after, err := parseCursor(rawCursor)
+	if err != nil {
+		return domain.Page[domain.FollowEntry]{}, err
+	}
+	items, err := lister.Follows(ctx, viewerID, userID, followers, after)
+	if err != nil {
+		return domain.Page[domain.FollowEntry]{}, err
+	}
+	out := domain.Page[domain.FollowEntry]{Items: items}
+	if len(items) > domain.PageSize {
+		out.Items = items[:domain.PageSize]
+		last := out.Items[len(out.Items)-1]
+		out.NextCursor = cursor(last.ID, last.FollowedAt)
+	}
+	return out, nil
+}

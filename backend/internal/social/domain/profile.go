@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // Profile is an author's social profile, opened from a post's name or photo
 // (22 Oct 2026). It carries only what the author's posts already show plus
@@ -35,4 +38,17 @@ type PlayerCard struct {
 // author's profile records a profile view for the author's Ziyaretçiler.
 type ProfileReader interface {
 	Profile(ctx context.Context, viewerID, userID string) (Profile, error)
+}
+
+// FollowEntry is one row of a followers or following list (23 Oct 2026).
+// Author.Following says whether the viewer follows this account.
+type FollowEntry struct {
+	Author
+	FollowedAt time.Time `json:"followedAt"`
+}
+
+// FollowLister is implemented by the PostgreSQL repository. Lists are open
+// to every signed-in account; blocked accounts are left out both ways.
+type FollowLister interface {
+	Follows(ctx context.Context, viewerID, userID string, followers bool, after Cursor) ([]FollowEntry, error)
 }

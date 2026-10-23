@@ -14,6 +14,7 @@ import type {
   SocialPost,
   SocialProfile,
   SocialReply,
+  FollowEntry,
   SocialRepository,
 } from '../domain/models';
 
@@ -184,6 +185,21 @@ export const socialRepository: SocialRepository = {
   pickMedia,
   releaseMedia,
   mediaSource: (token, id) => mediaSource(token, path(id) + '/media'),
+  async follows(token, userId, kind, cursor) {
+    return validPage(
+      await request<unknown>(
+        '/v1/social/users/' +
+          encodeURIComponent(userId) +
+          '/' +
+          kind +
+          '?cursor=' +
+          encodeURIComponent(cursor),
+        { token },
+      ),
+      (item: unknown): item is FollowEntry =>
+        authorValid(item) && dateValid((item as FollowEntry).followedAt),
+    );
+  },
   async profile(token, userId) {
     const result = await request<{ profile: unknown }>(
       '/v1/social/users/' + encodeURIComponent(userId) + '/profile',

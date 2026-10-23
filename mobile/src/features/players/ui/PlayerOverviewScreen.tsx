@@ -35,6 +35,8 @@ export function PlayerOverviewScreen({
   media,
   avatarUri,
   sharer,
+  onFollowers,
+  onFollowing,
 }: {
   fullName: string;
   // The owner's id and gallery service enable uploads on the own profile.
@@ -50,6 +52,8 @@ export function PlayerOverviewScreen({
   avatarUri?: string;
   // Own profile only: shares the player card to other apps.
   sharer?: ProfileSharer;
+  onFollowers?(): void;
+  onFollowing?(): void;
 }) {
   const avatarSource = useAvatarSource(avatarUri);
   const { profile, error, loading, retry } = usePlayerProfile(service, token);
@@ -87,6 +91,8 @@ export function PlayerOverviewScreen({
             counts={counts}
             posts={posts}
             isPro={isPro}
+            onFollowers={onFollowers}
+            onFollowing={onFollowing}
             gallery={
               token && userId && media
                 ? { token, ownerId: userId, service: media, editable: true }

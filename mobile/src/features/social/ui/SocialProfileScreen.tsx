@@ -49,6 +49,7 @@ export function SocialProfileScreen({
   onOpenPost,
   onOpenDiscovery,
   onOwnProfile,
+  onFollowList,
 }: {
   token: string;
   userId: string;
@@ -59,6 +60,8 @@ export function SocialProfileScreen({
   onOpenDiscovery?(kind: SocialProfile['role'], id: string): void;
   // Tapping your own name opens your own Profil page instead.
   onOwnProfile?(): void;
+  // The follower and following counts open the lists (23 Oct 2026).
+  onFollowList?(kind: 'followers' | 'following', name: string): void;
 }) {
   const [profile, setProfile] = useState<SocialProfile | null>(null);
   const [error, setError] = useState('');
@@ -234,6 +237,8 @@ export function SocialProfileScreen({
           verified={profile.verified}
           posts={posts}
           actions={actions}
+          onFollowers={() => onFollowList?.('followers', profile.fullName)}
+          onFollowing={() => onFollowList?.('following', profile.fullName)}
           gallery={{
             token,
             ownerId: profile.id,
@@ -242,7 +247,13 @@ export function SocialProfileScreen({
         />
       ) : (
         <>
-          <ProfileHeader profile={profile} counts={counts} actions={actions} />
+          <ProfileHeader
+            profile={profile}
+            counts={counts}
+            actions={actions}
+            onFollowers={() => onFollowList?.('followers', profile.fullName)}
+            onFollowing={() => onFollowList?.('following', profile.fullName)}
+          />
           <PlayerMediaGallery posts={posts} />
         </>
       )}
@@ -267,10 +278,14 @@ function ProfileHeader({
   profile,
   counts,
   actions,
+  onFollowers,
+  onFollowing,
 }: {
   profile: SocialProfile;
   counts: ProfileCounts | null;
   actions: React.ReactNode;
+  onFollowers(): void;
+  onFollowing(): void;
 }) {
   const tags = [
     profile.footballType && profile.footballType !== 'unknown'
@@ -303,17 +318,24 @@ function ProfileHeader({
           />
         </View>
         <View style={styles.stats}>
-          {stats.map(([label, value]) => (
-            <View
-              key={String(label)}
-              style={styles.stat}
-              accessible
-              accessibilityLabel={value + ' ' + label}
-            >
-              <Text style={styles.statValue}>{value}</Text>
-              <Text style={styles.statLabel}>{label}</Text>
-            </View>
-          ))}
+          {stats.map(([label, value], index) => {
+            const onPress =
+              index === 1 ? onFollowers : index === 2 ? onFollowing : undefined;
+            return (
+              <Pressable
+                key={String(label)}
+                disabled={!onPress}
+                onPress={onPress}
+                style={styles.stat}
+                accessible
+                accessibilityRole={onPress ? 'button' : undefined}
+                accessibilityLabel={value + ' ' + label}
+              >
+                <Text style={styles.statValue}>{value}</Text>
+                <Text style={styles.statLabel}>{label}</Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
       <View style={styles.identity}>

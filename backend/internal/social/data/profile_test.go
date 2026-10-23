@@ -93,3 +93,47 @@ func TestProfileOpensFromAnyPostAndRecordsTheVisit(t *testing.T) {
 		t.Fatalf("blocked visit recorded: %d", views)
 	}
 }
+
+// Requires TEST_DATABASE_URL; skipped otherwise.
+func TestFollowersAndFollowingAreListedWithoutBlockedAccounts(t *testing.T) {
+	db := testpostgres.New(t)
+	ctx := context.Background()
+	ids := []string{"00000000000000000000000000000c01", "00000000000000000000000000000c02", "00000000000000000000000000000c03", "00000000000000000000000000000c04"}
+	for _, id := range ids {
+		if _, err := db.DB.ExecContext(ctx, `INSERT INTO users(id,full_name,email,password_hash,role,city,created_at) VALUES($1,$1,$1||'@example.test','unused','player','Ankara',now())`, id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	star, a, b, viewer := ids[0], ids[1], ids[2], ids[3]
+	repo := data.New(db.DB)
+	for _, f := range []string{a, b, viewer} {
+		if err := repo.SetFollow(ctx, f, star, true); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := repo.SetFollow(ctx, viewer, a, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := db.DB.ExecContext(ctx, `INSERT INTO user_blocks(blocker_id,blocked_id) VALUES($1,$2)`, b, viewer); err != nil {
+		t.Fatal(err)
+	}
+	list, err := repo.Follows(ctx, viewer, star, true, domain.Cursor{})
+	if err != nil || len(list) != 2 {
+		t.Fatalf("followers seen by viewer (b blocked them): %+v %v", list, err)
+	}
+	for _, e := range list {
+		if e.ID == b {
+			t.Fatal("blocked account listed")
+		}
+		if e.ID == a && !e.Author.Following {
+			t.Fatal("viewer follows a")
+		}
+	}
+	following, err := repo.Follows(ctx, star, viewer, false, domain.Cursor{})
+	if err != nil || len(following) != 2 {
+		t.Fatalf("viewer follows star and a: %+v %v", following, err)
+	}
+	if _, err := repo.Follows(ctx, viewer, b, true, domain.Cursor{}); !errors.Is(err, domain.ErrNotFound) {
+		t.Fatalf("a blocker's list opened: %v", err)
+	}
+}

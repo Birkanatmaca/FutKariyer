@@ -4,6 +4,7 @@ import {
   maxImageBytes,
   maxVideoBytes,
   type FeedScope,
+  type FollowListKind,
   type UserPostsFilter,
   type MediaKind,
   type SelectedMedia,
@@ -59,6 +60,12 @@ export function createSocialService(repository: SocialRepository) {
     releaseMedia: (media: SelectedMedia) => repository.releaseMedia(media),
     mediaSource: (token: string, id: string) =>
       repository.mediaSource(token, id),
+    follows: (
+      token: string,
+      userId: string,
+      kind: FollowListKind,
+      cursor = '',
+    ) => repository.follows(token, userId, kind, cursor),
     profile: (token: string, userId: string) =>
       repository.profile(token, userId),
     follow: (token: string, id: string, following: boolean) =>
