@@ -17,6 +17,8 @@ type Profile struct {
 	// Discovery is whether the viewer may also open the author's discovery
 	// profile (football card, gallery, introduction request).
 	Discovery bool `json:"discovery"`
+	// CanMessage: the viewer may write to this account (23 Oct 2026).
+	CanMessage bool `json:"canMessage"`
 	// PlayerProfile is the player's football card, present only when the
 	// viewer may open their discovery profile; same fields as discovery.
 	PlayerProfile *PlayerCard `json:"playerProfile"`

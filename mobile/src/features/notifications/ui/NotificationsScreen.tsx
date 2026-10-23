@@ -44,6 +44,7 @@ export function NotificationsScreen({
   onOpenTeamApplications,
   onOpenPayment,
   onOpenNews,
+  onOpenChat,
 }: {
   token: string;
   service: NotificationsService;
@@ -66,6 +67,8 @@ export function NotificationsScreen({
   onOpenPayment?(pro: boolean): void;
   // News review cards open the club's own news.
   onOpenNews?(): void;
+  // Message cards open the conversation with the sender.
+  onOpenChat?(userId: string): void;
 }) {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<NotificationFilter>('all');
@@ -123,6 +126,7 @@ export function NotificationsScreen({
     else if (item.kind === 'payment')
       onOpenPayment?.(/\bPro\b/.test(item.title + ' ' + item.body));
     else if (item.kind === 'news_review') onOpenNews?.();
+    else if (item.kind === 'message' && target) onOpenChat?.(item.resourceId);
   }
 
   function toggle(id: string) {

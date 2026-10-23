@@ -59,6 +59,9 @@ import (
 	listingapplication "futcareer/backend/internal/listings/application"
 	listingdata "futcareer/backend/internal/listings/data"
 	listingtransport "futcareer/backend/internal/listings/transport"
+	messageapplication "futcareer/backend/internal/messages/application"
+	messagedata "futcareer/backend/internal/messages/data"
+	messagetransport "futcareer/backend/internal/messages/transport"
 	moderationapplication "futcareer/backend/internal/moderation/application"
 	moderationdata "futcareer/backend/internal/moderation/data"
 	moderationtransport "futcareer/backend/internal/moderation/transport"
@@ -305,6 +308,9 @@ func run() error {
 	routes.Handle("/v1/me/coach-team", clubHandler)
 	routes.Handle("/v1/me/squad", clubHandler)
 	routes.Handle("/v1/me/squad/", clubHandler)
+	messageHandler := messagetransport.New(authService, messageapplication.New(messagedata.New(db)))
+	routes.Handle("/v1/me/conversations", messageHandler)
+	routes.Handle("/v1/me/conversations/", messageHandler)
 	squadInviteHandler := squadinvitetransport.New(authService, squadinviteapplication.New(squadinvitedata.New(db)))
 	for _, path := range []string{"/v1/me/squad/candidates", "/v1/me/squad/invites", "/v1/me/squad/invites/", "/v1/me/squad-invites", "/v1/me/squad-invites/"} {
 		routes.Handle(path, squadInviteHandler)

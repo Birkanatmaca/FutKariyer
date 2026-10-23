@@ -17,6 +17,7 @@ import {
 import {
   HeartHandshake,
   ImagePlus,
+  MessageCircle,
   PanelLeft,
   Users,
 } from 'lucide-react-native';
@@ -57,6 +58,8 @@ export function SocialFeedScreen({
   onRequests,
   onMenu,
   onOpenProfile,
+  onMessages,
+  messageCount = 0,
 }: {
   token: string;
   service: SocialService;
@@ -73,6 +76,9 @@ export function SocialFeedScreen({
   onMenu(): void;
   // A post's photo or name opens its author's profile (22 Oct 2026).
   onOpenProfile?(userId: string): void;
+  // Mesajlar beside the requests button, with the unread count (23 Oct 2026).
+  onMessages?(): void;
+  messageCount?: number;
 }) {
   // Oyunlar left this screen for its own hub page on 19 Oct 2026.
   const [scope, setScope] = useState<FeedScope>('explore');
@@ -198,15 +204,18 @@ export function SocialFeedScreen({
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={styles.safe}>
       <View style={styles.brand}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={copy.social.sidebar.open}
-          onPress={onMenu}
-          hitSlop={6}
-          style={styles.headerButton}
-        >
-          <PanelLeft size={20} color={colors.text} />
-        </Pressable>
+        <View style={styles.side}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={copy.social.sidebar.open}
+            onPress={onMenu}
+            hitSlop={6}
+            style={styles.headerButton}
+          >
+            <PanelLeft size={20} color={colors.text} />
+          </Pressable>
+          {onMessages ? <View style={styles.placeholder} /> : null}
+        </View>
         <View
           accessible
           accessibilityRole="header"
@@ -214,29 +223,54 @@ export function SocialFeedScreen({
         >
           <Wordmark height={26} />
         </View>
-        {onRequests ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={copy.social.requests}
-            accessibilityHint={
-              requestCount ? copy.social.requestsBadge(requestCount) : undefined
-            }
-            onPress={onRequests}
-            hitSlop={6}
-            style={styles.headerButton}
-          >
-            <HeartHandshake size={20} color={colors.text} />
-            {requestCount > 0 ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {requestCount > 99 ? '99+' : requestCount}
-                </Text>
-              </View>
-            ) : null}
-          </Pressable>
-        ) : (
-          <View style={styles.headerButton} />
-        )}
+        <View style={styles.side}>
+          {onMessages ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={copy.messages.open}
+              accessibilityHint={
+                messageCount ? copy.messages.unread(messageCount) : undefined
+              }
+              onPress={onMessages}
+              hitSlop={6}
+              style={styles.headerButton}
+            >
+              <MessageCircle size={20} color={colors.text} />
+              {messageCount > 0 ? (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {messageCount > 99 ? '99+' : messageCount}
+                  </Text>
+                </View>
+              ) : null}
+            </Pressable>
+          ) : null}
+          {onRequests ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={copy.social.requests}
+              accessibilityHint={
+                requestCount
+                  ? copy.social.requestsBadge(requestCount)
+                  : undefined
+              }
+              onPress={onRequests}
+              hitSlop={6}
+              style={styles.headerButton}
+            >
+              <HeartHandshake size={20} color={colors.text} />
+              {requestCount > 0 ? (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {requestCount > 99 ? '99+' : requestCount}
+                  </Text>
+                </View>
+              ) : null}
+            </Pressable>
+          ) : (
+            <View style={styles.headerButton} />
+          )}
+        </View>
         {onRequests ? (
           <RequestsHint count={requestCount} loadedAt={requestsLoadedAt} />
         ) : null}
@@ -526,6 +560,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brand,
   },
   hintText: { color: colors.brandInk, fontSize: 12, fontWeight: '800' },
+  side: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  placeholder: { width: 40, height: 40 },
   brand: {
     zIndex: 5,
     flexDirection: 'row',

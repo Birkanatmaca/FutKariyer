@@ -50,6 +50,7 @@ export function SocialProfileScreen({
   onOpenDiscovery,
   onOwnProfile,
   onFollowList,
+  onMessage,
 }: {
   token: string;
   userId: string;
@@ -62,6 +63,8 @@ export function SocialProfileScreen({
   onOwnProfile?(): void;
   // The follower and following counts open the lists (23 Oct 2026).
   onFollowList?(kind: 'followers' | 'following', name: string): void;
+  // Opens the conversation when messaging is open between the two (23 Oct 2026).
+  onMessage?(id: string): void;
 }) {
   const [profile, setProfile] = useState<SocialProfile | null>(null);
   const [error, setError] = useState('');
@@ -177,6 +180,12 @@ export function SocialProfileScreen({
               selected={profile.following}
               onPress={follow}
             />
+            {profile.canMessage && onMessage ? (
+              <ActionButton
+                label={copy.messages.message}
+                onPress={() => onMessage(profile.id)}
+              />
+            ) : null}
             {profile.discovery && onOpenDiscovery ? (
               <ActionButton
                 label={copy.social.profileFootball}

@@ -44,6 +44,7 @@ const profile = {
   followingCount: 4,
   self: false,
   discovery: false,
+  canMessage: false,
   playerProfile: null,
 };
 beforeEach(() => jest.clearAllMocks());

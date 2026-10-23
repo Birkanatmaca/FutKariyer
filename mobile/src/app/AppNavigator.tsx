@@ -109,6 +109,12 @@ import {
   squadRepository,
 } from '../features/squad';
 import {
+  ChatScreen,
+  InboxScreen,
+  createMessagesService,
+  messagesRepository,
+} from '../features/messages';
+import {
   SocialFeedScreen,
   SocialThreadScreen,
   SocialPublishScreen,
@@ -260,6 +266,9 @@ type SocialRoutes = {
   SocialThread: { id: string };
   // A post author's profile (22 Oct 2026).
   SocialProfile: { id: string };
+  // One-to-one messages (23 Oct 2026).
+  Messages: undefined;
+  Chat: { id: string };
   // Someone's followers or followed accounts (23 Oct 2026).
   FollowList: { id: string; kind: 'followers' | 'following'; name: string };
   SocialPublish: undefined;
@@ -294,6 +303,7 @@ const notificationsService = createNotificationsService(
   notificationsRepository,
 );
 const socialService = createSocialService(socialRepository);
+const messagesService = createMessagesService(messagesRepository);
 const giftsService = createGiftsService(giftsRepository);
 const connectionsService = createConnectionsService(connectionsRepository);
 const clubService = createClubService(clubRepository);
@@ -374,9 +384,13 @@ function MainTabs() {
   const renderTabBar = useCallback(
     (props: BottomTabBarProps) => {
       const route = props.state.routes[props.state.index];
+      // Full-screen composers: a new post and a chat (23 Oct 2026) keep the
+      // keyboard and send button clear of the tab bar.
       if (
         route.name === 'Social' &&
-        getFocusedRouteNameFromRoute(route) === 'SocialPublish'
+        ['SocialPublish', 'Chat'].includes(
+          getFocusedRouteNameFromRoute(route) ?? '',
+        )
       )
         return null;
       return (
@@ -1093,6 +1107,13 @@ function NotificationsTab({
           ? undefined
           : openMore({ screen: pro ? 'Pro' : 'TeamRights' })
       }
+      onOpenChat={id =>
+        navigation.navigate('Social', {
+          screen: 'Chat',
+          params: { id },
+          initial: false,
+        })
+      }
       onOpenNews={() =>
         user?.role === 'club' &&
         (!user.delegate || user.delegate.permissions.includes('news'))
@@ -1710,6 +1731,7 @@ function SocialFeedRoute({
   onOpenAuthor,
   onVisitors,
   onUpgrade,
+  onMessages,
 }: {
   token: string;
   publishedAt?: number;
@@ -1718,11 +1740,28 @@ function SocialFeedRoute({
   onRequests(): void;
   onOpenProfile(kind: DiscoveryKind, id: string): void;
   onOpenAuthor(id: string): void;
+  onMessages(): void;
   onVisitors(): void;
   onUpgrade(): void;
 }) {
   const { user, delegate } = useAuth();
   const requests = useIncomingCount(connectionsService, token);
+  // Unread messages for the header badge, refreshed whenever the feed gains
+  // focus. A coach running a club account has no access to its messages.
+  const [messageCount, setMessageCount] = useState(0);
+  useFocusEffect(
+    useCallback(() => {
+      let current = true;
+      if (!delegate)
+        messagesService
+          .inbox(token)
+          .then(inbox => current && setMessageCount(inbox.unread))
+          .catch(() => undefined);
+      return () => {
+        current = false;
+      };
+    }, [token, delegate]),
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <>
@@ -1737,6 +1776,8 @@ function SocialFeedRoute({
         onRequests={delegate ? undefined : onRequests}
         onMenu={() => setMenuOpen(true)}
         onOpenProfile={onOpenAuthor}
+        onMessages={delegate ? undefined : onMessages}
+        messageCount={messageCount}
       />
       <SocialSidebar
         visible={menuOpen}
@@ -1772,6 +1813,7 @@ function SocialNavigator() {
             onCompose={() => navigation.navigate('SocialPublish')}
             onRequests={() => navigation.navigate('SocialConnections')}
             onOpenAuthor={id => navigation.navigate('SocialProfile', { id })}
+            onMessages={() => navigation.navigate('Messages')}
             onOpenProfile={(kind, id) =>
               navigation.navigate('SocialDiscover', {
                 screen: 'DiscoveryProfile',
@@ -1877,6 +1919,7 @@ function SocialNavigator() {
                   | undefined
               )?.navigate('Profile')
             }
+            onMessage={id => navigation.push('Chat', { id })}
             onFollowList={(kind, name) =>
               navigation.push('FollowList', {
                 id: route.params.id,
@@ -1884,6 +1927,27 @@ function SocialNavigator() {
                 name,
               })
             }
+          />
+        )}
+      </SocialStack.Screen>
+      <SocialStack.Screen name="Messages">
+        {({ navigation }) => (
+          <InboxScreen
+            token={token}
+            service={messagesService}
+            onBack={() => navigation.goBack()}
+            onOpen={id => navigation.push('Chat', { id })}
+          />
+        )}
+      </SocialStack.Screen>
+      <SocialStack.Screen name="Chat">
+        {({ navigation, route }) => (
+          <ChatScreen
+            token={token}
+            partnerId={route.params.id}
+            service={messagesService}
+            onBack={() => navigation.goBack()}
+            onOpenProfile={id => navigation.push('SocialProfile', { id })}
           />
         )}
       </SocialStack.Screen>

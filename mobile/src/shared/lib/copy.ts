@@ -156,6 +156,38 @@ export const copy = {
       'Başvurun yönetici onayı bekliyor. Onaylandığında kullanıcı adın ve şifrenle giriş yapabilirsin.',
     successBack: 'Giriş ekranına dön',
   },
+  // One-to-one messages (23 Oct 2026).
+  messages: {
+    title: 'Mesajlar',
+    open: 'Mesajlar',
+    unread: (count: number) => count + ' okunmamış mesaj',
+    emptyTitle: 'Henüz mesajın yok',
+    emptyBody:
+      'Kabul edilmiş bağlantılarınla ve kulübünle (kadrondaki oyuncularla) buradan yazışabilirsin.',
+    you: 'Sen: ',
+    placeholder: 'Mesaj yaz',
+    send: 'Gönder',
+    sendFailed: 'Mesaj gönderilemedi. Tekrar dene.',
+    lengthError: 'Mesaj 1-1000 karakter olmalı.',
+    readOnly:
+      'Bu hesapla artık mesajlaşamazsın; geçmiş yazışmalar burada kalır.',
+    seen: 'Görüldü',
+    loadOlder: 'Önceki mesajlar',
+    start: 'Sohbete ilk mesajı sen yaz.',
+    message: 'Mesaj',
+    openProfile: (name: string) => name + ' profilini aç',
+    time: (value: string) => {
+      const date = new Date(value);
+      const now = new Date();
+      const sameDay = date.toDateString() === now.toDateString();
+      return sameDay
+        ? date.toLocaleTimeString('tr-TR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+    },
+  },
   // Privacy policy, terms of use, KVKK notice and support (23 Oct 2026).
   legal: {
     consent:

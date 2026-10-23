@@ -48,6 +48,8 @@ var privateAreas = []*regexp.Regexp{
 	regexp.MustCompile(`^/v1/me/pro(/|$)`),
 	regexp.MustCompile(`^/v1/me/(pro-payments|team-request-payments|store-orders|store-purchases)(/|$)`),
 	regexp.MustCompile(`^/v1/me/push-devices(/|$)`),
+	// The club's private messages (23 Oct 2026).
+	regexp.MustCompile(`^/v1/me/conversations(/|$)`),
 	regexp.MustCompile(`^/v1/me/(password|sessions)(/|$)`),
 }
 

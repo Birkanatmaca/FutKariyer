@@ -71,6 +71,8 @@ export type SocialProfile = SocialAuthor & {
   self: boolean;
   // The viewer may also open the author's discovery profile.
   discovery: boolean;
+  // The viewer may write to this account (23 Oct 2026).
+  canMessage: boolean;
   // A player's football card, when discovery rules let the viewer see it.
   playerProfile: PlayerProfile | null;
 };

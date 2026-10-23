@@ -54,6 +54,7 @@ function profileValid(value: unknown): value is SocialProfile {
     countValid(profile.followingCount) &&
     typeof profile.self === 'boolean' &&
     typeof profile.discovery === 'boolean' &&
+    typeof profile.canMessage === 'boolean' &&
     (profile.playerProfile === null ||
       (profile.discovery &&
         profile.role === 'player' &&

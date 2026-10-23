@@ -13,6 +13,7 @@ import {
   Gift,
   Handshake,
   Medal,
+  MessageCircle,
   Newspaper,
   Sparkles,
   Trophy,
@@ -40,6 +41,7 @@ const kindIcon: Record<DisplayNotificationKind, LucideIcon> = {
   follow: UserPlus,
   staff: UsersRound,
   squad_invite: UserRoundPlus,
+  message: MessageCircle,
   other: Bell,
 };
 

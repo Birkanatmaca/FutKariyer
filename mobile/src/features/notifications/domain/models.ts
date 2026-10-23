@@ -12,6 +12,8 @@ export const notificationKinds = [
   'staff',
   // Club squad invitations and their answers (22 Oct 2026).
   'squad_invite',
+  // One-to-one messages, one card per unread burst (23 Oct 2026).
+  'message',
 ] as const;
 
 export type NotificationKind = (typeof notificationKinds)[number];

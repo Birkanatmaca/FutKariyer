@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	messagesdata "futcareer/backend/internal/messages/data"
 	"futcareer/backend/internal/social/domain"
 )
 
@@ -38,10 +39,10 @@ func (r *Postgres) Profile(ctx context.Context, viewerID, userID string) (domain
 		(SELECT count(*) FROM social_posts sp WHERE sp.author_id=u.id),
 		(SELECT count(*) FROM profile_follows f JOIN users fu ON fu.id=f.follower_id AND fu.active WHERE f.profile_id=u.id),
 		(SELECT count(*) FROM profile_follows f JOIN users fu ON fu.id=f.profile_id AND fu.active WHERE f.follower_id=u.id),
-		u.id=$1,`+discoveryAllowed+`
+		u.id=$1,`+discoveryAllowed+`,`+messagesdata.Eligible()+`
 		FROM users u WHERE u.id=$2 AND `+activeAuthor+` AND `+visibleToViewer, viewerID, userID).Scan(
 		&p.ID, &p.FullName, &p.Role, &p.Verified, &p.AvatarVersion, &p.FootballType, &p.LicenseStatus, &p.IsPro, &p.Author.Following,
-		&p.Posts, &p.Followers, &p.FollowingCount, &p.Self, &p.Discovery)
+		&p.Posts, &p.Followers, &p.FollowingCount, &p.Self, &p.Discovery, &p.CanMessage)
 	if errors.Is(err, sql.ErrNoRows) {
 		return p, domain.ErrNotFound
 	}
