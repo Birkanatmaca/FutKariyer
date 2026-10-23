@@ -208,6 +208,10 @@ type DiscoveryRoutes = {
 type MoreRoutes = {
   MoreHome: undefined;
   Account: undefined;
+  // Settings for every account, organizers included (23 Oct 2026).
+  AccountEdit: undefined;
+  AccountPassword: undefined;
+  AccountSessions: undefined;
   BlockedUsers: undefined;
   Discover: NavigatorScreenParams<DiscoveryRoutes> | undefined;
   Connections: undefined;
@@ -672,6 +676,19 @@ function MoreNavigator() {
           <AccountScreen
             onBack={() => navigation.goBack()}
             onBlockedUsers={() => navigation.navigate('BlockedUsers')}
+            onEditProfile={
+              delegate ? undefined : () => navigation.navigate('AccountEdit')
+            }
+            onChangePassword={
+              delegate
+                ? undefined
+                : () => navigation.navigate('AccountPassword')
+            }
+            onSessions={
+              delegate
+                ? undefined
+                : () => navigation.navigate('AccountSessions')
+            }
             extra={
               token && member ? (
                 <PrivateBrowsingSetting
@@ -682,6 +699,28 @@ function MoreNavigator() {
               ) : null
             }
           />
+        )}
+      </MoreStack.Screen>
+      <MoreStack.Screen name="AccountEdit">
+        {({ navigation }) =>
+          token ? (
+            <MoreAccountProfile
+              token={token}
+              onBack={() => navigation.goBack()}
+              onChangePassword={() => navigation.navigate('AccountPassword')}
+              onSessions={() => navigation.navigate('AccountSessions')}
+            />
+          ) : null
+        }
+      </MoreStack.Screen>
+      <MoreStack.Screen name="AccountPassword">
+        {({ navigation }) => (
+          <ChangePasswordScreen onBack={() => navigation.goBack()} />
+        )}
+      </MoreStack.Screen>
+      <MoreStack.Screen name="AccountSessions">
+        {({ navigation }) => (
+          <SessionsScreen onBack={() => navigation.goBack()} />
         )}
       </MoreStack.Screen>
       <MoreStack.Screen name="BlockedUsers">
@@ -1512,6 +1551,30 @@ function OwnPlayerProfile({
       posts={posts}
       onFollowers={() => openFollowList(userId, 'followers', fullName)}
       onFollowing={() => openFollowList(userId, 'following', fullName)}
+    />
+  );
+}
+// Profili düzenle from Diğer > Ayarlar: name and photo for any account.
+function MoreAccountProfile({
+  token,
+  onBack,
+  onChangePassword,
+  onSessions,
+}: {
+  token: string;
+  onBack(): void;
+  onChangePassword(): void;
+  onSessions(): void;
+}) {
+  const account = useAccountProfile(accountRepository, token);
+  return (
+    <AccountProfileScreen
+      token={token}
+      repository={accountRepository}
+      onChange={account.setProfile}
+      onBack={onBack}
+      onChangePassword={onChangePassword}
+      onSessions={onSessions}
     />
   );
 }

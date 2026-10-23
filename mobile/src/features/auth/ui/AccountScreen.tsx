@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ban, ChevronRight, LockKeyhole, Trash2 } from 'lucide-react-native';
+import {
+  Ban,
+  ChevronRight,
+  KeyRound,
+  LockKeyhole,
+  MonitorSmartphone,
+  Trash2,
+} from 'lucide-react-native';
 import { Screen } from '../../../shared/ui/Screen';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
@@ -18,6 +25,8 @@ export function AccountScreen({
   onBlockedUsers,
   avatarUri,
   onEditProfile,
+  onChangePassword,
+  onSessions,
 }: {
   onBack?: () => void;
   settings?: boolean;
@@ -28,6 +37,9 @@ export function AccountScreen({
   // Profile photo and the Profili düzenle entry (19 Oct 2026).
   avatarUri?: string;
   onEditProfile?: () => void;
+  // Password and sessions for every account, organizers included (23 Oct 2026).
+  onChangePassword?: () => void;
+  onSessions?: () => void;
 } = {}) {
   const { user, signOut, deleteAccount } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -117,6 +129,30 @@ export function AccountScreen({
         </View>
       )}
       {settings ? extra : null}
+      {settings && onChangePassword ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onChangePassword}
+          style={styles.row}
+        >
+          <KeyRound size={18} color={colors.secondary} />
+          <Text style={styles.rowText}>
+            {copy.accountProfile.changePassword}
+          </Text>
+          <ChevronRight size={18} color={colors.muted} />
+        </Pressable>
+      ) : null}
+      {settings && onSessions ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onSessions}
+          style={styles.row}
+        >
+          <MonitorSmartphone size={18} color={colors.secondary} />
+          <Text style={styles.rowText}>{copy.accountProfile.sessions}</Text>
+          <ChevronRight size={18} color={colors.muted} />
+        </Pressable>
+      ) : null}
       {settings && onBlockedUsers ? (
         <Pressable
           accessibilityRole="button"
