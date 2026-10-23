@@ -156,6 +156,23 @@ export const copy = {
       'Başvurun yönetici onayı bekliyor. Onaylandığında kullanıcı adın ve şifrenle giriş yapabilirsin.',
     successBack: 'Giriş ekranına dön',
   },
+  // Privacy policy, terms of use, KVKK notice and support (23 Oct 2026).
+  legal: {
+    consent:
+      'Kullanım şartlarını ve KVKK aydınlatma metnini okudum, kabul ediyorum.',
+    consentError:
+      'Devam etmek için kullanım şartlarını ve KVKK aydınlatma metnini onayla.',
+    terms: 'Kullanım şartları',
+    privacy: 'Gizlilik politikası',
+    kvkk: 'KVKK aydınlatma metni',
+    section: 'YASAL VE DESTEK',
+    support: 'Yardım ve destek',
+    supportHint: 'Soru ve sorunların için bize yaz.',
+    termsHint: 'Uygulamayı kullanma kuralları.',
+    privacyHint: 'Hangi verileri neden işlediğimiz.',
+    kvkkHint: 'Kişisel verilerin ve hakların.',
+    openFailed: 'Sayfa açılamadı. Biraz sonra tekrar dene.',
+  },
   signUp: {
     title: 'Hesap oluştur',
     description: 'Birkaç bilgiyle profilini başlat.',

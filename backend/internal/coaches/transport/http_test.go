@@ -44,7 +44,7 @@ func TestClubStaffInviteSwitchAndRevoke(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	player, err := auth.Register(ctx, authapp.RegisterInput{FullName: "Deniz Oyuncu", Email: "deniz@example.com", Password: password, Role: "player", FootballType: "amateur", LicenseStatus: "licensed"})
+	player, err := auth.Register(ctx, authapp.RegisterInput{TermsAccepted: true, FullName: "Deniz Oyuncu", Email: "deniz@example.com", Password: password, Role: "player", FootballType: "amateur", LicenseStatus: "licensed"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -205,6 +205,7 @@ func TestCoachSelfRegistration(t *testing.T) {
 	signUp := func(body map[string]any, status int) map[string]any {
 		t.Helper()
 		body["password"] = password
+		body["termsAccepted"] = true
 		return call("POST", "/v1/auth/register", "", body, status)
 	}
 	fields := func(out map[string]any) map[string]any {

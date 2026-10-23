@@ -37,7 +37,7 @@ func TestContentPublicationUploadAndAdministratorBoundary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	player, err := auth.Register(ctx, authapp.RegisterInput{FullName: "Test Player", Email: "player@example.com", Password: "test-password-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed"})
+	player, err := auth.Register(ctx, authapp.RegisterInput{TermsAccepted: true, FullName: "Test Player", Email: "player@example.com", Password: "test-password-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed"})
 	if err != nil {
 		t.Fatal(err)
 	}

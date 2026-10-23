@@ -10,7 +10,14 @@ const account = {
   role: 'player' as const,
   footballType: 'amateur' as const,
   licenseStatus: 'licensed' as const,
+  termsAccepted: true,
 };
+test('sign-up needs the terms of use and the KVKK notice accepted', () => {
+  expect(
+    Object.keys(validateRegistration({ ...account, termsAccepted: false })),
+  ).toEqual(['termsAccepted']);
+  expect(toRegisterInput(account).termsAccepted).toBe(true);
+});
 test('valid account passes; email is trimmed for validation', () => {
   expect(
     validateRegistration({ ...account, email: ' deniz@example.com ' }),
@@ -39,6 +46,7 @@ test('a coach names a licence level instead of a licence status', () => {
     password: 'strong-password',
     role: 'coach' as const,
     footballType: 'amateur' as const,
+    termsAccepted: true,
   };
   expect(Object.keys(validateRegistration(coach))).toEqual(['licenseLevel']);
   expect(

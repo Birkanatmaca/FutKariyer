@@ -4,4 +4,5 @@ export const config = {
   allowInsecureApi: false,
   apiBaseUrl: '/api',
   requestTimeout: 12000,
+  supportEmail: '',
 };

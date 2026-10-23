@@ -33,7 +33,7 @@ func seedReal(t *testing.T, ctx context.Context, db *sql.DB) realData {
 	svc := auth.New(authdata.New(db), time.Hour)
 	var out realData
 	for i, email := range []string{"gercek.oyuncu@example.com", "diger.oyuncu@example.com"} {
-		res, err := svc.Register(ctx, auth.RegisterInput{FullName: []string{"Gerçek Oyuncu", "Diğer Oyuncu"}[i], Email: email, Password: "guclu-sifre-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed"})
+		res, err := svc.Register(ctx, auth.RegisterInput{TermsAccepted: true, FullName: []string{"Gerçek Oyuncu", "Diğer Oyuncu"}[i], Email: email, Password: "guclu-sifre-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed"})
 		if err != nil {
 			t.Fatal(err)
 		}

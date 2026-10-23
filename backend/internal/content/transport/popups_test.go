@@ -28,7 +28,7 @@ func TestPopupSizesIntervalAndCap(t *testing.T) {
 	auth := authapp.New(authdata.New(db.DB), time.Hour)
 	service := application.New(data.New(db.DB))
 	public := transport.New(auth, service)
-	player, err := auth.Register(ctx, authapp.RegisterInput{FullName: "Deniz Oyuncu", Email: "deniz@example.com", Password: "test-password-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed"})
+	player, err := auth.Register(ctx, authapp.RegisterInput{TermsAccepted: true, FullName: "Deniz Oyuncu", Email: "deniz@example.com", Password: "test-password-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed"})
 	if err != nil {
 		t.Fatal(err)
 	}

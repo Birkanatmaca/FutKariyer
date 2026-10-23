@@ -22,4 +22,7 @@ export const config = {
   // profile card. Empty: the card goes to Instagram's own share screen, where
   // the user picks Hikâye.
   facebookAppId: '',
+  // Support address for Diğer > Yardım ve destek; the row stays hidden while
+  // empty. Fill it in together with the legal pages' company details.
+  supportEmail: '',
 };

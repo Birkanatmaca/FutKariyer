@@ -19,7 +19,7 @@ func TestPersistentAuthLifecycle(t *testing.T) {
 	repo := data.New(database.DB)
 	service := application.New(repo, time.Hour)
 	ctx := context.Background()
-	input := application.RegisterInput{FullName: "Deniz Yılmaz", Email: " DENIZ@example.com ", Password: "strong-password-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed"}
+	input := application.RegisterInput{TermsAccepted: true, FullName: "Deniz Yılmaz", Email: " DENIZ@example.com ", Password: "strong-password-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed"}
 	registered, err := service.Register(ctx, input)
 	if err != nil {
 		t.Fatal(err)
@@ -79,12 +79,12 @@ func TestRegistrationRejectsInvalidAccounts(t *testing.T) {
 		want []string
 	}{
 		// Only players and coaches sign up on their own; clubs and organizers apply.
-		{application.RegisterInput{FullName: "X", Email: "invalid", Password: "short", Role: "admin"}, []string{"email", "footballType", "fullName", "password", "role"}},
-		{application.RegisterInput{FullName: "Kulüp", Email: "kulup@example.com", Password: password, Role: "club", FootballType: "amateur"}, []string{"role"}},
-		{application.RegisterInput{FullName: "Deniz", Email: "deniz@example.com", Password: password, Role: "player", FootballType: "amateur"}, []string{"licenseStatus"}},
+		{application.RegisterInput{TermsAccepted: true, FullName: "X", Email: "invalid", Password: "short", Role: "admin"}, []string{"email", "footballType", "fullName", "password", "role"}},
+		{application.RegisterInput{TermsAccepted: true, FullName: "Kulüp", Email: "kulup@example.com", Password: password, Role: "club", FootballType: "amateur"}, []string{"role"}},
+		{application.RegisterInput{TermsAccepted: true, FullName: "Deniz", Email: "deniz@example.com", Password: password, Role: "player", FootballType: "amateur"}, []string{"licenseStatus"}},
 		// A coach names a licence level; "unknown" is not a declaration.
-		{application.RegisterInput{FullName: "Ayşe", Email: "ayse@example.com", Password: password, Role: "coach", FootballType: "amateur", LicenseLevel: "unknown"}, []string{"licenseLevel"}},
-		{application.RegisterInput{FullName: "Ayşe", Email: "ayse@example.com", Password: password, Role: "coach", LicenseLevel: "uefa_b"}, []string{"footballType"}},
+		{application.RegisterInput{TermsAccepted: true, FullName: "Ayşe", Email: "ayse@example.com", Password: password, Role: "coach", FootballType: "amateur", LicenseLevel: "unknown"}, []string{"licenseLevel"}},
+		{application.RegisterInput{TermsAccepted: true, FullName: "Ayşe", Email: "ayse@example.com", Password: password, Role: "coach", LicenseLevel: "uefa_b"}, []string{"footballType"}},
 	} {
 		_, err := service.Register(context.Background(), c.in)
 		var fields application.ValidationError

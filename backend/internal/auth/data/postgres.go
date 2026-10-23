@@ -25,8 +25,8 @@ func (r *Postgres) Register(ctx context.Context, user domain.User, session domai
 	}
 	defer tx.Rollback()
 	_, err = tx.ExecContext(ctx, `INSERT INTO users
-		(id,full_name,email,password_hash,role,city,created_at,username,active)
-		VALUES($1,$2,NULLIF($3,''),$4,$5,$6,$7,NULLIF($8,''),TRUE)`,
+		(id,full_name,email,password_hash,role,city,created_at,username,active,terms_accepted_at)
+		VALUES($1,$2,NULLIF($3,''),$4,$5,$6,$7,NULLIF($8,''),TRUE,$7)`,
 		user.ID, user.FullName, user.Email, user.PasswordHash, user.Role, user.City, user.CreatedAt, user.Username,
 	)
 	if err != nil {
@@ -169,8 +169,8 @@ func (r *Postgres) Apply(ctx context.Context, user domain.User, app domain.Appli
 		return err
 	}
 	defer tx.Rollback()
-	_, err = tx.ExecContext(ctx, `INSERT INTO users(id,full_name,email,password_hash,role,city,created_at,username,active,approval_status)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,FALSE,'pending')`,
+	_, err = tx.ExecContext(ctx, `INSERT INTO users(id,full_name,email,password_hash,role,city,created_at,username,active,approval_status,terms_accepted_at)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,FALSE,'pending',$7)`,
 		user.ID, user.FullName, user.Email, user.PasswordHash, user.Role, user.City, user.CreatedAt, user.Username)
 	if err != nil {
 		var pgErr *pgconn.PgError

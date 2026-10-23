@@ -16,6 +16,7 @@ import { Choice } from './Choice';
 import { Field } from '../../../shared/ui/Field';
 import { Button } from '../../../shared/ui/Button';
 import { ErrorBanner } from '../../../shared/ui/ErrorBanner';
+import { TermsConsent } from './TermsConsent';
 import { ApiError } from '../../../shared/api/client';
 import { copy } from '../../../shared/lib/copy';
 import { colors, radius, space } from '../../../styles/tokens';
@@ -53,6 +54,7 @@ export function ApplicationScreen({
     district: '',
     footballType: '',
     note: '',
+    termsAccepted: false,
   });
   const [fields, setFields] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
@@ -246,6 +248,19 @@ export function ApplicationScreen({
           textAlignVertical="top"
           editable={!busy}
           maxLength={500}
+        />
+        <TermsConsent
+          checked={draft.termsAccepted}
+          disabled={busy}
+          error={fields.termsAccepted}
+          onChange={checked => {
+            setDraft(current => ({ ...current, termsAccepted: checked }));
+            setFields(current => {
+              const next = { ...current };
+              delete next.termsAccepted;
+              return next;
+            });
+          }}
         />
         <ErrorBanner message={error} />
         <Button label={text.button} onPress={submit} loading={busy} compact />

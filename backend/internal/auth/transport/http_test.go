@@ -27,7 +27,7 @@ func TestAuthHTTPContract(t *testing.T) {
 		handler.ServeHTTP(rec, req)
 		return rec
 	}
-	rec := call("POST", "/v1/auth/register", `{"fullName":"Deniz Yılmaz","email":"deniz@example.com","password":"strong-password","role":"player","footballType":"amateur","licenseStatus":"licensed"}`, "")
+	rec := call("POST", "/v1/auth/register", `{"fullName":"Deniz Yılmaz","email":"deniz@example.com","password":"strong-password","role":"player","footballType":"amateur","licenseStatus":"licensed","termsAccepted":true}`, "")
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("register: %d %s", rec.Code, rec.Body)
 	}
@@ -49,6 +49,10 @@ func TestAuthHTTPContract(t *testing.T) {
 	}
 	if rec = call("GET", "/v1/auth/me", "", result.Token); rec.Code != 401 {
 		t.Fatal("revoked bearer token accepted")
+	}
+	// The terms of use and the KVKK notice must be accepted (23 Oct 2026).
+	if rec = call("POST", "/v1/auth/register", `{"fullName":"Ece Kaya","email":"ece@example.com","password":"strong-password","role":"player","footballType":"amateur","licenseStatus":"licensed"}`, ""); rec.Code != 422 || !bytes.Contains(rec.Body.Bytes(), []byte("termsAccepted")) {
+		t.Fatalf("sign-up without accepting the terms: %d %s", rec.Code, rec.Body)
 	}
 	if rec = call("POST", "/v1/auth/register", `{} {}`, ""); rec.Code != 400 {
 		t.Fatal("multiple JSON objects accepted")

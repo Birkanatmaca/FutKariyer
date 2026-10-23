@@ -96,6 +96,8 @@ type RegisterBase = {
   password: string;
   fullName: string;
   footballType: PlayerFootballType;
+  // The terms of use and the KVKK notice were accepted (23 Oct 2026).
+  termsAccepted: true;
 };
 export type RegisterInput =
   | (RegisterBase & { role: 'player'; licenseStatus: DeclaredLicenseStatus })
@@ -114,6 +116,7 @@ export type AccountApplicationInput = {
   district?: string;
   footballType?: PlayerFootballType;
   note?: string;
+  termsAccepted: true;
 };
 export type AccountApplicationResult = { status: 'pending' };
 export type ResetPasswordInput = {

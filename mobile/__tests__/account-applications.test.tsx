@@ -54,6 +54,7 @@ const club: ApplicationDraft = {
   fullName: 'Çankaya Gençlik',
   contactName: 'Ayşe Demir',
   username: 'cankaya.genclik',
+  termsAccepted: true,
   email: 'kulup@example.com',
   password: 'strong-password',
   phone: '',
@@ -145,6 +146,7 @@ describe('application validation', () => {
       password: 'strong-password',
       district: 'Çankaya',
       footballType: 'amateur',
+      termsAccepted: true,
     });
     expect(
       toApplicationInput({ ...club, phone: ' 0312 ', note: 'Not' }),
@@ -157,6 +159,7 @@ describe('application validation', () => {
       password: 'strong-password',
       phone: '0312',
       footballType: 'amateur',
+      termsAccepted: true,
       note: 'Not',
     });
   });
@@ -372,6 +375,7 @@ describe('sign-up screens', () => {
     expect(texts(root)).toContain(copy.signUp.coachLicenseError);
 
     await act(async () => pressable(root, 'UEFA B').props.onPress());
+    await act(async () => pressable(root, copy.legal.consent).props.onPress());
     await act(async () => pressable(root, copy.signUp.button).props.onPress());
     expect(repository.register).toHaveBeenCalledWith({
       role: 'coach',
@@ -380,6 +384,7 @@ describe('sign-up screens', () => {
       password: 'strong-password',
       footballType: 'halisaha',
       licenseLevel: 'uefa_b',
+      termsAccepted: true,
     });
     expect(storage.save).toHaveBeenCalledWith(
       expect.objectContaining({ token: 't'.repeat(43) }),
@@ -416,6 +421,7 @@ describe('sign-up screens', () => {
         ).length > 0,
     );
     await act(async () => professional.props.onPress());
+    await act(async () => pressable(root, copy.legal.consent).props.onPress());
     await act(async () => pressable(root, text.button).props.onPress());
     expect(repository.apply).toHaveBeenCalledWith({
       role: 'club',
@@ -425,6 +431,7 @@ describe('sign-up screens', () => {
       email: 'kulup@example.com',
       password: 'strong-password',
       footballType: 'professional',
+      termsAccepted: true,
     });
     expect(texts(root)).toEqual(
       expect.arrayContaining([text.successTitle, text.successDescription]),
@@ -468,6 +475,7 @@ describe('sign-up screens', () => {
         ).length > 0,
     );
     await act(async () => amateur.props.onPress());
+    await act(async () => pressable(root, copy.legal.consent).props.onPress());
     await act(async () => pressable(root, text.button).props.onPress());
     expect(repository.apply).toHaveBeenCalledWith(
       expect.objectContaining({ role: 'club', footballType: 'amateur' }),

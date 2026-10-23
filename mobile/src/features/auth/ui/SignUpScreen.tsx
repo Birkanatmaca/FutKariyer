@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Keyboard, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LockKeyhole, Mail, UserRound } from 'lucide-react-native';
+import { TermsConsent } from './TermsConsent';
 import { AuthFrame } from './AuthFrame';
 import {
   CoachLicensePicker,
@@ -45,6 +46,7 @@ export function SignUpScreen({
   const [password, setPassword] = useState('');
   const [footballType, setFootballType] = useState<PlayerFootballType | ''>('');
   // Unchecked license box means no active license, so this always has a value.
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [licenseStatus, setLicenseStatus] =
     useState<DeclaredLicenseStatus>('unlicensed');
   const [licenseLevel, setLicenseLevel] = useState<DeclaredCoachLicense | ''>(
@@ -80,6 +82,7 @@ export function SignUpScreen({
       footballType,
       licenseStatus,
       licenseLevel,
+      termsAccepted,
     };
     const errors = validateRegistration(draft);
     setFields(errors);
@@ -188,6 +191,15 @@ export function SignUpScreen({
             {coach ? copy.signUp.coachPrivacy : copy.signUp.privacy}
           </Text>
         </View>
+        <TermsConsent
+          checked={termsAccepted}
+          disabled={busy}
+          error={fields.termsAccepted}
+          onChange={checked => {
+            setTermsAccepted(checked);
+            clearField('termsAccepted');
+          }}
+        />
         <ErrorBanner message={error} />
         <Button
           label={copy.signUp.button}

@@ -53,7 +53,7 @@ func wrongCode(code string) string {
 
 func register(t *testing.T, svc *application.Service, email string) application.AuthResult {
 	t.Helper()
-	result, err := svc.Register(context.Background(), application.RegisterInput{FullName: "Deniz Kaya", Email: email, Password: "strong-password-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed", Device: "iPhone 15"})
+	result, err := svc.Register(context.Background(), application.RegisterInput{TermsAccepted: true, FullName: "Deniz Kaya", Email: email, Password: "strong-password-123", Role: "player", FootballType: "amateur", LicenseStatus: "licensed", Device: "iPhone 15"})
 	if err != nil {
 		t.Fatal(err)
 	}

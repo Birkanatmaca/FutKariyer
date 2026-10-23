@@ -24,7 +24,7 @@ func TestPlayerProfilePersistenceAndAuthorization(t *testing.T) {
 	auth := authapplication.New(authdata.New(database.DB), time.Hour)
 	register := func(role, email string) authapplication.AuthResult {
 		t.Helper()
-		result, err := auth.Register(context.Background(), authapplication.RegisterInput{
+		result, err := auth.Register(context.Background(), authapplication.RegisterInput{TermsAccepted: true,
 			FullName: "Deniz Yılmaz", Email: email, Password: "strong-password", Role: role, FootballType: "amateur", LicenseStatus: "licensed",
 		})
 		if err != nil {

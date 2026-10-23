@@ -68,7 +68,7 @@ func TestLogsCarryNoPersonalData(t *testing.T) {
 		_ = json.Unmarshal(w.Body.Bytes(), &out)
 		return out
 	}
-	signup := call("POST", "/v1/auth/register", "", map[string]string{"fullName": "Gizli Kişi", "email": email, "password": password, "role": "player", "footballType": "amateur", "licenseStatus": "licensed"})
+	signup := call("POST", "/v1/auth/register", "", map[string]any{"fullName": "Gizli Kişi", "email": email, "password": password, "role": "player", "footballType": "amateur", "licenseStatus": "licensed", "termsAccepted": true})
 	token, _ := signup["token"].(string)
 	if token == "" {
 		t.Fatalf("sign-up: %v", signup)

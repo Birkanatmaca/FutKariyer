@@ -72,6 +72,7 @@ import (
 	paymenttransport "futcareer/backend/internal/payments/transport"
 	"futcareer/backend/internal/platform/adminweb"
 	"futcareer/backend/internal/platform/audit"
+	"futcareer/backend/internal/platform/legal"
 	"futcareer/backend/internal/platform/logging"
 	platformmail "futcareer/backend/internal/platform/mail"
 	"futcareer/backend/internal/platform/metrics"
@@ -355,6 +356,11 @@ func run() error {
 	routes.Handle("POST /v1/client-errors", logging.ClientErrors(func(source string, fatal bool) {
 		registry.Add("client_errors_total", "Errors reported by the apps.", []string{"source", "fatal"}, []string{source, strconv.FormatBool(fatal)}, 1)
 	}))
+	// Privacy policy, terms of use and KVKK notice (23 Oct 2026).
+	legalPages := legal.New()
+	for path := range legal.Paths {
+		routes.Handle("GET "+path, legalPages)
+	}
 	authHandler := transport.New(authService)
 	for _, path := range []string{"/v1/me/password", "/v1/me/sessions", "/v1/me/sessions/"} {
 		routes.Handle(path, authHandler)

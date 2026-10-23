@@ -4,6 +4,10 @@ import {
   ArrowLeftRight,
   ChevronRight,
   ClipboardList,
+  FileText,
+  LifeBuoy,
+  Scale,
+  ShieldCheck,
   ShoppingBag,
   Settings,
   Newspaper,
@@ -21,6 +25,7 @@ import { Screen } from '../shared/ui/Screen';
 import { Brand } from '../shared/ui/Brand';
 import { Avatar } from '../shared/ui/Avatar';
 import { copy } from '../shared/lib/copy';
+import { openLegal, openSupport, supportAvailable } from '../shared/lib/legal';
 import { colors, radius, space } from '../styles/tokens';
 
 type Entry = {
@@ -272,6 +277,28 @@ export function MoreScreen({
         explore,
         account,
       ];
+  // Every account reaches the legal pages and support (23 Oct 2026).
+  sections.push({
+    title: copy.legal.section,
+    entries: [
+      ...(supportAvailable()
+        ? [
+            entry(copy.legal.support, copy.legal.supportHint, LifeBuoy, () =>
+              openSupport().catch(() => undefined),
+            ),
+          ]
+        : []),
+      entry(copy.legal.terms, copy.legal.termsHint, FileText, () =>
+        openLegal('terms').catch(() => undefined),
+      ),
+      entry(copy.legal.privacy, copy.legal.privacyHint, ShieldCheck, () =>
+        openLegal('privacy').catch(() => undefined),
+      ),
+      entry(copy.legal.kvkk, copy.legal.kvkkHint, Scale, () =>
+        openLegal('kvkk').catch(() => undefined),
+      ),
+    ],
+  });
   const shown = sections.filter(section => section.entries.length > 0);
   return (
     <Screen>

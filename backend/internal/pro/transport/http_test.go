@@ -54,7 +54,7 @@ func TestProMembershipVisitorsAndPayments(t *testing.T) {
 
 	register := func(name, email, footballType string) authapp.AuthResult {
 		t.Helper()
-		result, err := auth.Register(ctx, authapp.RegisterInput{FullName: name, Email: email, Password: "test-password-123", Role: "player", FootballType: footballType, LicenseStatus: "licensed"})
+		result, err := auth.Register(ctx, authapp.RegisterInput{TermsAccepted: true, FullName: name, Email: email, Password: "test-password-123", Role: "player", FootballType: footballType, LicenseStatus: "licensed"})
 		if err != nil {
 			t.Fatal(err)
 		}

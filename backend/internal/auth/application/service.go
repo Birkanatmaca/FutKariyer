@@ -41,6 +41,8 @@ type RegisterInput struct {
 	LicenseLevel  string `json:"licenseLevel"`
 	// Device is a short label of the phone, shown under Active sessions.
 	Device string `json:"device"`
+	// TermsAccepted confirms the terms of use and the KVKK notice (23 Oct 2026).
+	TermsAccepted bool `json:"termsAccepted"`
 }
 type LoginInput struct {
 	Identifier string `json:"identifier"`
@@ -149,6 +151,9 @@ func (s *Service) Register(ctx context.Context, in RegisterInput) (AuthResult, e
 	}
 	if in.FootballType != "amateur" && in.FootballType != "professional" && in.FootballType != "halisaha" {
 		fields["footballType"] = "Futbol türünü seç."
+	}
+	if !in.TermsAccepted {
+		fields["termsAccepted"] = termsMessage
 	}
 	if len(fields) > 0 {
 		return AuthResult{}, fields
@@ -469,7 +474,11 @@ type ApplyInput struct {
 	District     string `json:"district"`
 	FootballType string `json:"footballType"`
 	Note         string `json:"note"`
+	// TermsAccepted confirms the terms of use and the KVKK notice (23 Oct 2026).
+	TermsAccepted bool `json:"termsAccepted"`
 }
+
+const termsMessage = "Devam etmek için kullanım şartlarını ve KVKK aydınlatma metnini onayla."
 
 var phonePattern = regexp.MustCompile(`^[0-9 +()-]{0,30}$`)
 
@@ -519,6 +528,9 @@ func (s *Service) Apply(ctx context.Context, in ApplyInput) error {
 	}
 	if in.Role == "club" && in.FootballType != "amateur" && in.FootballType != "professional" && in.FootballType != "halisaha" {
 		fields["footballType"] = "Takım türünü seç."
+	}
+	if !in.TermsAccepted {
+		fields["termsAccepted"] = termsMessage
 	}
 	if in.Role != "club" {
 		in.FootballType = ""

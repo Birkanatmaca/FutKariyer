@@ -19,15 +19,15 @@ func TestClubApplicationsNeedApproval(t *testing.T) {
 	ctx := context.Background()
 	svc := auth.New(authdata.New(db), time.Hour)
 	queue := data.New(db)
-	club := auth.ApplyInput{Role: "club", FullName: "Gençlik FK", ContactName: "Ali Veli", Username: "genclikfk", Email: "kulup@example.com", Password: "guclu-sifre-123", Phone: "+90 555 000 00 00", District: "Çankaya", FootballType: "halisaha", Note: "Halı saha takımıyız."}
+	club := auth.ApplyInput{TermsAccepted: true, Role: "club", FullName: "Gençlik FK", ContactName: "Ali Veli", Username: "genclikfk", Email: "kulup@example.com", Password: "guclu-sifre-123", Phone: "+90 555 000 00 00", District: "Çankaya", FootballType: "halisaha", Note: "Halı saha takımıyız."}
 	if err := svc.Apply(ctx, club); err != nil {
 		t.Fatal(err)
 	}
 	// Only administrators open organizer accounts (22 Oct 2026).
-	if err := svc.Apply(ctx, auth.ApplyInput{Role: "organizer", FullName: "Ankara Turnuva", ContactName: "Ayşe Yılmaz", Username: "orgturnuva", Email: "org2@example.com", Password: "guclu-sifre-456"}); !errors.As(err, new(auth.ValidationError)) {
+	if err := svc.Apply(ctx, auth.ApplyInput{TermsAccepted: true, Role: "organizer", FullName: "Ankara Turnuva", ContactName: "Ayşe Yılmaz", Username: "orgturnuva", Email: "org2@example.com", Password: "guclu-sifre-456"}); !errors.As(err, new(auth.ValidationError)) {
 		t.Fatalf("organizer application accepted: %v", err)
 	}
-	second := auth.ApplyInput{Role: "club", FullName: "Ankara Turnuva", ContactName: "Ayşe Yılmaz", Username: "ankaraturnuva", Email: "org@example.com", Password: "guclu-sifre-456", FootballType: "amateur"}
+	second := auth.ApplyInput{TermsAccepted: true, Role: "club", FullName: "Ankara Turnuva", ContactName: "Ayşe Yılmaz", Username: "ankaraturnuva", Email: "org@example.com", Password: "guclu-sifre-456", FootballType: "amateur"}
 	if err := svc.Apply(ctx, second); err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestClubApplicationsNeedApproval(t *testing.T) {
 	if err := svc.Apply(ctx, dup); !errors.Is(err, authdomain.ErrUsernameExists) {
 		t.Fatalf("duplicate username accepted: %v", err)
 	}
-	if err := svc.Apply(ctx, auth.ApplyInput{Role: "player", FullName: "X Y", ContactName: "X Y", Username: "xyz", Email: "x@example.com", Password: "guclu-sifre-789"}); !errors.As(err, new(auth.ValidationError)) {
+	if err := svc.Apply(ctx, auth.ApplyInput{TermsAccepted: true, Role: "player", FullName: "X Y", ContactName: "X Y", Username: "xyz", Email: "x@example.com", Password: "guclu-sifre-789"}); !errors.As(err, new(auth.ValidationError)) {
 		t.Fatal("player application accepted through the club/organizer form")
 	}
 

@@ -71,6 +71,7 @@ export type RegistrationDraft = {
   footballType: PlayerFootballType | '';
   licenseStatus?: DeclaredLicenseStatus | '';
   licenseLevel?: DeclaredCoachLicense | '';
+  termsAccepted: boolean;
 };
 // Mirrors POST /v1/auth/register: only players and coaches sign up here.
 export function validateRegistration(input: RegistrationDraft): FieldErrors {
@@ -110,6 +111,9 @@ export function validateRegistration(input: RegistrationDraft): FieldErrors {
   if (utf8Length(input.password) > 72) {
     fields.password = copy.form.passwordMax;
   }
+  if (!input.termsAccepted) {
+    fields.termsAccepted = copy.legal.consentError;
+  }
   return fields;
 }
 // Builds the request body from a valid draft; each role sends only its own
@@ -120,6 +124,7 @@ export function toRegisterInput(input: RegistrationDraft): RegisterInput {
     email: input.email.trim(),
     password: input.password,
     footballType: input.footballType as PlayerFootballType,
+    termsAccepted: true as const,
   };
   return input.role === 'coach'
     ? {
@@ -145,6 +150,7 @@ export type ApplicationDraft = {
   district: string;
   footballType: PlayerFootballType | '';
   note: string;
+  termsAccepted: boolean;
 };
 const usernamePattern = /^[a-z0-9._-]{3,32}$/;
 const phonePattern = /^[0-9 +()-]*$/;
@@ -194,6 +200,9 @@ export function validateApplication(input: ApplicationDraft): FieldErrors {
   if (charLength(input.note.trim()) > 500) {
     fields.note = text.noteError;
   }
+  if (!input.termsAccepted) {
+    fields.termsAccepted = copy.legal.consentError;
+  }
   return fields;
 }
 // Builds the request body; empty optional fields are left out.
@@ -207,6 +216,7 @@ export function toApplicationInput(
     username: input.username.trim(),
     email: input.email.trim(),
     password: input.password,
+    termsAccepted: true,
   };
   const phone = input.phone.trim();
   const district = input.district.trim();

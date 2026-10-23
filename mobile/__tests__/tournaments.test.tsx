@@ -41,6 +41,10 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: ({ children }: { children: React.ReactNode }) => children,
 }));
 jest.mock('lucide-react-native', () => ({
+  FileText: () => null,
+  LifeBuoy: () => null,
+  Scale: () => null,
+  ShieldCheck: () => null,
   ArrowLeft: () => null,
   ArrowUpRight: () => null,
   Bell: () => null,
@@ -326,6 +330,11 @@ describe('organizer accounts', () => {
       copy.more.tournamentsHint,
       copy.more.newsHint,
       copy.more.settingsHint,
+      // Legal pages for every account (23 Oct 2026); support stays hidden
+      // until a support address is configured.
+      copy.legal.termsHint,
+      copy.legal.privacyHint,
+      copy.legal.kvkkHint,
     ]);
     const shown = texts(root);
     for (const hidden of [
